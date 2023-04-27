@@ -247,6 +247,7 @@ def get_builtin_method_backing_field(class_name: str, method: dict) -> str:
 
 
 def gen_builtin_class(f: TextIO, builtin_class: dict, builtin_sizes_map: dict[int], package_name: str, gdinterface_import_path: str="../gdinterface"):
+def gen_builtin_class(f: TextIO, builtin_class: dict, builtin_sizes_map: dict[int], package_name: str):
     name: str = builtin_class["name"]
     methods: list = builtin_class.get("methods", [])
     operators: list = builtin_class["operators"]
@@ -258,10 +259,10 @@ def gen_builtin_class(f: TextIO, builtin_class: dict, builtin_sizes_map: dict[in
     snake_name = pascal_to_snake_case(name)
 
     f.write(f"package {package_name}\n\n")
-    f.write("import \"core\"\n")
+    f.write("import \"../core\"\n")
     if name in types_with_odin_string_constructors:
         f.write("import \"core:strings\"\n")
-    f.write(f"import gdinterface \"{gdinterface_import_path}\"\n\n")
+    f.write(f"import gdinterface \"../gdinterface\"\n\n")
 
     f.write(f"{pascal_name} :: struct {{\n")
     f.write(f"    _opaque: {pascal_name}OpaqueType,\n")
