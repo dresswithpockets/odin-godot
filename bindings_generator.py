@@ -246,7 +246,6 @@ def get_builtin_method_backing_field(class_name: str, method: dict) -> str:
     return s
 
 
-def gen_builtin_class(f: TextIO, builtin_class: dict, builtin_sizes_map: dict[int], package_name: str, gdinterface_import_path: str="../gdinterface"):
 def gen_builtin_class(f: TextIO, builtin_class: dict, builtin_sizes_map: dict[int], package_name: str):
     name: str = builtin_class["name"]
     methods: list = builtin_class.get("methods", [])
