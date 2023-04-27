@@ -1,2 +1,9 @@
 variant/
 !variant/common.odin
+
+*.dll
+*.exe
+*.so
+*.a
+*.o
+*.lib
