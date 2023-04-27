@@ -11,6 +11,7 @@ ObjectPtr :: distinct rawptr
 TypePtr :: distinct rawptr
 
 MethodBindPtr :: distinct rawptr
+RefPtr :: distinct rawptr
 
 VariantType :: enum {
     Nil,
@@ -370,9 +371,12 @@ Interface :: struct {
     mem_realloc: proc(ptr: rawptr, bytes: c.size_t) -> rawptr,
     mem_free: proc(ptr: rawptr),
 
-    print_error: proc(description: cstring, function: cstring, file: cstring, line: i32),
-    print_warning: proc(description: cstring, function: cstring, file: cstring, line: i32),
-    print_script_error: proc(description: cstring, function: cstring, file: cstring, line: i32),
+    print_error: proc(description: cstring, function: cstring, file: cstring, line: i32, editor_notify: bool),
+    print_error_with_message: proc(description: cstring, message: cstring, function: cstring, file: cstring, line: i32, editor_notify: bool),
+    print_warning: proc(description: cstring, function: cstring, file: cstring, line: i32, editor_notify: bool),
+    print_warning_with_message: proc(description: cstring, message: cstring, function: cstring, file: cstring, line: i32, editor_notify: bool),
+    print_script_error: proc(description: cstring, function: cstring, file: cstring, line: i32, editor_notify: bool),
+    print_script_error_with_message: proc(description: cstring, message: cstring, function: cstring, file: cstring, line: i32, editor_notify: bool),
 
     get_native_struct_size: proc(name: StringNamePtr) -> u64,
 
@@ -458,6 +462,23 @@ Interface :: struct {
     string_operator_index: proc(self: StringPtr, index: i64) -> ^u32,
     string_operator_index_const: proc(self: StringPtr, index: i64) -> ^u32,
 
+    string_operator_plus_eq_string: proc(self: StringPtr, b: StringPtr),
+    string_operator_plus_eq_char: proc(self: StringPtr, b: u32),
+    string_operator_plus_eq_cstr: proc(self: StringPtr, b: cstring),
+    string_operator_plus_eq_wcstr: proc(self: StringPtr, b: [^]c.wchar_t),
+    string_operator_plus_eq_c32str: proc(self: StringPtr, b: [^]u32),
+
+    // XMLParser extra utilities
+    xml_parser_open_buffer: proc(instance: ObjectPtr, buffer: [^]u8, size: c.size_t),
+
+    // FileAccess extra utilities
+    file_access_store_buffer: proc(instance: ObjectPtr, src: [^]u8, length: u64),
+    file_access_get_buffer: proc(instance: ObjectPtr, dst: [^]u8, length: u64),
+
+    // WorkerThreadPool extra utilities
+    worker_thread_pool_add_native_group_task: proc(instance: ObjectPtr, func: proc(rawptr, u32), user_data: rawptr, elements: i32, tasks: i32, high_priority: bool, description: StringPtr) -> i64,
+    worker_thread_pool_add_native_task: proc(instance: ObjectPtr, func: proc(rawptr), user_data: rawptr, high_priority: bool, description: StringPtr) -> i64,
+
     // Packed array functions
 
     // self should be a PackedByteArray
@@ -509,6 +530,10 @@ Interface :: struct {
     array_operator_index: proc(self: TypePtr, index: i64) -> VariantPtr,
     // self should be an Array ptr
     array_operator_index_const: proc(self: TypePtr, index: i64) -> VariantPtr,
+    // self should be an Array ptr
+    array_ref: proc(self: TypePtr, from: TypePtr),
+    // self should be an Array ptr
+    array_set_typed: proc(self: TypePtr, type: VariantType, class_name: StringNamePtr, script: VariantPtr),
 
     // dictionary functions
 
@@ -533,6 +558,11 @@ Interface :: struct {
     object_cast_to : proc(object: ObjectPtr, class_tag: rawptr) -> ObjectPtr,
     object_get_instance_from_id: proc(instance_id: u64) -> ObjectPtr,
     object_get_instance_id: proc(object: ObjectPtr) -> u64,
+
+    // REFERENCE
+
+    ref_get_object: proc(ref: RefPtr) -> ObjectPtr,
+    ref_set_object: proc(ref: RefPtr, object: ObjectPtr),
 
     // SCRIPT INSTANCE
 
