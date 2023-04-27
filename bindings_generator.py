@@ -441,7 +441,8 @@ def main():
 
     builtin_sizes_map = {v["build_configuration"]: {s["name"]: s["size"] for s in v["sizes"]} for v in builtin_class_sizes}
 
-    with open("enums.odin", "w") as f:
+    Path("./core").mkdir(exist_ok=True)
+    with open("core/enums.odin", "w") as f:
         f.write("package godot\n\n")
         gen_global_enums(f, global_enums)
     
