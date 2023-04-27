@@ -1,3 +1,5 @@
+core/enums.odin
+
 variant/
 !variant/common.odin
 
