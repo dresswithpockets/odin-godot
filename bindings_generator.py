@@ -425,6 +425,46 @@ def gen_builtin_class(f: TextIO, builtin_class: dict, builtin_sizes_map: dict[in
         f.write(f"__{pascal_name}__destructor: {destructor_type}\n\n")
 
 
+def gen_engine_class(f: TextIO, engine_class: dict, is_singleton: bool, package_name: str):
+
+    """
+        "name": "AESContext",
+        "is_refcounted": true,
+        "is_instantiable": true,
+        "inherits": "RefCounted",
+        "api_type": "core",
+        "enums":
+        "methods":"""
+    
+    name = engine_class["name"]
+    is_refcounted = engine_class["is_refcounted"]
+    is_instantiable = engine_class["is_instantiable"]
+    inherits = engine_class["inherits"]
+    api_type = engine_class["api_type"]
+    enums = engine_class["enums"]
+    methods = engine_class["methods"]
+    
+    f.write(f"package {package_name}\n\n")
+    f.write("import core \"../core\"\n")
+    f.write("import gdinterface \"../gdinterface\"\n")
+
+    # TODO: write type?
+    """
+    probably something like
+    TypeName :: struct {
+        _opaque: u64,
+    }
+    """
+
+    if is_singleton:
+        pass
+        # TODO: write singleton getter
+    
+    # TODO: write enums
+
+    # TODO: write methods
+
+
 def main():
     api_file = "./godot-cpp/gdextension/extension_api.json"
     
@@ -440,6 +480,7 @@ def main():
     native_structures = api_json["native_structures"]
 
     builtin_sizes_map = {v["build_configuration"]: {s["name"]: s["size"] for s in v["sizes"]} for v in builtin_class_sizes}
+    singletons_map = {s["type"]: s["name"] for s in singletons}
 
     Path("./core").mkdir(exist_ok=True)
     with open("core/enums.odin", "w") as f:
@@ -458,6 +499,14 @@ def main():
             gen_builtin_class(f, builtin_api, builtin_sizes_map, "variant")
     
     # TODO: generate classes, utility functions, singletons, etc
+    Path("./engine").mkdir(exist_ok=True)
+    for engine_class in classes:
+        name = engine_class["name"]
+        file_name = pascal_to_snake_case(godot_to_pascal_case(name))
+        file_name = f"engine/{file_name}.odin"
+        is_singleton = name in singletons_map
+        with open(file_name, "w") as f:
+            gen_engine_class(f, engine_class, is_singleton, "engine")
 
 
 if __name__ == "__main__":
