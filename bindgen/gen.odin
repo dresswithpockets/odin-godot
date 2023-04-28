@@ -60,14 +60,14 @@ generate_global_enums :: proc(options: Options, api: ^Api, sb: ^strings.Builder)
         // have a prefix. e.e `GDExtensionVariantType` uses the prefix
         // `GDEXTENSION_VARIANT_TYPE_`. The prefix gets stripped before
         // the value is generated in odin.
-        const_case_prefix := odin_to_const_case(odin_case_name, true)
+        const_case_prefix := odin_to_const_case(odin_case_name)
         defer delete(const_case_prefix)
 
         // gotta do all of that for the prefix alias if there is one
         prefix_alias, has_alias := enum_prefix_alias[global_enum.name]
         const_case_prefix_alias: string
         if has_alias {
-            const_case_prefix_alias = odin_to_const_case(prefix_alias, true)
+            const_case_prefix_alias = odin_to_const_case(prefix_alias)
         }
         defer if has_alias {
             delete(const_case_prefix_alias)
@@ -108,6 +108,10 @@ generate_global_enums :: proc(options: Options, api: ^Api, sb: ^strings.Builder)
                 }
             }
 
+            // we might have a lingering _ after we removed the prefix
+            if value_name[0] == '_' && len(value_name) > 1 {
+                value_name = value_name[1:]
+            }
             value_name = const_to_odin_case(value_name)
             fmt.sbprintf(sb, "    %v = %v,\n", value_name, value.value)
         }
