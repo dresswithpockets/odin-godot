@@ -4,23 +4,18 @@ import "core:encoding/json"
 import "core:fmt"
 import "core:os"
 
-State :: struct {
-    options: Options,
-    api:     ^Api,
+Options :: struct {
+    api_file: string,
 }
 
-Options :: struct {
-    api_file:             string,
+default_options :: proc() -> Options {
+    return Options{""}
 }
 
 print_usage :: proc() {
     fmt.printf("%v generates Odin bindings from godot's extension_api.json")
     fmt.println("Usage:\n")
     fmt.printf("\t%v (api_json_path)\n", os.args[0])
-}
-
-default_options :: proc() -> Options {
-    return Options{""}
 }
 
 parse_args :: proc(options: ^Options) -> bool {
@@ -58,10 +53,10 @@ main :: proc() {
 
     fmt.printf("Generating API for %v\n", api.version.full_name)
 
-    state := State{options, api}
+    state := create_state(options, api)
     generate_bindings(state)
 
-    // since we wanna keep api around until the end of the program's lifetime,
+    // since we wanna keep state around until the end of the program's lifetime,
     // no need to be particular about freeing the bits and pieces of the struct (:
     free_all()
 }
