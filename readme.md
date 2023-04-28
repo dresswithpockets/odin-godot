@@ -1,6 +1,35 @@
-# GDExtension Bindings for Odin
+# Odin Bindings for Godot GDExtension
 
-## Usage
+## C API Bindings
+
+The C bindings are in `./gdinterface/`. They're based on `godot-cpp/gdextension/gdextension_interface.h`.
+
+## Creating a GDExtension
+
+Create and export an entrypoint for your extension:
+
+```odin
+package example
+
+import gd "godot:gdinterface"
+
+@(export)
+example_init :: proc "c" (
+    interface: ^gd.Interface,
+    library: gd.ExtensionClassLibraryPtr,
+    initialization: ^gd.Initialization,
+) -> bool {
+    // do usual initialization
+    return true
+}
+```
+
+Build as a shared library
+```sh
+odin build . -build-mode:shared
+```
+
+## Generating Complete Bindings
 
 Clone & generate bindings
 ```sh
@@ -16,3 +45,7 @@ cd odin-godot
 > odin build ./bindgen -o:speed -out:./bindgen/bindgen.exe
 > ./bindgen/bindgen.exe godot-cpp/gdextension/extension_api.json
 > ```
+
+## Using Generated Bindings
+
+WIP
