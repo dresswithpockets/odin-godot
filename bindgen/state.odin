@@ -234,8 +234,8 @@ _state_builtin_class_members :: proc(state: ^State) {
     for class in &state.api.builtin_classes {
         state_class := &state.builtin_classes[class.name]
         _state_builtin_class_operators(state, state_class, &class)
+        _state_builtin_class_constructors(state, state_class, &class)
         state_class.methods = _state_builtin_class_methods(state, &class)
-        state_class.constructors = _state_builtin_class_constructors(state, &class)
     }
 }
 
