@@ -219,7 +219,11 @@ generate_builtin_class :: proc(state: ^State, class: ^StateBuiltinClass, sb: ^st
                 if has_right_type {
                     fmt.sbprintln(sb, "    other := other")
                 }
-                fmt.sbprintf(sb, "    return call_builtin_operator_ptr(%v, cast(TypePtr)&self._opaque, cast(TypePtr)", overload.backing_func_name)
+                fmt.sbprintf(
+                    sb,
+                    "    return call_builtin_operator_ptr(%v, cast(TypePtr)&self._opaque, cast(TypePtr)",
+                    overload.backing_func_name,
+                )
                 if has_right_type {
                     fmt.sbprintf(sb, "&other._opaque")
                 } else {
