@@ -122,12 +122,7 @@ CallError :: struct {
 VariantFromTypeConstructorProc :: #type proc "c" (variant: VariantPtr, type: TypePtr)
 TypeFromVariantConstructorProc :: #type proc "c" (type: TypePtr, variant: VariantPtr)
 PtrOperatorEvaluator :: #type proc "c" (left: TypePtr, right: TypePtr, result: TypePtr)
-PtrBuiltInMethod :: #type proc "c" (
-    base: TypePtr,
-    args: [^]TypePtr,
-    returns: TypePtr,
-    arg_count: int,
-)
+PtrBuiltInMethod :: #type proc "c" (base: TypePtr, args: [^]TypePtr, returns: TypePtr, arg_count: int)
 PtrConstructor :: #type proc "c" (base: TypePtr, args: [^]TypePtr)
 PtrDestructor :: #type proc "c" (base: TypePtr)
 PtrSetter :: #type proc "c" (base: TypePtr, value: TypePtr)
@@ -143,11 +138,7 @@ ClassConstructor :: #type proc "c" () -> ObjectPtr
 
 InstanceBindingCreateCallback :: #type proc "c" (token: rawptr, instance: rawptr) -> rawptr
 InstanceBindingFreeCallback :: #type proc "c" (token: rawptr, instance: rawptr, binding: rawptr)
-InstanceBindingReferenceCallback :: #type proc "c" (
-    token: rawptr,
-    binding: rawptr,
-    reference: bool,
-) -> bool
+InstanceBindingReferenceCallback :: #type proc "c" (token: rawptr, binding: rawptr, reference: bool) -> bool
 
 InstanceBindingCallbacks :: struct {
     create:    InstanceBindingCreateCallback,
@@ -164,11 +155,7 @@ ExtensionClassSet :: #type proc "c" (
     name: StringNamePtr,
     value: VariantPtr,
 ) -> bool
-ExtensionClassGet :: #type proc "c" (
-    instance: ExtensionClassInstancePtr,
-    name: StringNamePtr,
-    ret: VariantPtr,
-) -> bool
+ExtensionClassGet :: #type proc "c" (instance: ExtensionClassInstancePtr, name: StringNamePtr, ret: VariantPtr) -> bool
 ExtensionClassGetRid :: #type proc "c" (instance: ExtensionClassInstancePtr) -> u64
 
 PropertyInfo :: struct {
@@ -194,45 +181,22 @@ MethodInfo :: struct {
     default_arguments:      [^]VariantPtr,
 }
 
-ExtensionClassGetPropertyList :: #type proc "c" (
-    instance: ExtensionClassInstancePtr,
-    count: u32,
-) -> [^]PropertyInfo
-ExtensionClassFreePropertyList :: #type proc "c" (
-    instance: ExtensionClassInstancePtr,
-    list: ^PropertyInfo,
-)
-ExtensionClassPropertyCanRevert :: #type proc "c" (
-    instance: ExtensionClassInstancePtr,
-    name: StringNamePtr,
-) -> bool
+ExtensionClassGetPropertyList :: #type proc "c" (instance: ExtensionClassInstancePtr, count: u32) -> [^]PropertyInfo
+ExtensionClassFreePropertyList :: #type proc "c" (instance: ExtensionClassInstancePtr, list: ^PropertyInfo)
+ExtensionClassPropertyCanRevert :: #type proc "c" (instance: ExtensionClassInstancePtr, name: StringNamePtr) -> bool
 ExtensionClassPropertyGetRevert :: #type proc "c" (
     instance: ExtensionClassInstancePtr,
     name: StringNamePtr,
     ret: VariantPtr,
 ) -> bool
 ExtensionClassNotification :: #type proc "c" (instance: ExtensionClassInstancePtr, what: i32)
-ExtensionClassToString :: #type proc "c" (
-    instance: ExtensionClassInstancePtr,
-    is_valid: ^bool,
-    out: StringPtr,
-)
+ExtensionClassToString :: #type proc "c" (instance: ExtensionClassInstancePtr, is_valid: ^bool, out: StringPtr)
 ExtensionClassReference :: #type proc "c" (instance: ExtensionClassInstancePtr)
 ExtensionClassUnreference :: #type proc "c" (instance: ExtensionClassInstancePtr)
-ExtensionClassCallVirtual :: #type proc "c" (
-    instance: ExtensionClassInstancePtr,
-    args: [^]TypePtr,
-    ret: TypePtr,
-)
+ExtensionClassCallVirtual :: #type proc "c" (instance: ExtensionClassInstancePtr, args: [^]TypePtr, ret: TypePtr)
 ExtensionClassCreateInstance :: #type proc "c" (user_data: rawptr) -> ObjectPtr
-ExtensionClassFreeInstance :: #type proc "c" (
-    user_data: rawptr,
-    instance: ExtensionClassInstancePtr,
-)
-ExtensionClassGetVirtual :: #type proc "c" (
-    user_data: rawptr,
-    name: StringNamePtr,
-) -> ExtensionClassCallVirtual
+ExtensionClassFreeInstance :: #type proc "c" (user_data: rawptr, instance: ExtensionClassInstancePtr)
+ExtensionClassGetVirtual :: #type proc "c" (user_data: rawptr, name: StringNamePtr) -> ExtensionClassCallVirtual
 
 ExtensionClassCreationInfo :: struct {
     is_virtual:               bool,
@@ -363,14 +327,8 @@ ExtensionScriptInstancePropertyGetRevert :: #type proc "c" (
     name: StringNamePtr,
     ret: VariantPtr,
 ) -> bool
-ExtensionScriptInstanceGetOwner :: #type proc "c" (
-    instance: ExtensionScriptInstanceDataPtr,
-) -> ObjectPtr
-ExtensionScriptInstancePropertyStateAdd :: #type proc "c" (
-    name: StringNamePtr,
-    value: VariantPtr,
-    user_data: rawptr,
-)
+ExtensionScriptInstanceGetOwner :: #type proc "c" (instance: ExtensionScriptInstanceDataPtr) -> ObjectPtr
+ExtensionScriptInstancePropertyStateAdd :: #type proc "c" (name: StringNamePtr, value: VariantPtr, user_data: rawptr)
 ExtensionScriptInstanceGetPropertyState :: #type proc "c" (
     instance: ExtensionScriptInstanceDataPtr,
     add_func: ExtensionScriptInstancePropertyStateAdd,
@@ -381,10 +339,7 @@ ExtensionScriptInstanceGetMethodList :: #type proc "c" (
     instance: ExtensionScriptInstanceDataPtr,
     count: ^u32,
 ) -> [^]MethodInfo
-ExtensionScriptInstanceFreeMethodList :: #type proc "c" (
-    instance: ExtensionScriptInstanceDataPtr,
-    list: ^MethodInfo,
-)
+ExtensionScriptInstanceFreeMethodList :: #type proc "c" (instance: ExtensionScriptInstanceDataPtr, list: ^MethodInfo)
 
 ExtensionScriptInstanceHasMethod :: #type proc "c" (
     instance: ExtensionScriptInstanceDataPtr,
@@ -399,29 +354,18 @@ ExtensionScriptInstanceCall :: #type proc "c" (
     ret: VariantPtr,
     error: ^CallError,
 )
-ExtensionScriptInstanceNotification :: #type proc "c" (
-    instance: ExtensionScriptInstanceDataPtr,
-    what: i32,
-)
+ExtensionScriptInstanceNotification :: #type proc "c" (instance: ExtensionScriptInstanceDataPtr, what: i32)
 ExtensionScriptInstanceToString :: #type proc "c" (
     instance: ExtensionScriptInstanceDataPtr,
     is_valid: ^bool,
     out: StringPtr,
 )
 
-ExtensionScriptInstanceRefCountIncremented :: #type proc "c" (
-    instance: ExtensionScriptInstanceDataPtr,
-)
-ExtensionScriptInstanceRefCountDecremented :: #type proc "c" (
-    instance: ExtensionScriptInstanceDataPtr,
-) -> bool
+ExtensionScriptInstanceRefCountIncremented :: #type proc "c" (instance: ExtensionScriptInstanceDataPtr)
+ExtensionScriptInstanceRefCountDecremented :: #type proc "c" (instance: ExtensionScriptInstanceDataPtr) -> bool
 
-ExtensionScriptInstanceGetScript :: #type proc "c" (
-    instance: ExtensionScriptInstanceDataPtr,
-) -> ObjectPtr
-ExtensionScriptInstanceIsPlaceholder :: #type proc "c" (
-    instance: ExtensionScriptInstanceDataPtr,
-) -> bool
+ExtensionScriptInstanceGetScript :: #type proc "c" (instance: ExtensionScriptInstanceDataPtr) -> ObjectPtr
+ExtensionScriptInstanceIsPlaceholder :: #type proc "c" (instance: ExtensionScriptInstanceDataPtr) -> bool
 
 ExtensionScriptLanguagePtr :: distinct rawptr
 
@@ -468,10 +412,7 @@ Interface :: struct {
 
     // GODOT CORE
     mem_alloc:                                          proc(bytes: c.size_t) -> rawptr,
-    mem_realloc:                                        proc(
-        ptr: rawptr,
-        bytes: c.size_t,
-    ) -> rawptr,
+    mem_realloc:                                        proc(ptr: rawptr, bytes: c.size_t) -> rawptr,
     mem_free:                                           proc(ptr: rawptr),
     print_error:                                        proc(
         description: cstring,
@@ -600,16 +541,8 @@ Interface :: struct {
         valid: ^bool,
         oob: ^bool,
     ),
-    variant_iter_init:                                  proc(
-        self: VariantPtr,
-        iter: VariantPtr,
-        valid: ^bool,
-    ) -> bool,
-    variant_iter_next:                                  proc(
-        self: VariantPtr,
-        iter: VariantPtr,
-        valid: ^bool,
-    ) -> bool,
+    variant_iter_init:                                  proc(self: VariantPtr, iter: VariantPtr, valid: ^bool) -> bool,
+    variant_iter_next:                                  proc(self: VariantPtr, iter: VariantPtr, valid: ^bool) -> bool,
     variant_iter_get:                                   proc(
         self: VariantPtr,
         iter: VariantPtr,
@@ -617,52 +550,22 @@ Interface :: struct {
         valid: ^bool,
     ),
     variant_hash:                                       proc(self: VariantPtr) -> i64,
-    variant_recursive_hash:                             proc(
-        self: VariantPtr,
-        recursion_count: i64,
-    ) -> i64,
-    variant_hash_compare:                               proc(
-        self: VariantPtr,
-        other: VariantPtr,
-    ) -> bool,
+    variant_recursive_hash:                             proc(self: VariantPtr, recursion_count: i64) -> i64,
+    variant_hash_compare:                               proc(self: VariantPtr, other: VariantPtr) -> bool,
     variant_booleanize:                                 proc(self: VariantPtr) -> bool,
-    variant_duplicate:                                  proc(
-        self: VariantPtr,
-        ret: VariantPtr,
-        deep: bool,
-    ),
+    variant_duplicate:                                  proc(self: VariantPtr, ret: VariantPtr, deep: bool),
     variant_stringify:                                  proc(self: VariantPtr, ret: StringPtr),
     variant_get_type:                                   proc(self: VariantPtr) -> VariantType,
-    variant_has_method:                                 proc(
-        self: VariantPtr,
-        method: StringNamePtr,
-    ) -> bool,
-    variant_has_member:                                 proc(
-        type: VariantType,
-        method: StringNamePtr,
-    ) -> bool,
-    variant_has_key:                                    proc(
-        self: VariantPtr,
-        key: VariantPtr,
-        valid: ^bool,
-    ) -> bool,
+    variant_has_method:                                 proc(self: VariantPtr, method: StringNamePtr) -> bool,
+    variant_has_member:                                 proc(type: VariantType, method: StringNamePtr) -> bool,
+    variant_has_key:                                    proc(self: VariantPtr, key: VariantPtr, valid: ^bool) -> bool,
     variant_get_type_name:                              proc(type: VariantType, name: StringPtr),
-    variant_can_convert:                                proc(
-        from: VariantType,
-        to: VariantType,
-    ) -> bool,
-    variant_can_convert_strict:                         proc(
-        from: VariantType,
-        to: VariantType,
-    ) -> bool,
+    variant_can_convert:                                proc(from: VariantType, to: VariantType) -> bool,
+    variant_can_convert_strict:                         proc(from: VariantType, to: VariantType) -> bool,
 
     // ptrcalls
-    get_variant_from_type_constructor:                  proc(
-        type: VariantType,
-    ) -> VariantFromTypeConstructorProc,
-    get_variant_to_type_constructor:                    proc(
-        type: VariantType,
-    ) -> TypeFromVariantConstructorProc,
+    get_variant_from_type_constructor:                  proc(type: VariantType) -> VariantFromTypeConstructorProc,
+    get_variant_to_type_constructor:                    proc(type: VariantType) -> TypeFromVariantConstructorProc,
     variant_get_ptr_operator_evaluator:                 proc(
         operator: VariantOperator,
         type_a: VariantType,
@@ -673,10 +576,7 @@ Interface :: struct {
         method: StringNamePtr,
         hash: i64,
     ) -> PtrBuiltInMethod,
-    variant_get_ptr_constructor:                        proc(
-        type: VariantType,
-        constructor: i32,
-    ) -> PtrConstructor,
+    variant_get_ptr_constructor:                        proc(type: VariantType, constructor: i32) -> PtrConstructor,
     variant_get_ptr_destructor:                         proc(type: VariantType) -> PtrDestructor,
     variant_construct:                                  proc(
         type: VariantType,
@@ -685,20 +585,10 @@ Interface :: struct {
         argument_count: i32,
         error: ^CallError,
     ),
-    variant_get_ptr_setter:                             proc(
-        type: VariantType,
-        member: StringNamePtr,
-    ) -> PtrSetter,
-    variant_get_ptr_getter:                             proc(
-        type: VariantType,
-        member: StringNamePtr,
-    ) -> PtrGetter,
-    variant_get_ptr_indexed_setter:                     proc(
-        type: VariantType,
-    ) -> PtrIndexedSetter,
-    variant_get_ptr_indexed_getter:                     proc(
-        type: VariantType,
-    ) -> PtrIndexedGetter,
+    variant_get_ptr_setter:                             proc(type: VariantType, member: StringNamePtr) -> PtrSetter,
+    variant_get_ptr_getter:                             proc(type: VariantType, member: StringNamePtr) -> PtrGetter,
+    variant_get_ptr_indexed_setter:                     proc(type: VariantType) -> PtrIndexedSetter,
+    variant_get_ptr_indexed_getter:                     proc(type: VariantType) -> PtrIndexedGetter,
     variant_get_ptr_keyed_setter:                       proc(type: VariantType) -> PtrKeyedSetter,
     variant_get_ptr_keyed_getter:                       proc(type: VariantType) -> PtrKeyedGetter,
     variant_get_ptr_keyed_checker:                      proc(type: VariantType) -> PtrKeyedChecker,
@@ -707,45 +597,19 @@ Interface :: struct {
         constant: StringNamePtr,
         ret: VariantPtr,
     ),
-    variant_get_ptr_utility_function:                   proc(
-        function: StringNamePtr,
-        hash: i64,
-    ) -> PtrUtilityFunction,
+    variant_get_ptr_utility_function:                   proc(function: StringNamePtr, hash: i64) -> PtrUtilityFunction,
 
     // extra utilities
     string_new_with_latin1_chars:                       proc(dest: StringPtr, contents: cstring),
     string_new_with_utf8_chars:                         proc(dest: StringPtr, contents: cstring),
     string_new_with_utf16_chars:                        proc(dest: StringPtr, contents: ^u16),
     string_new_with_utf32_chars:                        proc(dest: StringPtr, contents: ^u32),
-    string_new_with_wide_chars:                         proc(
-        dest: StringPtr,
-        contents: ^c.wchar_t,
-    ),
-    string_new_with_latin1_chars_and_len:               proc(
-        dest: StringPtr,
-        contents: cstring,
-        size: i64,
-    ),
-    string_new_with_utf8_chars_and_len:                 proc(
-        dest: StringPtr,
-        contents: cstring,
-        size: i64,
-    ),
-    string_new_with_utf16_chars_and_len:                proc(
-        dest: StringPtr,
-        contents: ^u16,
-        size: i64,
-    ),
-    string_new_with_utf32_chars_and_len:                proc(
-        dest: StringPtr,
-        contents: ^u32,
-        size: i64,
-    ),
-    string_new_with_wide_chars_and_len:                 proc(
-        dest: StringPtr,
-        contents: ^c.wchar_t,
-        size: i64,
-    ),
+    string_new_with_wide_chars:                         proc(dest: StringPtr, contents: ^c.wchar_t),
+    string_new_with_latin1_chars_and_len:               proc(dest: StringPtr, contents: cstring, size: i64),
+    string_new_with_utf8_chars_and_len:                 proc(dest: StringPtr, contents: cstring, size: i64),
+    string_new_with_utf16_chars_and_len:                proc(dest: StringPtr, contents: ^u16, size: i64),
+    string_new_with_utf32_chars_and_len:                proc(dest: StringPtr, contents: ^u32, size: i64),
+    string_new_with_wide_chars_and_len:                 proc(dest: StringPtr, contents: ^c.wchar_t, size: i64),
     /* Information about the following functions:
      * - The return value is the resulting encoded string length.
      * - The length returned is in characters, not in bytes. It also does not include a trailing zero.
@@ -764,16 +628,8 @@ Interface :: struct {
         text: cstring,
         max_write_len: i64,
     ) -> i64,
-    string_to_utf16_chars:                              proc(
-        self: StringPtr,
-        text: ^u16,
-        max_write_len: i64,
-    ) -> i64,
-    string_to_utf32_chars:                              proc(
-        self: StringPtr,
-        text: ^u32,
-        max_write_len: i64,
-    ) -> i64,
+    string_to_utf16_chars:                              proc(self: StringPtr, text: ^u16, max_write_len: i64) -> i64,
+    string_to_utf32_chars:                              proc(self: StringPtr, text: ^u32, max_write_len: i64) -> i64,
     string_to_wide_chars:                               proc(
         self: StringPtr,
         text: ^c.wchar_t,
@@ -788,23 +644,11 @@ Interface :: struct {
     string_operator_plus_eq_c32str:                     proc(self: StringPtr, b: [^]u32),
 
     // XMLParser extra utilities
-    xml_parser_open_buffer:                             proc(
-        instance: ObjectPtr,
-        buffer: [^]u8,
-        size: c.size_t,
-    ),
+    xml_parser_open_buffer:                             proc(instance: ObjectPtr, buffer: [^]u8, size: c.size_t),
 
     // FileAccess extra utilities
-    file_access_store_buffer:                           proc(
-        instance: ObjectPtr,
-        src: [^]u8,
-        length: u64,
-    ),
-    file_access_get_buffer:                             proc(
-        instance: ObjectPtr,
-        dst: [^]u8,
-        length: u64,
-    ),
+    file_access_store_buffer:                           proc(instance: ObjectPtr, src: [^]u8, length: u64),
+    file_access_get_buffer:                             proc(instance: ObjectPtr, dst: [^]u8, length: u64),
 
     // WorkerThreadPool extra utilities
     worker_thread_pool_add_native_group_task:           proc(
@@ -857,15 +701,9 @@ Interface :: struct {
     packed_int64_array_operator_index_const:            proc(self: TypePtr, index: i64) -> ^i64,
 
     // self should be a PackedStringArray
-    packed_string_array_operator_index:                 proc(
-        self: TypePtr,
-        index: i64,
-    ) -> StringPtr,
+    packed_string_array_operator_index:                 proc(self: TypePtr, index: i64) -> StringPtr,
     // self should be a PackedStringArray
-    packed_string_array_operator_index_const:           proc(
-        self: TypePtr,
-        index: i64,
-    ) -> StringPtr,
+    packed_string_array_operator_index_const:           proc(self: TypePtr, index: i64) -> StringPtr,
 
     // self should be a PackedVector2Array, returns Vector2 ptr
     packed_vector2_array_operator_index:                proc(self: TypePtr, index: i64) -> TypePtr,
@@ -878,15 +716,9 @@ Interface :: struct {
     packed_vector3_array_operator_index_const:          proc(self: TypePtr, index: i64) -> TypePtr,
 
     // self should be an Array ptr
-    array_operator_index:                               proc(
-        self: TypePtr,
-        index: i64,
-    ) -> VariantPtr,
+    array_operator_index:                               proc(self: TypePtr, index: i64) -> VariantPtr,
     // self should be an Array ptr
-    array_operator_index_const:                         proc(
-        self: TypePtr,
-        index: i64,
-    ) -> VariantPtr,
+    array_operator_index_const:                         proc(self: TypePtr, index: i64) -> VariantPtr,
     // self should be an Array ptr
     array_ref:                                          proc(self: TypePtr, from: TypePtr),
     // self should be an Array ptr
@@ -900,15 +732,9 @@ Interface :: struct {
     // dictionary functions
 
     // self should be an Dictionary ptr
-    dictionary_operator_index:                          proc(
-        self: TypePtr,
-        key: VariantPtr,
-    ) -> VariantPtr,
+    dictionary_operator_index:                          proc(self: TypePtr, key: VariantPtr) -> VariantPtr,
     // self should be an Dictionary ptr
-    dictionary_operator_index_const:                    proc(
-        self: TypePtr,
-        key: VariantPtr,
-    ) -> VariantPtr,
+    dictionary_operator_index_const:                    proc(self: TypePtr, key: VariantPtr) -> VariantPtr,
 
     // OBJECT
     object_method_bind_call:                            proc(
@@ -945,10 +771,7 @@ Interface :: struct {
         class_name: StringNamePtr,
         instance: ExtensionClassInstancePtr,
     ),
-    object_cast_to:                                     proc(
-        object: ObjectPtr,
-        class_tag: rawptr,
-    ) -> ObjectPtr,
+    object_cast_to:                                     proc(object: ObjectPtr, class_tag: rawptr) -> ObjectPtr,
     object_get_instance_from_id:                        proc(instance_id: u64) -> ObjectPtr,
     object_get_instance_id:                             proc(object: ObjectPtr) -> u64,
 
@@ -965,9 +788,7 @@ Interface :: struct {
     // CLASSDB EXTENSION
 
     // The passed class must be a built-in godot class, or an already-registered extension class. In both case, object_set_instance should be called to fully initialize the object.
-    classdb_construct_object:                           proc(
-        class_name: StringNamePtr,
-    ) -> ObjectPtr,
+    classdb_construct_object:                           proc(class_name: StringNamePtr) -> ObjectPtr,
     classdb_get_method_bind:                            proc(
         class_name: StringNamePtr,
         method_name: StringNamePtr,
@@ -1028,10 +849,7 @@ Interface :: struct {
         library: ExtensionClassLibraryPtr,
         class_name: StringNamePtr,
     ),
-    get_library_path:                                   proc(
-        library: ExtensionClassLibraryPtr,
-        path: StringPtr,
-    ),
+    get_library_path:                                   proc(library: ExtensionClassLibraryPtr, path: StringPtr),
 }
 
 InitializationLevel :: enum {
