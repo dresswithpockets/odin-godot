@@ -4,6 +4,11 @@ import "core:encoding/json"
 import "core:fmt"
 import "core:os"
 
+State :: struct {
+    options: Options,
+    api:     ^Api,
+}
+
 Options :: struct {
     api_file:             string,
     global_enums_path:    string,
@@ -60,7 +65,8 @@ main :: proc() {
 
     fmt.printf("Generating API for %v\n", api.version.full_name)
 
-    generate_bindings(options, api)
+    state := State{options, api}
+    generate_bindings(state)
 
     // since we wanna keep api around until the end of the program's lifetime,
     // no need to be particular about freeing the bits and pieces of the struct (:
