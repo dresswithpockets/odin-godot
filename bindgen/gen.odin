@@ -35,6 +35,9 @@ pod_types :: []string{
     "uint64_t",
 }
 
+@(private)
+types_with_odin_string_constructors :: []string{"String", "StringName", "NodePath"}
+
 generate_bindings :: proc(state: ^State) {
     sb := strings.builder_make()
 
@@ -46,6 +49,37 @@ generate_bindings :: proc(state: ^State) {
         os.write_entire_file("core/enums.odin", transmute([]byte)enums_output)
 
         strings.builder_reset(&sb)
+    }
+
+    {
+        for name, class in &state.builtin_classes {
+            fmt.sbprint(&sb, "package variant\n\n")
+
+            // import the dependency list
+            fmt.sbprint(&sb, "import \"../core\"\n")
+            fmt.sbprint(&sb, "import \"../gdinterface\"\n\n")
+            for package_name in class.depends_on_packages {
+                if package_name == "core" {
+                    continue
+                }
+                fmt.sbprintf(&sb, "import \"../%v\"\n", package_name)
+            }
+
+            // used in the special constructor for some string types
+            if slice.contains(types_with_odin_string_constructors, name) {
+                fmt.sbprint(&sb, "import \"core:strings\"\n")
+            }
+
+            generate_builtin_class(state, &class, &sb)
+
+            class_output := strings.to_string(sb)
+            file_name_parts := [?]string{"variant/", class.godot_name, ".odin"}
+            file_name := strings.concatenate(file_name_parts[:])
+            defer delete(file_name)
+            os.write_entire_file(file_name, transmute([]byte)class_output)
+
+            strings.builder_reset(&sb)
+        }
     }
 
     // TODO: more gen (:
@@ -129,8 +163,35 @@ generate_global_enums :: proc(state: ^State, sb: ^strings.Builder) {
     return
 }
 
-generate_builtin_class :: proc(state: ^State, sb: ^strings.Builder) {
+generate_builtin_class :: proc(state: ^State, class: ^StateBuiltinClass, sb: ^strings.Builder) {
+    odin_name := state.type_odin_names[class.godot_name]
 
+    fmt.sbprintf(sb, "%v :: struct {{\n", odin_name)
+    fmt.sbprintf(sb, "    _opaque: __%vOpaqueType,\n", odin_name)
+    fmt.sbprint(sb, "}\n\n")
+
+    first_config := true
+    for name, config in state.size_configurations {
+        size, in_size_config := config.sizes[class.godot_name]
+        assert(in_size_config)
+        
+        if first_config {
+            fmt.sbprint(sb, "when ")
+            first_config = false
+        } else {
+            fmt.sbprint(sb, " else when ")
+        }
+
+        fmt.sbprintf(sb, "core.interface.BUILD_CONFIG == \"%v\" {{\n", name)
+        if size != 0 && (size & (size - 1) == 0) && size < 16 {
+            size *= 8
+            fmt.sbprintf(sb, "    __%vOpaqueType :: u%v\n", odin_name, size)
+        } else {
+            fmt.sbprintf(sb, "    __%vOpaqueType :: [%v]u8\n", odin_name, size)
+        }
+        fmt.sbprint(sb, "}")
+    }
+    fmt.sbprint(sb, "\n\n")
 }
 
 // godot uses ACRONYMPascalCase, but we use AcronymPascalCase
