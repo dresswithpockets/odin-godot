@@ -1,10 +1,10 @@
 package bindgen
 
+import "core:fmt"
+import "core:slice"
 import "core:strings"
 import "core:unicode"
 import "core:unicode/utf8"
-import "core:slice"
-import "core:fmt"
 
 // these are already in gdinterface
 @(private)
