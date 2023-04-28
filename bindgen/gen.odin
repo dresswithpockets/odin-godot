@@ -251,15 +251,31 @@ generate_builtin_class :: proc(state: ^State, class: ^StateBuiltinClass, sb: ^st
     // TODO: generate initialization function
 
     // generate backing fields
-    for operator_name, operator in class.operators {
-        for overload in operator.overloads {
-            fmt.sbprintln(sb, "@private")
-            fmt.sbprintf(sb, "%v: %v\n\n", overload.backing_func_name, operator_evaluator_type)
+    {
+        // generate operator backing fields
+        for operator_name, operator in class.operators {
+            for overload in operator.overloads {
+                fmt.sbprintln(sb, "@private")
+                fmt.sbprintf(sb, "%v: %v\n\n", overload.backing_func_name, operator_evaluator_type)
+            }
         }
     }
 
-    // TODO: generate backing fields for methods
-    // TODO: generate backing fields for constructors
+    {
+        // generate backing fields for methods
+        for method_name, method in class.methods {
+            fmt.sbprintln(sb, "@private")
+            fmt.sbprintf(sb, "%v: %v\n\n", method.backing_func_name, builtin_method_type)
+        }
+    }
+
+    {
+        // generate backing fields for constructors
+        for constructor in class.constructors {
+            fmt.sbprintln(sb, "@private")
+            fmt.sbprintf(sb, "__%v__constructor_%v: %v\n\n", class.godot_name, constructor.index, constructor_type)
+        }
+    }
 
     if class.has_destructor {
         fmt.sbprintln(sb, "@private")
