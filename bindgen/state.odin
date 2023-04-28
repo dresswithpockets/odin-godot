@@ -36,7 +36,7 @@ StateBuiltinClass :: struct {
     has_destructor:      bool,
     operators:           map[string]StateClassOperator,
     methods:             map[string]StateBuiltinClassMethod,
-    constructors:        map[string]StateClassConstructor,
+    constructors:        []StateClassConstructor,
     depends_on_packages: map[string]bool,
 }
 
@@ -82,7 +82,7 @@ StateClassConstructor :: struct {
 StateFunctionArgument :: struct {
     name:          string,
     godot_type:    string,
-    default_value: string,
+    default_value: Maybe(string),
 }
 
 @(private)
@@ -382,17 +382,24 @@ _state_builtin_class_methods :: proc(
 }
 
 @(private)
-_state_builtin_class_constructors :: proc(
-    state: ^State,
-    class: ^ApiBuiltinClass,
-) -> (
-    cons: map[string]StateClassConstructor,
-) {
-    cons = make(map[string]StateClassConstructor)
-    for _ in class.constructors {
-        // TODO:
+_state_builtin_class_constructors :: proc(state: ^State, class: ^StateBuiltinClass, api_class: ^ApiBuiltinClass){
+    class.constructors = make([]StateClassConstructor, len(api_class.constructors))
+    for constructor in &api_class.constructors {
+        state_constructor := StateClassConstructor{
+            index = constructor.index,
+            arguments = make([]StateFunctionArgument, len(constructor.arguments)),
+        }
+
+        for arg, i in constructor.arguments {
+            state_constructor.arguments[i] = StateFunctionArgument{
+                godot_type = arg.type,
+                name = arg.name,
+                default_value = arg.default_value,
+            }
+        }
+
+        class.constructors[constructor.index] = state_constructor
     }
-    return
 }
 
 @(private)
