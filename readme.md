@@ -1,5 +1,9 @@
 # Odin Bindings for Godot GDExtension
 
+This binding is WIP and not stable. Its currently targeting Godot v4.0.2.
+
+At the moment, the bindings generator only produces global enums.
+
 ## C API Bindings
 
 The C bindings are in `./gdinterface/`. They're based on `godot-cpp/gdextension/gdextension_interface.h`.
