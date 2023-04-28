@@ -73,7 +73,7 @@ ApiUtilityFunction :: struct {
 ApiFunctionArgument :: struct {
     name:          string `json:"name"`,
     type:          string `json:"type"`,
-    default_value: string `json:"default_value"`,
+    default_value: Maybe(string) `json:"default_value"`,
 }
 
 ApiBuiltinClass :: struct {
