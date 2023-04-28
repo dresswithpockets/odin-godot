@@ -2,36 +2,37 @@ package bindgen
 
 import "core:fmt"
 import "core:strings"
+import "core:slice"
 
 State :: struct {
     options:          Options,
     api:              ^Api,
-    
+
     // maps a godot type name to the package its in
     type_package_map: map[string]string,
     // maps a godot type name to an odin type name
-    type_odin_names:    map[string]string,
+    type_odin_names:  map[string]string,
     // maps a godot type name to an odin type's snake case name
-    type_snake_names:   map[string]string,
-
+    type_snake_names: map[string]string,
     enums:            map[string]StateEnum,
     // maps a builtin godot type name to builtin class details
     builtin_classes:  map[string]StateBuiltinClass,
 }
 
 StateEnum :: struct {
-    godot_name: string,
+    godot_name:  string,
     is_bitfield: bool,
-    values: map[string]int,
+    values:      map[string]int,
 }
 
 StateBuiltinClass :: struct {
-    godot_name:     string,
-    is_keyed:       bool,
-    has_destructor: bool,
-    operators:      map[string]StateClassOperator,
-    methods:        map[string]StateBuiltinClassMethod,
-    constructors:   map[string]StateClassConstructor,
+    godot_name:          string,
+    is_keyed:            bool,
+    has_destructor:      bool,
+    operators:           map[string]StateClassOperator,
+    methods:             map[string]StateBuiltinClassMethod,
+    constructors:        map[string]StateClassConstructor,
+    depends_on_packages: map[string]bool,
 }
 
 StateClassOperator :: struct {
@@ -172,10 +173,10 @@ _state_global_enums :: proc(state: ^State) {
     state.enums = make(map[string]StateEnum)
 
     for api_enum in state.api.enums {
-        state_enum := StateEnum{
-            godot_name = api_enum.name,
+        state_enum := StateEnum {
+            godot_name  = api_enum.name,
             is_bitfield = api_enum.is_bitfield,
-            values = make(map[string]int),
+            values      = make(map[string]int),
         }
 
         for value in api_enum.values {
@@ -210,7 +211,7 @@ _state_builtin_classes :: proc(state: ^State) {
 _state_builtin_class_members :: proc(state: ^State) {
     for class in &state.api.builtin_classes {
         state_class := &state.builtin_classes[class.name]
-        state_class.operators = _state_builtin_class_operators(state, &class)
+        _state_builtin_class_operators(state, state_class, &class)
         state_class.methods = _state_builtin_class_methods(state, &class)
         state_class.constructors = _state_builtin_class_constructors(state, &class)
     }
@@ -309,35 +310,37 @@ _class_operator_backing_func_name :: proc(
 }
 
 @(private)
-_state_builtin_class_operators :: proc(
-    state: ^State,
-    class: ^ApiBuiltinClass,
-) -> (
-    ops: map[string]StateClassOperator,
-) {
-    ops = make(map[string]StateClassOperator)
+_state_builtin_class_operators :: proc(state: ^State, class: ^StateBuiltinClass, api_class: ^ApiBuiltinClass) {
+    class.operators = make(map[string]StateClassOperator)
 
-    for operator in &class.operators {
-        group, ok := &ops[operator.name]
+    for operator in &api_class.operators {
+        group, ok := &class.operators[operator.name]
         if !ok {
-            ops[operator.name] = StateClassOperator {
+            class.operators[operator.name] = StateClassOperator {
                 operator        = operator.name,
                 overloads       = make([dynamic]StateClassOperatorOverload),
-                proc_name       = _class_operator_proc_name(state, class, &operator),
+                proc_name       = _class_operator_proc_name(state, api_class, &operator),
                 variant_op_name = operator_enum_map[operator.name],
             }
-            group = &ops[operator.name]
+            group = &class.operators[operator.name]
         }
 
         append(
             &group.overloads,
             StateClassOperatorOverload{
-                backing_func_name = _class_operator_backing_func_name(state, class, &operator),
-                proc_name = _class_operator_overload_proc_name(state, class, &operator),
+                backing_func_name = _class_operator_backing_func_name(state, api_class, &operator),
+                proc_name = _class_operator_overload_proc_name(state, api_class, &operator),
                 return_type = operator.return_type,
                 right_type = operator.right_type,
             },
         )
+
+        if right_type, ok := operator.right_type.(string); ok {
+            right_type_package, ok := state.type_package_map[right_type]
+            if ok {
+                class.depends_on_packages[right_type_package] = true
+            }
+        }
     }
     return
 }
@@ -345,13 +348,14 @@ _state_builtin_class_operators :: proc(
 @(private)
 _state_builtin_class_methods :: proc(
     state: ^State,
-    class: ^ApiBuiltinClass,
+    api_class: ^ApiBuiltinClass,
 ) -> (
     cons: map[string]StateBuiltinClassMethod,
 ) {
     cons = make(map[string]StateBuiltinClassMethod)
-    for method in class.methods {
+    for method in api_class.methods {
         cons[method.name] = StateBuiltinClassMethod{}
+        // TODO:
     }
     return
 }
@@ -365,7 +369,7 @@ _state_builtin_class_constructors :: proc(
 ) {
     cons = make(map[string]StateClassConstructor)
     for _ in class.constructors {
-
+        // TODO:
     }
     return
 }
