@@ -298,6 +298,10 @@ const_to_odin_case :: proc(name: string) -> (s: string) {
     runes := utf8.string_to_runes(name)
     defer delete(runes)
 
+    if unicode.is_number(runes[0]) {
+        fmt.sbprint(&sb, "_")
+    }
+
     fmt.sbprint(&sb, runes[0])
     for i := 1; i < len(runes); i += 1 {
         r := runes[i]
