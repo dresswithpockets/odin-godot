@@ -11,3 +11,4 @@ variant/
 *.a
 *.o
 *.lib
+*.pdb
