@@ -1,14 +1,5 @@
 package bindgen
 
-Options :: struct {
-    api_file: string,
-}
-
-ApiLoadError :: enum {
-    CantOpenFile,
-    CantParseJson,
-}
-
 Api :: struct {
     version:         ApiVersion `json:"header"`,
     builtin_sizes:   []ApiBuiltinClassSizes `json:"builtin_class_sizes"`,
