@@ -44,7 +44,9 @@ main :: proc() {
     }
 
     fmt.printf("Generating API for %v\n", api.version.full_name)
-    
+
+    generate_bindings(options, api)
+
     // since we wanna keep api around until the end of the program's lifetime,
     // no need to be particular about freeing the bits and pieces of the struct (:
     free_all()
