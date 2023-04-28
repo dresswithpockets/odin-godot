@@ -6,6 +6,8 @@ import "core:os"
 
 Options :: struct {
     api_file: string,
+    global_enums_path: string,
+    global_enums_package: string,
 }
 
 ApiLoadError :: enum {
@@ -17,6 +19,16 @@ print_usage :: proc() {
     fmt.printf("%v generates Odin bindings from godot's extension_api.json")
     fmt.println("Usage:\n")
     fmt.printf("\t%v (api_json_path)\n", os.args[0])
+}
+
+default_options :: proc() -> Options {
+    return Options{
+        "",
+
+        "core/enums.odin",
+        "core",
+
+    }
 }
 
 parse_args :: proc(options: ^Options) -> bool {
@@ -35,7 +47,7 @@ load_api :: proc(options: Options) -> (api: ^Api, ok: bool) {
 }
 
 main :: proc() {
-    options: Options
+    options := default_options()
 
     if len(os.args) != 2 {
         print_usage()
