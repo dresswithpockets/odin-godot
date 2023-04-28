@@ -4,24 +4,23 @@ import "core:fmt"
 import "core:strings"
 
 State :: struct {
-    options:          Options,
-    api:              ^Api,
+    options:             Options,
+    api:                 ^Api,
 
     // maps a godot type name to the package its in
-    type_package_map: map[string]string,
+    type_package_map:    map[string]string,
     // maps a godot type name to an odin type name
-    type_odin_names:  map[string]string,
+    type_odin_names:     map[string]string,
     // maps a godot type name to an odin type's snake case name
-    type_snake_names: map[string]string,
-
+    type_snake_names:    map[string]string,
     size_configurations: map[string]StateSizeConfiguration,
-    enums:            map[string]StateEnum,
+    enums:               map[string]StateEnum,
     // maps a builtin godot type name to builtin class details
-    builtin_classes:  map[string]StateBuiltinClass,
+    builtin_classes:     map[string]StateBuiltinClass,
 }
 
 StateSizeConfiguration :: struct {
-    name: string,
+    name:  string,
     sizes: map[string]uint,
 }
 
@@ -180,8 +179,8 @@ _state_size_configurations :: proc(state: ^State) {
     state.size_configurations = make(map[string]StateSizeConfiguration)
 
     for builtin_config in state.api.builtin_sizes {
-        configuration := StateSizeConfiguration{
-            name = builtin_config.configuration,
+        configuration := StateSizeConfiguration {
+            name  = builtin_config.configuration,
             sizes = make(map[string]uint),
         }
         for size in builtin_config.sizes {

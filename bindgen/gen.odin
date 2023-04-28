@@ -174,7 +174,7 @@ generate_builtin_class :: proc(state: ^State, class: ^StateBuiltinClass, sb: ^st
     for name, config in state.size_configurations {
         size, in_size_config := config.sizes[class.godot_name]
         assert(in_size_config)
-        
+
         if first_config {
             fmt.sbprint(sb, "when ")
             first_config = false

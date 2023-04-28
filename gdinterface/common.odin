@@ -12,11 +12,7 @@ when BUILD_CONFIG == "float_32" {
     float :: f64
 }
 
-call_builtin_constructor :: proc(
-    constructor: PtrConstructor,
-    base: TypePtr,
-    args: ..TypePtr,
-) {
+call_builtin_constructor :: proc(constructor: PtrConstructor, base: TypePtr, args: ..TypePtr) {
     constructor(base, raw_data(args))
 }
 
@@ -26,21 +22,12 @@ call_builtin_operator_ptr :: proc(op: PtrOperatorEvaluator, a, b: TypePtr, $T: t
     return ret
 }
 
-call_builtin_method_ptr_ret :: proc(
-    method: PtrBuiltInMethod,
-    base: TypePtr,
-    $T: typeid,
-    args: ..TypePtr,
-) -> T {
+call_builtin_method_ptr_ret :: proc(method: PtrBuiltInMethod, base: TypePtr, $T: typeid, args: ..TypePtr) -> T {
     ret: T
     method(base, raw_data(args), cast(TypePtr)&ret, len(args))
     return ret
 }
 
-call_builtin_method_ptr_no_ret :: proc(
-    method: PtrBuiltInMethod,
-    base: TypePtr,
-    args: ..TypePtr,
-) {
+call_builtin_method_ptr_no_ret :: proc(method: PtrBuiltInMethod, base: TypePtr, args: ..TypePtr) {
     method(base, raw_data(args), cast(TypePtr)nil, len(args))
 }
