@@ -394,18 +394,18 @@ _state_builtin_class_methods :: proc(
 }
 
 @(private)
-_state_builtin_class_constructors :: proc(state: ^State, class: ^StateBuiltinClass, api_class: ^ApiBuiltinClass){
+_state_builtin_class_constructors :: proc(state: ^State, class: ^StateBuiltinClass, api_class: ^ApiBuiltinClass) {
     class.constructors = make([]StateClassConstructor, len(api_class.constructors))
     for constructor in &api_class.constructors {
-        state_constructor := StateClassConstructor{
-            index = constructor.index,
+        state_constructor := StateClassConstructor {
+            index     = constructor.index,
             arguments = make([]StateFunctionArgument, len(constructor.arguments)),
         }
 
         for arg, i in constructor.arguments {
-            state_constructor.arguments[i] = StateFunctionArgument{
-                godot_type = arg.type,
-                name = arg.name,
+            state_constructor.arguments[i] = StateFunctionArgument {
+                godot_type    = arg.type,
+                name          = arg.name,
                 default_value = arg.default_value,
             }
         }
