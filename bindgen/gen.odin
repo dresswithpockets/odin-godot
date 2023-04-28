@@ -1,6 +1,7 @@
 package bindgen
 
 import "core:fmt"
+import "core:os"
 import "core:slice"
 import "core:strings"
 import "core:unicode"
@@ -37,8 +38,16 @@ pod_types :: []string{
 generate_bindings :: proc(options: Options, api: ^Api) {
     sb := strings.builder_make()
 
-    generate_global_enums(options, api, &sb)
-    fmt.println(strings.to_string(sb))
+    {
+        fmt.sbprintf(&sb, "package %v\n\n", options.global_enums_package)
+        generate_global_enums(options, api, &sb)
+
+        enums_output := strings.to_string(sb)
+        os.write_entire_file(options.global_enums_path, transmute([]byte)enums_output)
+
+        strings.builder_reset(&sb)
+    }
+    // TODO: more gen (:
 
     strings.builder_destroy(&sb)
 }
