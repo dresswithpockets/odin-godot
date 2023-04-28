@@ -294,11 +294,14 @@ _class_operator_overload_proc_name :: proc(
 
     class_snake_name := _get_correct_class_snake_name(state, class.name)
     op_name := operator_name_map[operator.name]
-    if operator.right_type == nil {
-        fmt.sbprintf(&sb, "%v_%v_default", class_snake_name, op_name)
-    } else {
-        right_type_snake_name := _get_correct_class_snake_name(state, operator.right_type.(string))
+    if right_type, has_right_type := operator.right_type.(string); has_right_type {
+        right_type_snake_name := _get_correct_class_snake_name(state, right_type)
         fmt.sbprintf(&sb, "%v_%v_%v", class_snake_name, op_name, right_type_snake_name)
+    } else {
+        if operator.name == "%" {
+            op_name = "format"
+        }
+        fmt.sbprintf(&sb, "%v_%v_default", class_snake_name, op_name)
     }
 
     name = strings.clone(strings.to_string(sb))
