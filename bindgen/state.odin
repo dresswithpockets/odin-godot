@@ -259,15 +259,26 @@ _builtin_backing_func_name :: proc(class: ^ApiBuiltinClass, method: ^ApiBuiltinC
 }
 
 @(private)
-_builtin_class_method_backing_func_name :: proc(state: ^State, api_class: ^ApiBuiltinClass, method: ^ApiBuiltinClassMethod) -> (name: string) {
+_builtin_class_method_backing_func_name :: proc(
+    state: ^State,
+    api_class: ^ApiBuiltinClass,
+    method: ^ApiBuiltinClassMethod,
+) -> (
+    name: string,
+) {
     unimplemented()
 }
 
 @(private)
-_builtin_class_method_proc_name :: proc(state: ^State, api_class: ^ApiBuiltinClass, method: ^ApiBuiltinClassMethod) -> (name: string) {
+_builtin_class_method_proc_name :: proc(
+    state: ^State,
+    api_class: ^ApiBuiltinClass,
+    method: ^ApiBuiltinClassMethod,
+) -> (
+    name: string,
+) {
     unimplemented()
 }
-
 
 // formats the name for a class operator's public proc group
 // format is like class_name_op_name, used for proc overloading
