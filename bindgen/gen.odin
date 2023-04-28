@@ -7,6 +7,11 @@ import "core:strings"
 import "core:unicode"
 import "core:unicode/utf8"
 
+constructor_type :: "gdinterface.PtrConstructor"
+destructor_type :: "gdinterface.PtrDestructor"
+operator_evaluator_type :: "gdinterface.PtrOperatorEvaluator"
+builtin_method_type :: "gdinterface.PtrBuiltInMethod"
+
 // these are already in gdinterface
 @(private)
 ignore_enums_by_name :: []string{"Variant.Operator", "Variant.Type"}
@@ -171,7 +176,7 @@ generate_builtin_class :: proc(state: ^State, class: ^StateBuiltinClass, sb: ^st
     fmt.sbprint(sb, "}\n\n")
 
     first_config := true
-    for name, config in state.size_configurations {
+    for config_name, config in state.size_configurations {
         size, in_size_config := config.sizes[class.godot_name]
         assert(in_size_config)
 
@@ -182,7 +187,7 @@ generate_builtin_class :: proc(state: ^State, class: ^StateBuiltinClass, sb: ^st
             fmt.sbprint(sb, " else when ")
         }
 
-        fmt.sbprintf(sb, "core.interface.BUILD_CONFIG == \"%v\" {{\n", name)
+        fmt.sbprintf(sb, "core.interface.BUILD_CONFIG == \"%v\" {{\n", config_name)
         if size != 0 && (size & (size - 1) == 0) && size < 16 {
             size *= 8
             fmt.sbprintf(sb, "    __%vOpaqueType :: u%v\n", odin_name, size)
@@ -192,6 +197,31 @@ generate_builtin_class :: proc(state: ^State, class: ^StateBuiltinClass, sb: ^st
         fmt.sbprint(sb, "}")
     }
     fmt.sbprint(sb, "\n\n")
+
+    // TODO: generate frontend for operators
+    // TODO: generate frontend for methods
+    // TODO: generate frontend for constructors
+    // TODO: generate frontend for special string constructors
+    // TODO: generate frontend for destructor
+
+    // TODO: generate initialization function
+
+    // generate backing fields
+    for operator_name, operator in class.operators {
+        for overload in operator.overloads {
+            fmt.printf("")
+            fmt.sbprintln(sb, "@private")
+            fmt.sbprintf(sb, "%v: %v\n\n", overload.backing_func_name, operator_evaluator_type)
+        }
+    }
+
+    // TODO: generate backing fields for methods
+    // TODO: generate backing fields for constructors
+
+    if class.has_destructor {
+        fmt.sbprintln(sb, "@private")
+        fmt.sbprintf(sb, "__%v__destructor: %v\n\n", class.godot_name, destructor_type)
+    }
 }
 
 // godot uses ACRONYMPascalCase, but we use AcronymPascalCase
