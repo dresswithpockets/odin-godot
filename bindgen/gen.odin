@@ -129,6 +129,10 @@ generate_global_enums :: proc(state: State, sb: ^strings.Builder) {
     return
 }
 
+generate_builtin_class :: proc(state: State, sb: ^strings.Builder) {
+
+}
+
 // godot uses ACRONYMPascalCase, but we use AcronymPascalCase
 // return string must be freed
 @(private)
