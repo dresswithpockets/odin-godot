@@ -144,9 +144,11 @@ godot_to_odin_case :: proc(name: string) -> (s: string) {
     fmt.sbprint(&sb, unicode.to_upper(runes[0]))
     for i := 1; i < len(runes) - 1; i += 1 {
         r := runes[i]
-        previous := runes[i-1]
-        next := runes[i+1]
-        if unicode.is_upper(r) && (unicode.is_upper(previous) || unicode.is_number(previous)) && unicode.is_upper(next) {
+        previous := runes[i - 1]
+        next := runes[i + 1]
+        if unicode.is_upper(r) &&
+           (unicode.is_upper(previous) || unicode.is_number(previous)) &&
+           unicode.is_upper(next) {
             fmt.sbprint(&sb, unicode.to_lower(r))
             continue
         }
@@ -155,7 +157,7 @@ godot_to_odin_case :: proc(name: string) -> (s: string) {
     }
     // always push the last rune as lower
     if len(runes) > 1 {
-        fmt.sbprint(&sb, unicode.to_lower(runes[len(runes)-1]))
+        fmt.sbprint(&sb, unicode.to_lower(runes[len(runes) - 1]))
     }
 
     s = strings.clone(strings.to_string(sb))
@@ -209,7 +211,7 @@ const_to_odin_case :: proc(name: string) -> (s: string) {
             continue
         }
 
-        previous := runes[i-1]
+        previous := runes[i - 1]
         if previous == '_' {
             fmt.sbprint(&sb, r)
             continue
