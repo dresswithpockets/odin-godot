@@ -35,7 +35,7 @@ pod_types :: []string{
     "uint64_t",
 }
 
-generate_bindings :: proc(state: State) {
+generate_bindings :: proc(state: ^State) {
     sb := strings.builder_make()
 
     {
@@ -47,23 +47,23 @@ generate_bindings :: proc(state: State) {
 
         strings.builder_reset(&sb)
     }
+
     // TODO: more gen (:
 
     strings.builder_destroy(&sb)
 }
 
-generate_global_enums :: proc(state: State, sb: ^strings.Builder) {
-    for global_enum in state.api.enums {
-        // we ignore some enums by name, such as those pre-implement
+generate_global_enums :: proc(state: ^State, sb: ^strings.Builder) {
+    for name, global_enum in state.enums {
+        // we ignore some enums by name, such as those pre-implemented
         // in gdinterface
-        if slice.contains(ignore_enums_by_name, global_enum.name) {
+        if slice.contains(ignore_enums_by_name, name) {
             continue
         }
 
         // we use AcronymPascalCase in our generated code, but godot
         // uses ACRONYMPascalCase - harder to read IMO
-        odin_case_name := godot_to_odin_case(global_enum.name)
-        defer delete(odin_case_name)
+        odin_case_name := state.type_odin_names[name]
 
         // godot's enums use CONST_CASE for their values, and usually
         // have a prefix. e.e `GDExtensionVariantType` uses the prefix
@@ -73,7 +73,7 @@ generate_global_enums :: proc(state: State, sb: ^strings.Builder) {
         defer delete(const_case_prefix)
 
         // gotta do all of that for the prefix alias if there is one
-        prefix_alias, has_alias := enum_prefix_alias[global_enum.name]
+        prefix_alias, has_alias := enum_prefix_alias[name]
         const_case_prefix_alias: string
         if has_alias {
             const_case_prefix_alias = odin_to_const_case(prefix_alias)
@@ -87,7 +87,7 @@ generate_global_enums :: proc(state: State, sb: ^strings.Builder) {
         // `METHOD_FLAG_NORMAL`, as well as `METHOD_FLAGS_DEFAULT`.
         // The latter will get caught by const_case_prefix, but we also
         // need to have a prefix for the singular variation of the prefix
-        is_flags := strings.has_suffix(global_enum.name, "Flags")
+        is_flags := strings.has_suffix(name, "Flags")
         flag_prefix: string
         without_flags_prefix: string
         if is_flags {
@@ -100,8 +100,8 @@ generate_global_enums :: proc(state: State, sb: ^strings.Builder) {
         }
 
         fmt.sbprintf(sb, "%v :: enum {{\n", odin_case_name)
-        for value in global_enum.values {
-            value_name := value.name
+        for value_name, value in global_enum.values {
+            value_name := value_name
             if len(value_name) != len(const_case_prefix) {
                 value_name = strings.trim_prefix(value_name, const_case_prefix)
             }
@@ -122,14 +122,14 @@ generate_global_enums :: proc(state: State, sb: ^strings.Builder) {
                 value_name = value_name[1:]
             }
             value_name = const_to_odin_case(value_name)
-            fmt.sbprintf(sb, "    %v = %v,\n", value_name, value.value)
+            fmt.sbprintf(sb, "    %v = %v,\n", value_name, value)
         }
         fmt.sbprint(sb, "}\n\n")
     }
     return
 }
 
-generate_builtin_class :: proc(state: State, sb: ^strings.Builder) {
+generate_builtin_class :: proc(state: ^State, sb: ^strings.Builder) {
 
 }
 
@@ -169,7 +169,40 @@ godot_to_odin_case :: proc(name: string) -> (s: string) {
 }
 
 @(private)
-odin_to_const_case :: proc(name: string, append_underscore := false) -> (s: string) {
+godot_to_snake_case :: proc(name: string) -> (s: string) {
+    // lol (:
+    s = godot_to_odin_case(odin_to_snake_case(name))
+    return
+}
+
+@(private)
+odin_to_snake_case :: proc(name: string) -> (s: string) {
+    assert(len(name) > 0)
+
+    sb := strings.builder_make()
+    defer strings.builder_destroy(&sb)
+
+    runes := utf8.string_to_runes(name)
+    defer delete(runes)
+
+    fmt.sbprint(&sb, unicode.to_lower(runes[0]))
+    for i := 1; i < len(runes); i += 1 {
+        r := runes[i]
+        if unicode.is_alpha(r) && unicode.is_upper(r) {
+            fmt.sbprint(&sb, "_")
+            fmt.sbprint(&sb, unicode.to_lower(r))
+            continue
+        }
+
+        fmt.sbprint(&sb, unicode.to_lower(r))
+    }
+
+    s = strings.clone(strings.to_string(sb))
+    return
+}
+
+@(private)
+odin_to_const_case :: proc(name: string) -> (s: string) {
     assert(len(name) > 0)
 
     sb := strings.builder_make()
@@ -188,10 +221,6 @@ odin_to_const_case :: proc(name: string, append_underscore := false) -> (s: stri
         }
 
         fmt.sbprint(&sb, unicode.to_upper(r))
-    }
-
-    if append_underscore {
-        fmt.sbprint(&sb, '_')
     }
 
     s = strings.clone(strings.to_string(sb))
