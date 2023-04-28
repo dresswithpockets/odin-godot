@@ -35,15 +35,15 @@ pod_types :: []string{
     "uint64_t",
 }
 
-generate_bindings :: proc(options: Options, api: ^Api) {
+generate_bindings :: proc(state: State) {
     sb := strings.builder_make()
 
     {
-        fmt.sbprintf(&sb, "package %v\n\n", options.global_enums_package)
-        generate_global_enums(options, api, &sb)
+        fmt.sbprintf(&sb, "package %v\n\n", state.options.global_enums_package)
+        generate_global_enums(state, &sb)
 
         enums_output := strings.to_string(sb)
-        os.write_entire_file(options.global_enums_path, transmute([]byte)enums_output)
+        os.write_entire_file(state.options.global_enums_path, transmute([]byte)enums_output)
 
         strings.builder_reset(&sb)
     }
@@ -52,8 +52,8 @@ generate_bindings :: proc(options: Options, api: ^Api) {
     strings.builder_destroy(&sb)
 }
 
-generate_global_enums :: proc(options: Options, api: ^Api, sb: ^strings.Builder) {
-    for global_enum in api.enums {
+generate_global_enums :: proc(state: State, sb: ^strings.Builder) {
+    for global_enum in state.api.enums {
         // we ignore some enums by name, such as those pre-implement
         // in gdinterface
         if slice.contains(ignore_enums_by_name, global_enum.name) {
