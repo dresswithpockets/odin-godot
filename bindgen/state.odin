@@ -397,7 +397,7 @@ _state_builtin_class_constructors :: proc(
 
 @(private)
 _get_correct_class_odin_name :: proc(state: ^State, name: string) -> string {
-    if n, ok := state.type_odin_names[name]; !ok {
+    if n, ok := state.type_odin_names[name]; ok {
         return n
     }
 
@@ -406,7 +406,7 @@ _get_correct_class_odin_name :: proc(state: ^State, name: string) -> string {
 
 @(private)
 _get_correct_class_snake_name :: proc(state: ^State, name: string) -> string {
-    if n, ok := state.type_snake_names[name]; !ok {
+    if n, ok := state.type_snake_names[name]; ok {
         return n
     }
 
