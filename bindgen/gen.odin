@@ -85,8 +85,8 @@ generate_global_enums :: proc(options: Options, api: ^Api, sb: ^strings.Builder)
             // chops off the s at the end
             flag_prefix = const_case_prefix[:len(const_case_prefix) - 1]
             // also a variation for enums where the "FLAGS_" portion of the
-            // value prefix is completely dropped
-            // TODO: check if non_flags_prefix is actually even being used
+            // value prefix is completely dropped. e.g `PropertyUsageFlags`
+            // uses the prefix `PROPERTY_USAGE_` instead of `PROPERTY_USAGE_FLAG`
             without_flags_prefix = const_case_prefix[:len(const_case_prefix) - 5]
         }
 
@@ -104,9 +104,6 @@ generate_global_enums :: proc(options: Options, api: ^Api, sb: ^strings.Builder)
                     value_name = strings.trim_prefix(value_name, flag_prefix)
                 }
                 if len(value_name) != len(without_flags_prefix) {
-                    if strings.has_prefix(value_name, without_flags_prefix) {
-                        fmt.printf("%v has a prefix without flags!\n", global_enum.name)
-                    }
                     value_name = strings.trim_prefix(value_name, without_flags_prefix)
                 }
             }
