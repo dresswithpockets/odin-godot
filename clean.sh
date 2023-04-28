@@ -1,0 +1,1 @@
+rm bindgen/bindgen.exe
