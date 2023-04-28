@@ -87,7 +87,7 @@ ApiBuiltinClass :: struct {
 
 ApiClassOperator :: struct {
     name:        string `json:"name"`,
-    right_type:  string `json:"right_type"`,
+    right_type:  Maybe(string) `json:"right_type"`,
     return_type: string `json:"return_type"`,
 }
 
@@ -128,14 +128,14 @@ ApiClassMethod :: struct {
 
 ApiClassMethodReturnValue :: struct {
     type: string `json:"type"`,
-    meta: string `json:"meta"`,
+    meta: Maybe(string) `json:"meta"`,
 }
 
 ApiClassMethodArguments :: struct {
     name:          string `json:"name"`,
     type:          string `json:"type"`,
-    meta:          string `json:"meta"`,
-    default_value: string `json:"default_value"`,
+    meta:          Maybe(string) `json:"meta"`,
+    default_value: Maybe(string) `json:"default_value"`,
 }
 
 ApiSingleton :: struct {
