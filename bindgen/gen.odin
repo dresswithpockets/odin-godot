@@ -60,9 +60,14 @@ generate_bindings :: proc(state: ^State) {
         for name, class in &state.builtin_classes {
             fmt.sbprint(&sb, "package variant\n\n")
 
+            // used in the special constructor for some string types
+            if slice.contains(types_with_odin_string_constructors, name) {
+                fmt.sbprint(&sb, "import \"core:strings\"\n")
+            }
+
             // import the dependency list
             fmt.sbprint(&sb, "import \"../core\"\n")
-            fmt.sbprint(&sb, "import \"../gdinterface\"\n\n")
+            fmt.sbprint(&sb, "import \"../gdinterface\"\n")
             for package_name in class.depends_on_packages {
                 if package_name == "core" {
                     continue
@@ -70,10 +75,7 @@ generate_bindings :: proc(state: ^State) {
                 fmt.sbprintf(&sb, "import \"../%v\"\n", package_name)
             }
 
-            // used in the special constructor for some string types
-            if slice.contains(types_with_odin_string_constructors, name) {
-                fmt.sbprint(&sb, "import \"core:strings\"\n")
-            }
+            fmt.sbprintln(&sb)
 
             generate_builtin_class(state, &class, &sb)
 
@@ -170,6 +172,7 @@ generate_global_enums :: proc(state: ^State, sb: ^strings.Builder) {
 
 generate_builtin_class :: proc(state: ^State, class: ^StateBuiltinClass, sb: ^strings.Builder) {
     odin_name := state.type_odin_names[class.godot_name]
+    snake_name := state.type_snake_names[class.godot_name]
 
     fmt.sbprintf(sb, "%v :: struct {{\n", odin_name)
     fmt.sbprintf(sb, "    _opaque: __%vOpaqueType,\n", odin_name)
@@ -198,18 +201,58 @@ generate_builtin_class :: proc(state: ^State, class: ^StateBuiltinClass, sb: ^st
     }
     fmt.sbprint(sb, "\n\n")
 
-    // TODO: generate frontend for operators
+    // generate frontend procs
+    {
+        // generate frontend operator procs
+        for operator_name, operator in class.operators {
+            for overload in operator.overloads {
+                fmt.sbprintf(sb, "%v :: proc(self: %v", overload.proc_name, odin_name)
+                right_type, has_right_type := overload.right_type.(string)
+                if has_right_type {
+                    right_type_odin_name := _get_correct_class_odin_name(state, right_type)
+                    fmt.sbprintf(sb, ", other: %v", right_type_odin_name)
+                }
+                return_type_odin_name := _get_correct_class_odin_name(state, overload.return_type)
+                fmt.sbprintf(sb, ") -> (ret: %v) {{\n", return_type_odin_name)
+                fmt.sbprintln(sb, "    using gdinterface")
+                fmt.sbprintln(sb, "    self := self")
+                if has_right_type {
+                    fmt.sbprintln(sb, "    other := other")
+                }
+                fmt.sbprintf(sb, "    return call_builtin_operator_ptr(%v, cast(TypePtr)&self._opaque, cast(TypePtr)", overload.backing_func_name)
+                if has_right_type {
+                    fmt.sbprintf(sb, "&other._opaque")
+                } else {
+                    fmt.sbprintf(sb, "nil")
+                }
+                fmt.sbprintf(sb, ", %v)\n", return_type_odin_name)
+                fmt.sbprint(sb, "}\n\n")
+            }
+
+            fmt.sbprintf(sb, "%v :: proc{{\n", operator.proc_name)
+            for overload in operator.overloads {
+                fmt.sbprintf(sb, "    %v,\n", overload.proc_name)
+            }
+            fmt.sbprint(sb, "}\n\n")
+        }
+    }
+
     // TODO: generate frontend for methods
     // TODO: generate frontend for constructors
     // TODO: generate frontend for special string constructors
-    // TODO: generate frontend for destructor
+    if class.has_destructor {
+        fmt.sbprintf(sb, "free_%v :: proc(self: %v) {{\n", snake_name, odin_name)
+        fmt.sbprintln(sb, "    using gdinterface")
+        fmt.sbprintln(sb, "    self := self")
+        fmt.sbprintf(sb, "    __%v__destructor(cast(TypePtr)&self._opaque)\n", class.godot_name)
+        fmt.sbprint(sb, "}\n\n")
+    }
 
     // TODO: generate initialization function
 
     // generate backing fields
     for operator_name, operator in class.operators {
         for overload in operator.overloads {
-            fmt.printf("")
             fmt.sbprintln(sb, "@private")
             fmt.sbprintf(sb, "%v: %v\n\n", overload.backing_func_name, operator_evaluator_type)
         }
@@ -262,7 +305,7 @@ godot_to_odin_case :: proc(name: string) -> (s: string) {
 @(private)
 godot_to_snake_case :: proc(name: string) -> (s: string) {
     // lol (:
-    s = godot_to_odin_case(odin_to_snake_case(name))
+    s = odin_to_snake_case(godot_to_odin_case(name))
     return
 }
 
