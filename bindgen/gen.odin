@@ -39,11 +39,11 @@ generate_bindings :: proc(state: State) {
     sb := strings.builder_make()
 
     {
-        fmt.sbprintf(&sb, "package %v\n\n", state.options.global_enums_package)
+        fmt.sbprint(&sb, "package core\n\n")
         generate_global_enums(state, &sb)
 
         enums_output := strings.to_string(sb)
-        os.write_entire_file(state.options.global_enums_path, transmute([]byte)enums_output)
+        os.write_entire_file("core/enums.odin", transmute([]byte)enums_output)
 
         strings.builder_reset(&sb)
     }

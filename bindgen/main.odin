@@ -11,8 +11,6 @@ State :: struct {
 
 Options :: struct {
     api_file:             string,
-    global_enums_path:    string,
-    global_enums_package: string,
 }
 
 ApiLoadError :: enum {
@@ -27,7 +25,7 @@ print_usage :: proc() {
 }
 
 default_options :: proc() -> Options {
-    return Options{"", "core/enums.odin", "core"}
+    return Options{""}
 }
 
 parse_args :: proc(options: ^Options) -> bool {
