@@ -13,11 +13,6 @@ Options :: struct {
     api_file:             string,
 }
 
-ApiLoadError :: enum {
-    CantOpenFile,
-    CantParseJson,
-}
-
 print_usage :: proc() {
     fmt.printf("%v generates Odin bindings from godot's extension_api.json")
     fmt.println("Usage:\n")
