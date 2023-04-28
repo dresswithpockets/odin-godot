@@ -2,7 +2,6 @@ package bindgen
 
 import "core:fmt"
 import "core:strings"
-import "core:slice"
 
 State :: struct {
     options:          Options,
@@ -14,9 +13,16 @@ State :: struct {
     type_odin_names:  map[string]string,
     // maps a godot type name to an odin type's snake case name
     type_snake_names: map[string]string,
+
+    size_configurations: map[string]StateSizeConfiguration,
     enums:            map[string]StateEnum,
     // maps a builtin godot type name to builtin class details
     builtin_classes:  map[string]StateBuiltinClass,
+}
+
+StateSizeConfiguration :: struct {
+    name: string,
+    sizes: map[string]uint,
 }
 
 StateEnum :: struct {
@@ -161,11 +167,28 @@ create_state :: proc(options: Options, api: ^Api) -> (state: ^State) {
     state.options = options
     state.api = api
 
+    _state_size_configurations(state)
     _state_global_enums(state)
     _state_builtin_classes(state)
     _state_builtin_class_members(state)
 
     return
+}
+
+@(private)
+_state_size_configurations :: proc(state: ^State) {
+    state.size_configurations = make(map[string]StateSizeConfiguration)
+
+    for builtin_config in state.api.builtin_sizes {
+        configuration := StateSizeConfiguration{
+            name = builtin_config.configuration,
+            sizes = make(map[string]uint),
+        }
+        for size in builtin_config.sizes {
+            configuration.sizes[size.name] = size.size
+        }
+        state.size_configurations[builtin_config.configuration] = configuration
+    }
 }
 
 @(private)
@@ -335,9 +358,8 @@ _state_builtin_class_operators :: proc(state: ^State, class: ^StateBuiltinClass,
             },
         )
 
-        if right_type, ok := operator.right_type.(string); ok {
-            right_type_package, ok := state.type_package_map[right_type]
-            if ok {
+        if right_type, not_nil := operator.right_type.(string); not_nil {
+            if right_type_package, in_map := state.type_package_map[right_type]; in_map {
                 class.depends_on_packages[right_type_package] = true
             }
         }
