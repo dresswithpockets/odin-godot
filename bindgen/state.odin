@@ -259,12 +259,12 @@ _builtin_backing_func_name :: proc(class: ^ApiBuiltinClass, method: ^ApiBuiltinC
 }
 
 @(private)
-_class_method_backing_func_name :: proc(state: ^State, api_class: ^ApiBuiltinClass, method: ^ApiBuiltinClassMethod) -> (name: string) {
+_builtin_class_method_backing_func_name :: proc(state: ^State, api_class: ^ApiBuiltinClass, method: ^ApiBuiltinClassMethod) -> (name: string) {
     unimplemented()
 }
 
 @(private)
-_class_method_proc_name :: proc(state: ^State, api_class: ^ApiBuiltinClass, method: ^ApiBuiltinClassMethod) -> (name: string) {
+_builtin_class_method_proc_name :: proc(state: ^State, api_class: ^ApiBuiltinClass, method: ^ApiBuiltinClassMethod) -> (name: string) {
     unimplemented()
 }
 
@@ -391,8 +391,8 @@ _state_builtin_class_methods :: proc(
     for method in &api_class.methods {
         cons[method.name] = StateBuiltinClassMethod {
             godot_name        = method.name,
-            backing_func_name = _class_method_backing_func_name(state, api_class, &method),
-            proc_name         = _class_method_proc_name(state, api_class, &method),
+            backing_func_name = _builtin_class_method_backing_func_name(state, api_class, &method),
+            proc_name         = _builtin_class_method_proc_name(state, api_class, &method),
             return_type       = method.return_type,
             is_const          = method.is_const,
             is_static         = method.is_static,
