@@ -5,8 +5,8 @@ import "core:fmt"
 import "core:os"
 
 Options :: struct {
-    api_file: string,
-    global_enums_path: string,
+    api_file:             string,
+    global_enums_path:    string,
     global_enums_package: string,
 }
 
@@ -22,13 +22,7 @@ print_usage :: proc() {
 }
 
 default_options :: proc() -> Options {
-    return Options{
-        "",
-
-        "core/enums.odin",
-        "core",
-
-    }
+    return Options{"", "core/enums.odin", "core"}
 }
 
 parse_args :: proc(options: ^Options) -> bool {
