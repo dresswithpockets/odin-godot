@@ -324,7 +324,7 @@ _class_operator_backing_func_name :: proc(
         fmt.sbprintf(&sb, "__%v__%v__Nil", class_name, op_name)
     } else {
         right_type_name := _get_correct_class_odin_name(state, operator.right_type.(string))
-        fmt.sbprintf(&sb, "__%v__%v__%v", class_name, right_type_name)
+        fmt.sbprintf(&sb, "__%v__%v__%v", class_name, op_name, right_type_name)
     }
 
     name = strings.clone(strings.to_string(sb))
