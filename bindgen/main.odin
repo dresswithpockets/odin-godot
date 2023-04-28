@@ -25,32 +25,6 @@ load_api :: proc(options: Options) -> (api: ^Api, ok: bool) {
     return
 }
 
-// free_api :: proc(api: ^Api) {
-//     for configuration in api.builtin_sizes {
-//         delete(configuration.configuration)
-//         delete(configuration.sizes)
-//     }
-//     delete(api.builtin_sizes)
-
-//     for configuration in api.builtin_offsets {
-//         delete(configuration.configuration)
-//         for class in configuration.classes {
-//             delete(class.members)
-//         }
-//         delete(configuration.classes)
-//     }
-//     delete(api.builtin_offsets)
-
-//     delete(api.constants)
-//     delete(api.enums)
-//     delete(api.util_functions)
-//     delete(api.builtin_classes)
-//     delete(api.classes)
-//     delete(api.singletons)
-//     delete(api.native_structs)
-//     free(api)
-// }
-
 main :: proc() {
     options: Options
 
