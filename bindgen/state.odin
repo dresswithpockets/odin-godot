@@ -378,16 +378,16 @@ _state_builtin_class_methods :: proc(
 ) {
     cons = make(map[string]StateBuiltinClassMethod)
     for method in &api_class.methods {
-        cons[method.name] = StateBuiltinClassMethod{
-            godot_name = method.name,
+        cons[method.name] = StateBuiltinClassMethod {
+            godot_name        = method.name,
             backing_func_name = _class_method_backing_func_name(state, api_class, &method),
-            proc_name = _class_method_backing_proc_name(state, api_class, &method),
-            return_type = method.return_type,
-            is_const = method.is_const,
-            is_static = method.is_static,
-            is_vararg = method.is_vararg,
-            hash = method.hash,
-            arguments = make([]StateFunctionArgument, len(method.arguments)),
+            proc_name         = _class_method_proc_name(state, api_class, &method),
+            return_type       = method.return_type,
+            is_const          = method.is_const,
+            is_static         = method.is_static,
+            is_vararg         = method.is_vararg,
+            hash              = method.hash,
+            arguments         = make([]StateFunctionArgument, len(method.arguments)),
         }
     }
     return
