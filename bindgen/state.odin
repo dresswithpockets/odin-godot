@@ -240,44 +240,39 @@ _state_builtin_class_members :: proc(state: ^State) {
 }
 
 // formats the name for a builtin class method's backing func ptr
-// format is like __ClassName__method_name__ArgType1_ArgType2
+// format is like __ClassName__METHODHASH
 @(private)
-_builtin_backing_func_name :: proc(class: ^ApiBuiltinClass, method: ^ApiBuiltinClassMethod) -> (name: string) {
+_builtin_class_method_backing_func_name :: proc(state: ^State, class: ^ApiBuiltinClass, method: ^ApiBuiltinClassMethod) -> (name: string) {
     sb := strings.builder_make()
     defer strings.builder_destroy(&sb)
 
-    fmt.sbprintf(&sb, "__%v__%v", class.name, method.hash)
-    if len(method.arguments) > 0 {
-        fmt.sbprint(&sb, "_")
-    }
-    for arg in method.arguments {
-        fmt.sbprintf(&sb, "_%v", arg.type)
-    }
+    class_name := _get_correct_class_odin_name(state, class.name)
+    fmt.sbprintf(&sb, "__%v__%v__%v", class_name, method.name, method.hash)
 
     name = strings.clone(strings.to_string(sb))
     return
 }
 
 @(private)
-_builtin_class_method_backing_func_name :: proc(
-    state: ^State,
-    api_class: ^ApiBuiltinClass,
-    method: ^ApiBuiltinClassMethod,
-) -> (
-    name: string,
-) {
-    unimplemented()
-}
-
-@(private)
 _builtin_class_method_proc_name :: proc(
     state: ^State,
-    api_class: ^ApiBuiltinClass,
+    class: ^ApiBuiltinClass,
     method: ^ApiBuiltinClassMethod,
 ) -> (
     name: string,
 ) {
-    unimplemented()
+    sb := strings.builder_make()
+    defer strings.builder_destroy(&sb)
+
+    class_snake_name := _get_correct_class_snake_name(state, class.name)
+    fmt.sbprintf(&sb, "%v_%v", class_snake_name, method.name)
+    for arg in method.arguments {
+        arg_type_snake_name := _get_correct_class_snake_name(state, arg.type)
+        fmt.sbprintf(&sb, "_%v", arg_type_snake_name)
+    }
+
+    name = strings.clone(strings.to_string(sb))
+    return
 }
 
 // formats the name for a class operator's public proc group
