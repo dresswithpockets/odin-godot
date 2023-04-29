@@ -266,10 +266,6 @@ _builtin_class_method_proc_name :: proc(
 
     class_snake_name := _get_correct_class_snake_name(state, class.name)
     fmt.sbprintf(&sb, "%v_%v", class_snake_name, method.name)
-    for arg in method.arguments {
-        arg_type_snake_name := _get_correct_class_snake_name(state, arg.type)
-        fmt.sbprintf(&sb, "_%v", arg_type_snake_name)
-    }
 
     name = strings.clone(strings.to_string(sb))
     return
