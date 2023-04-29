@@ -247,7 +247,13 @@ _state_builtin_class_members :: proc(state: ^State) {
 // formats the name for a builtin class method's backing func ptr
 // format is like __ClassName__METHODHASH
 @(private)
-_builtin_class_method_backing_func_name :: proc(state: ^State, class: ^ApiBuiltinClass, method: ^ApiBuiltinClassMethod) -> (name: string) {
+_builtin_class_method_backing_func_name :: proc(
+    state: ^State,
+    class: ^ApiBuiltinClass,
+    method: ^ApiBuiltinClassMethod,
+) -> (
+    name: string,
+) {
     sb := strings.builder_make()
     defer strings.builder_destroy(&sb)
 
