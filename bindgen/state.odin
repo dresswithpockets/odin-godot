@@ -171,6 +171,11 @@ create_state :: proc(options: Options, api: ^Api) -> (state: ^State) {
     _state_builtin_classes(state)
     _state_builtin_class_members(state)
 
+    // TODO: utility functions
+    // TODO: classes
+    // TODO: singletons
+    // TODO: native structures
+
     return
 }
 
