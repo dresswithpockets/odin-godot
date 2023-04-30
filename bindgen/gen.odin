@@ -89,6 +89,10 @@ generate_bindings :: proc(state: ^State) {
         }
     }
 
+    {
+
+    }
+
     // TODO: more gen (:
 
     strings.builder_destroy(&sb)
@@ -171,11 +175,8 @@ generate_global_enums :: proc(state: ^State, sb: ^strings.Builder) {
 }
 
 generate_builtin_class :: proc(state: ^State, class: ^StateBuiltinClass, sb: ^strings.Builder) {
-    odin_name := state.type_odin_names[class.godot_name]
-    snake_name := state.type_snake_names[class.godot_name]
-
-    fmt.sbprintf(sb, "%v :: struct {{\n", odin_name)
-    fmt.sbprintf(sb, "    _opaque: __%vOpaqueType,\n", odin_name)
+    fmt.sbprintf(sb, "%v :: struct {{\n", class.odin_name)
+    fmt.sbprintf(sb, "    _opaque: __%vOpaqueType,\n", class.odin_name)
     fmt.sbprint(sb, "}\n\n")
 
     first_config := true
@@ -193,92 +194,125 @@ generate_builtin_class :: proc(state: ^State, class: ^StateBuiltinClass, sb: ^st
         fmt.sbprintf(sb, "core.interface.BUILD_CONFIG == \"%v\" {{\n", config_name)
         if size != 0 && (size & (size - 1) == 0) && size < 16 {
             size *= 8
-            fmt.sbprintf(sb, "    __%vOpaqueType :: u%v\n", odin_name, size)
+            fmt.sbprintf(sb, "    __%vOpaqueType :: u%v\n", class.odin_name, size)
         } else {
-            fmt.sbprintf(sb, "    __%vOpaqueType :: [%v]u8\n", odin_name, size)
+            fmt.sbprintf(sb, "    __%vOpaqueType :: [%v]u8\n", class.odin_name, size)
         }
         fmt.sbprint(sb, "}")
     }
     fmt.sbprint(sb, "\n\n")
 
-    // generate frontend procs
-    {
-        // generate frontend operator procs
-        for operator_name, operator in class.operators {
-            for overload in operator.overloads {
-                fmt.sbprintf(sb, "%v :: proc(self: %v", overload.proc_name, odin_name)
-                right_type, has_right_type := overload.right_type.(string)
-                if has_right_type {
-                    right_type_odin_name := _get_correct_class_odin_name(state, right_type)
-                    fmt.sbprintf(sb, ", other: %v", right_type_odin_name)
-                }
-                return_type_odin_name := _get_correct_class_odin_name(state, overload.return_type)
-                fmt.sbprintf(sb, ") -> (ret: %v) {{\n", return_type_odin_name)
-                fmt.sbprintln(sb, "    using gdinterface")
-                fmt.sbprintln(sb, "    self := self")
-                if has_right_type {
-                    fmt.sbprintln(sb, "    other := other")
-                }
-                fmt.sbprintf(
-                    sb,
-                    "    return call_builtin_operator_ptr(%v, cast(TypePtr)&self._opaque, cast(TypePtr)",
-                    overload.backing_func_name,
-                )
-                if has_right_type {
-                    fmt.sbprintf(sb, "&other._opaque")
-                } else {
-                    fmt.sbprintf(sb, "nil")
-                }
-                fmt.sbprintf(sb, ", %v)\n", return_type_odin_name)
-                fmt.sbprint(sb, "}\n\n")
-            }
+    generate_builtin_class_frontend_procs(state, class, sb)
+    generate_builtin_class_initialization_proc(state, class, sb)
+    generate_builtin_class_backend_procs(state, class, sb)
 
-            fmt.sbprintf(sb, "%v :: proc{{\n", operator.proc_name)
-            for overload in operator.overloads {
-                fmt.sbprintf(sb, "    %v,\n", overload.proc_name)
+    // TODO: generate initialization function
+}
+
+generate_builtin_class_frontend_procs :: proc(state: ^State, class: ^StateBuiltinClass, sb: ^strings.Builder) {
+
+    // generate frontend for constructors
+    for constructor in class.constructors {
+        fmt.sbprintf(sb, "%v :: proc(", constructor.proc_name)
+        for arg, i in constructor.arguments {
+            if i > 0 {
+                fmt.sbprint(sb, ", ")
             }
-            fmt.sbprint(sb, "}\n\n")
+            fmt.sbprintf(sb, "%v: %v", arg.name, arg.odin_type)
         }
+        fmt.sbprintf(sb, ") -> (ret: %v) {{\n", class.odin_name)
+        fmt.sbprintln(sb, "    using gdinterface")
+        for arg in constructor.arguments {
+            fmt.sbprintf(sb, "    %v := %v\n", arg.name, arg.name)
+        }
+        fmt.sbprintf(sb, "    ret = %v{{}}\n", class.odin_name)
+        fmt.sbprintf(sb, "    call_builtin_constructor(%v, cast(TypePtr)&ret._opaque", constructor.backing_proc_name)
+        for arg in constructor.arguments {
+            fmt.sbprintf(sb, ", cast(TypePtr)&%v", arg.name)
+            if !slice.contains(pod_types, arg.name) {
+                fmt.sbprint(sb, "._opaque")
+            }
+        }
+        fmt.sbprint(sb, ")\n")
+        fmt.sbprint(sb, "    return\n")
+        fmt.sbprint(sb, "}\n\n")
     }
 
-    // TODO: generate frontend for methods
-    // TODO: generate frontend for constructors
+    // generate frontend operator procs
+    for operator_name, operator in class.operators {
+        for overload in operator.overloads {
+            fmt.sbprintf(sb, "%v :: proc(self: %v", overload.proc_name, class.odin_name)
+            
+            odin_right_type, has_right_type := overload.odin_right_type.(string)
+            if has_right_type {
+                fmt.sbprintf(sb, ", other: %v", odin_right_type)
+            }
+            fmt.sbprintf(sb, ") -> (ret: %v) {{\n", overload.odin_return_type)
+            fmt.sbprintln(sb, "    using gdinterface")
+            fmt.sbprintln(sb, "    self := self")
+            if has_right_type {
+                fmt.sbprintln(sb, "    other := other")
+            }
+            fmt.sbprintf(
+                sb,
+                "    return call_builtin_operator_ptr(%v, cast(TypePtr)&self._opaque, cast(TypePtr)",
+                overload.backing_func_name,
+            )
+            if has_right_type {
+                fmt.sbprintf(sb, "&other._opaque")
+            } else {
+                fmt.sbprintf(sb, "nil")
+            }
+            fmt.sbprintf(sb, ", %v)\n", overload.odin_return_type)
+            fmt.sbprint(sb, "}\n\n")
+        }
+
+        fmt.sbprintf(sb, "%v :: proc{{\n", operator.proc_name)
+        for overload in operator.overloads {
+            fmt.sbprintf(sb, "    %v,\n", overload.proc_name)
+        }
+        fmt.sbprint(sb, "}\n\n")
+    }
+
+    // generate frontend for methods
+
     // TODO: generate frontend for special string constructors
+
+    // generate overloads for constructors
+
+    // generate frontend for destructors
     if class.has_destructor {
-        fmt.sbprintf(sb, "free_%v :: proc(self: %v) {{\n", snake_name, odin_name)
+        fmt.sbprintf(sb, "free_%v :: proc(self: %v) {{\n", class.snake_name, class.odin_name)
         fmt.sbprintln(sb, "    using gdinterface")
         fmt.sbprintln(sb, "    self := self")
         fmt.sbprintf(sb, "    __%v__destructor(cast(TypePtr)&self._opaque)\n", class.godot_name)
         fmt.sbprint(sb, "}\n\n")
     }
+}
 
-    // TODO: generate initialization function
+generate_builtin_class_initialization_proc :: proc(state: ^State, class: ^StateBuiltinClass, sb: ^strings.Builder) {
+    
+}
 
-    // generate backing fields
-    {
-        // generate operator backing fields
-        for operator_name, operator in class.operators {
-            for overload in operator.overloads {
-                fmt.sbprintln(sb, "@private")
-                fmt.sbprintf(sb, "%v: %v\n\n", overload.backing_func_name, operator_evaluator_type)
-            }
+generate_builtin_class_backend_procs :: proc(state: ^State, class: ^StateBuiltinClass, sb: ^strings.Builder) {
+    // generate operator backing fields
+    for operator_name, operator in class.operators {
+        for overload in operator.overloads {
+            fmt.sbprintln(sb, "@private")
+            fmt.sbprintf(sb, "%v: %v\n\n", overload.backing_func_name, operator_evaluator_type)
         }
     }
 
-    {
-        // generate backing fields for methods
-        for method_name, method in class.methods {
-            fmt.sbprintln(sb, "@private")
-            fmt.sbprintf(sb, "%v: %v\n\n", method.backing_func_name, builtin_method_type)
-        }
+    // generate backing fields for methods
+    for method_name, method in class.methods {
+        fmt.sbprintln(sb, "@private")
+        fmt.sbprintf(sb, "%v: %v\n\n", method.backing_func_name, builtin_method_type)
     }
 
-    {
-        // generate backing fields for constructors
-        for constructor in class.constructors {
-            fmt.sbprintln(sb, "@private")
-            fmt.sbprintf(sb, "__%v__constructor_%v: %v\n\n", class.godot_name, constructor.index, constructor_type)
-        }
+    // generate backing fields for constructors
+    for constructor in class.constructors {
+        fmt.sbprintln(sb, "@private")
+        fmt.sbprintf(sb, "__%v__constructor_%v: %v\n\n", class.godot_name, constructor.index, constructor_type)
     }
 
     if class.has_destructor {
