@@ -89,10 +89,6 @@ generate_bindings :: proc(state: ^State) {
         }
     }
 
-    {
-
-    }
-
     // TODO: more gen (:
 
     strings.builder_destroy(&sb)
