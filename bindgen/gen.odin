@@ -297,7 +297,7 @@ generate_builtin_class_frontend_procs :: proc(state: ^State, class: ^StateBuilti
         fmt.sbprint(sb, "}\n\n")
     }
 
-    // generate frontend for methods
+    // TODO: generate frontend for methods
 
     // generate frontend for destructors
     if class.has_destructor {
@@ -310,7 +310,40 @@ generate_builtin_class_frontend_procs :: proc(state: ^State, class: ^StateBuilti
 }
 
 generate_builtin_class_initialization_proc :: proc(state: ^State, class: ^StateBuiltinClass, sb: ^strings.Builder) {
-    
+    fmt.sbprintf(sb, "init_%v_bindings :: proc() {{\n", class.snake_name)
+    fmt.sbprintln(sb, "    using gdinterface")
+
+    for constructor in class.constructors {
+        fmt.sbprintf(sb, "    %v = core.interface.variant_get_ptr_constructor(VariantType.%v, %v)\n", constructor.backing_proc_name, class.odin_name, constructor.index)
+    }
+
+    if class.has_destructor {
+        fmt.sbprintf(sb, "    __%v__destructor = core.interface.variant_get_ptr_destructor(VariantType.%v)\n", class.odin_name, class.odin_name)
+    }
+
+    for _, operator in class.operators {
+        for overload in operator.overloads {
+            right_type := overload.odin_right_type.(string) or_else "Nil"
+            // Variant just gets passed to this lookup as Nil for some reason, despite
+            // Nil also being used for unary operators. Godot is silly sometimes
+            if right_type == "Variant" {
+                right_type = "Nil"
+            }
+            fmt.sbprintf(sb, "    %v = core.interface.variant_get_ptr_operator_evaluator(VariantOperator.%v, VariantType.%v, VariantType.%v)\n", overload.backing_func_name, operator.variant_op_name, class.odin_name, right_type)
+        }
+    }
+
+    fmt.sbprintln(sb)
+
+    if len(class.methods) > 0 {
+        fmt.sbprint(sb, "    function_name: StringName\n\n")
+        for _, method in class.methods {
+            fmt.sbprintf(sb, "    function_name = new_string_name(\"%v\")\n")
+            fmt.sbprintf(sb, "    %v = core.interface.variant_get_ptr_builtin_method(VariantType.%v, cast(StringNamePtr)&function_name._opaque, %v)\n", method.backing_func_name, class.odin_name, method.hash)
+        }
+    }
+
+    fmt.sbprint(sb, "}\n\n")
 }
 
 generate_builtin_class_backend_procs :: proc(state: ^State, class: ^StateBuiltinClass, sb: ^strings.Builder) {
