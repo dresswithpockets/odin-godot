@@ -439,6 +439,48 @@ _state_builtin_class_constructors :: proc(state: ^State, class: ^StateBuiltinCla
 }
 
 @(private)
+_builtin_class_constructor_backing_proc_name :: proc(state: ^State, class: ^StateBuiltinClass, constructor: ^ApiClassConstructor) -> (name: string) {
+    sb := strings.builder_make()
+    defer strings.builder_destroy(&sb)
+    
+    fmt.sbprintf(&sb, "__%v__constructor_%v", class.godot_name, constructor.index)
+
+    name = strings.clone(strings.to_string(sb))
+    return
+}
+
+@(private)
+_builtin_class_constructor_base_proc_name :: proc(state: ^State, class_snake_name: string) -> (name: string) {
+    sb := strings.builder_make()
+    defer strings.builder_destroy(&sb)
+    
+    fmt.sbprintf(&sb, "new_%v", class_snake_name)
+    name = strings.clone(strings.to_string(sb))
+    return
+}
+
+@(private)
+_builtin_class_constructor_proc_name :: proc(state: ^State, class: ^StateBuiltinClass, constructor: ^ApiClassConstructor) -> (name: string) {
+    sb := strings.builder_make()
+    defer strings.builder_destroy(&sb)
+    
+    fmt.sbprint(&sb, class.base_constructor_name)
+    if len(constructor.arguments) > 0 {
+        fmt.sbprint(&sb, "_default")
+        name = strings.clone(strings.to_string(sb))
+        return
+    }
+
+    for arg in constructor.arguments {
+        snake_type := _get_correct_class_snake_name(state, arg.type)
+        fmt.sbprintf(&sb, "_%v", snake_type)
+    }
+
+    name = strings.clone(strings.to_string(sb))
+    return
+}
+
+@(private)
 _get_correct_class_odin_name :: proc(state: ^State, name: string) -> string {
     if n, ok := state.type_odin_names[name]; ok {
         return n
