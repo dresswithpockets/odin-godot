@@ -235,7 +235,12 @@ generate_builtin_class_frontend_procs :: proc(state: ^State, class: ^StateBuilti
     // generate frontend for special string constructors
     is_special_string_type := slice.contains(types_with_odin_string_constructors, class.godot_name)
     if is_special_string_type {
-        fmt.sbprintf(sb, "%v_odin :: proc(from: string) -> (ret: %v) {{\n", class.base_constructor_name, class.odin_name)
+        fmt.sbprintf(
+            sb,
+            "%v_odin :: proc(from: string) -> (ret: %v) {{\n",
+            class.base_constructor_name,
+            class.odin_name,
+        )
         fmt.sbprintln(sb, "    using gdinterface")
         fmt.sbprintln(sb, "    cstr, err := strings.clone_to_cstring(from)")
         fmt.sbprintf(sb, "    ret = %v{{}}\n", class.odin_name)
@@ -259,7 +264,7 @@ generate_builtin_class_frontend_procs :: proc(state: ^State, class: ^StateBuilti
     for operator_name, operator in class.operators {
         for overload in operator.overloads {
             fmt.sbprintf(sb, "%v :: proc(self: %v", overload.proc_name, class.odin_name)
-            
+
             odin_right_type, has_right_type := overload.odin_right_type.(string)
             if has_right_type {
                 fmt.sbprintf(sb, ", other: %v", odin_right_type)
@@ -308,11 +313,22 @@ generate_builtin_class_initialization_proc :: proc(state: ^State, class: ^StateB
     fmt.sbprintln(sb, "    using gdinterface")
 
     for constructor in class.constructors {
-        fmt.sbprintf(sb, "    %v = core.interface.variant_get_ptr_constructor(VariantType.%v, %v)\n", constructor.backing_proc_name, class.odin_name, constructor.index)
+        fmt.sbprintf(
+            sb,
+            "    %v = core.interface.variant_get_ptr_constructor(VariantType.%v, %v)\n",
+            constructor.backing_proc_name,
+            class.odin_name,
+            constructor.index,
+        )
     }
 
     if class.has_destructor {
-        fmt.sbprintf(sb, "    __%v__destructor = core.interface.variant_get_ptr_destructor(VariantType.%v)\n", class.odin_name, class.odin_name)
+        fmt.sbprintf(
+            sb,
+            "    __%v__destructor = core.interface.variant_get_ptr_destructor(VariantType.%v)\n",
+            class.odin_name,
+            class.odin_name,
+        )
     }
 
     for _, operator in class.operators {
@@ -323,7 +339,14 @@ generate_builtin_class_initialization_proc :: proc(state: ^State, class: ^StateB
             if right_type == "Variant" {
                 right_type = "Nil"
             }
-            fmt.sbprintf(sb, "    %v = core.interface.variant_get_ptr_operator_evaluator(VariantOperator.%v, VariantType.%v, VariantType.%v)\n", overload.backing_func_name, operator.variant_op_name, class.odin_name, right_type)
+            fmt.sbprintf(
+                sb,
+                "    %v = core.interface.variant_get_ptr_operator_evaluator(VariantOperator.%v, VariantType.%v, VariantType.%v)\n",
+                overload.backing_func_name,
+                operator.variant_op_name,
+                class.odin_name,
+                right_type,
+            )
         }
     }
 
@@ -333,7 +356,13 @@ generate_builtin_class_initialization_proc :: proc(state: ^State, class: ^StateB
         fmt.sbprint(sb, "    function_name: StringName\n\n")
         for _, method in class.methods {
             fmt.sbprintf(sb, "    function_name = new_string_name(\"%v\")\n")
-            fmt.sbprintf(sb, "    %v = core.interface.variant_get_ptr_builtin_method(VariantType.%v, cast(StringNamePtr)&function_name._opaque, %v)\n", method.backing_func_name, class.odin_name, method.hash)
+            fmt.sbprintf(
+                sb,
+                "    %v = core.interface.variant_get_ptr_builtin_method(VariantType.%v, cast(StringNamePtr)&function_name._opaque, %v)\n",
+                method.backing_func_name,
+                class.odin_name,
+                method.hash,
+            )
         }
     }
 
