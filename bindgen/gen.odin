@@ -233,8 +233,8 @@ generate_builtin_class_frontend_procs :: proc(state: ^State, class: ^StateBuilti
                 fmt.sbprint(sb, "._opaque")
             }
         }
-        fmt.sbprint(sb, ")\n")
-        fmt.sbprint(sb, "    return\n")
+        fmt.sbprintln(sb, ")")
+        fmt.sbprintln(sb, "    return")
         fmt.sbprint(sb, "}\n\n")
     }
 
