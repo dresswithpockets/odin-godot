@@ -147,7 +147,7 @@ operator_name_map := map[string]string {
     "not"    = "not",
 
     // containment
-    "in"     = "int",
+    "in"     = "in",
 }
 
 @(private)
