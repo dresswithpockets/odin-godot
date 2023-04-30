@@ -238,6 +238,29 @@ generate_builtin_class_frontend_procs :: proc(state: ^State, class: ^StateBuilti
         fmt.sbprint(sb, "}\n\n")
     }
 
+    // generate frontend for special string constructors
+    is_special_string_type := slice.contains(types_with_odin_string_constructors, class.godot_name)
+    if is_special_string_type {
+        fmt.sbprintf(sb, "%v_odin :: proc(from: string) -> (ret: %v) {{\n", class.base_constructor_name, class.odin_name)
+        fmt.sbprintln(sb, "    using gdinterface")
+        fmt.sbprintln(sb, "    cstr, err := strings.clone_to_cstring(from)")
+        fmt.sbprintf(sb, "    ret = %v{{}}\n", class.odin_name)
+        // TODO: does string_new_with_latin1_chars work with StringName and NodePath?
+        fmt.sbprintln(sb, "    core.interface.string_new_with_latin1_chars(cast(StringPtr)&ret._opaque, cstr)")
+        fmt.sbprintln(sb, "    return")
+        fmt.sbprint(sb, "}\n\n")
+    }
+
+    // generate overloads for constructors
+    fmt.sbprintf(sb, "%v :: proc{{\n", class.base_constructor_name)
+    for constructor in class.constructors {
+        fmt.sbprintf(sb, "    %v,\n", constructor.proc_name)
+    }
+    if is_special_string_type {
+        fmt.sbprintf(sb, "    %v_odin,\n", class.base_constructor_name)
+    }
+    fmt.sbprint(sb, "}\n\n")
+
     // generate frontend operator procs
     for operator_name, operator in class.operators {
         for overload in operator.overloads {
@@ -275,10 +298,6 @@ generate_builtin_class_frontend_procs :: proc(state: ^State, class: ^StateBuilti
     }
 
     // generate frontend for methods
-
-    // TODO: generate frontend for special string constructors
-
-    // generate overloads for constructors
 
     // generate frontend for destructors
     if class.has_destructor {
