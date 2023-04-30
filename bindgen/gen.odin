@@ -191,7 +191,7 @@ generate_builtin_class :: proc(state: ^State, class: ^StateBuiltinClass, sb: ^st
             fmt.sbprint(sb, " else when ")
         }
 
-        fmt.sbprintf(sb, "core.interface.BUILD_CONFIG == \"%v\" {{\n", config_name)
+        fmt.sbprintf(sb, "gdinterface.BUILD_CONFIG == \"%v\" {{\n", config_name)
         if size != 0 && (size & (size - 1) == 0) && size < 16 {
             size *= 8
             fmt.sbprintf(sb, "    __%vOpaqueType :: u%v\n", class.odin_name, size)
