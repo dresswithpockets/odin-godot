@@ -205,8 +205,6 @@ generate_builtin_class :: proc(state: ^State, class: ^StateBuiltinClass, sb: ^st
     generate_builtin_class_frontend_procs(state, class, sb)
     generate_builtin_class_initialization_proc(state, class, sb)
     generate_builtin_class_backend_procs(state, class, sb)
-
-    // TODO: generate initialization function
 }
 
 generate_builtin_class_frontend_procs :: proc(state: ^State, class: ^StateBuiltinClass, sb: ^strings.Builder) {
