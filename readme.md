@@ -32,7 +32,8 @@ Create and export an entrypoint for your extension:
 ```odin
 package example
 
-import gd "godot:gdinterface"
+// assuming odin-godot was cloned into your defacto shared collection
+import gd "shared:odin-godot/gdinterface"
 
 @(export)
 example_init :: proc "c" (
@@ -47,7 +48,7 @@ example_init :: proc "c" (
 
 Build as a shared library
 ```sh
-odin build . -build-mode:shared -collection:godot=path/to/odin-godot
+odin build . -build-mode:shared
 ```
 
 Then, follow the instructions for [using the extension module](https://docs.godotengine.org/en/stable/tutorials/scripting/gdextension/gdextension_cpp_example.html#using-the-gdextension-module).
