@@ -15,6 +15,7 @@ State :: struct {
     type_snake_names:    map[string]string,
     size_configurations: map[string]StateSizeConfiguration,
     enums:               map[string]StateEnum,
+    utility_functions:   map[string]StateUtilityFunction,
     // maps a builtin godot type name to builtin class details
     builtin_classes:     map[string]StateBuiltinClass,
 }
@@ -30,12 +31,28 @@ StateEnum :: struct {
     values:      map[string]int,
 }
 
+StateUtilityFunction :: struct {
+    backing_proc_name: string,
+    godot_name: string,
+    proc_name: string,
+    odin_return_type: string,
+    snake_return_type: string,
+    godot_return_type: string,
+    category: string,
+    is_vararg: bool,
+    hash: i64,
+    arguments: []StateFunctionArgument,
+}
+
 StateBuiltinClass :: struct {
+    odin_name: string,
+    snake_name: string,
     godot_name:          string,
     is_keyed:            bool,
     has_destructor:      bool,
     operators:           map[string]StateClassOperator,
     methods:             map[string]StateBuiltinClassMethod,
+    base_constructor_name: string,
     constructors:        []StateClassConstructor,
     depends_on_packages: map[string]bool,
 }
@@ -57,16 +74,22 @@ StateClassOperatorOverload :: struct {
     proc_name:         string,
     backing_func_name: string,
     // nil for unary operators
-    right_type:        Maybe(string),
-    return_type:       string,
+    odin_right_type:   Maybe(string),
+    snake_right_type:  Maybe(string),
+    godot_right_type:        Maybe(string),
+    odin_return_type: string,
+    snake_return_type: string,
+    godot_return_type:       string,
 }
 
 StateBuiltinClassMethod :: struct {
     backing_func_name: string,
     godot_name:        string,
     proc_name:         string,
-    // nil for void-returning functions
-    return_type:       Maybe(string),
+    // return types are nil for void-returning functions
+    odin_return_type:        Maybe(string),
+    snake_return_type: Maybe(string),
+    godot_return_type:       Maybe(string),
     is_vararg:         bool,
     is_const:          bool,
     is_static:         bool,
@@ -76,11 +99,15 @@ StateBuiltinClassMethod :: struct {
 
 StateClassConstructor :: struct {
     index:     u64,
+    backing_proc_name: string,
+    proc_name: string,
     arguments: []StateFunctionArgument,
 }
 
 StateFunctionArgument :: struct {
     name:          string,
+    odin_type:     string,
+    snake_type:    string,
     godot_type:    string,
     default_value: Maybe(string),
 }
@@ -169,10 +196,12 @@ create_state :: proc(options: Options, api: ^Api) -> (state: ^State) {
     _state_size_configurations(state)
     _state_global_enums(state)
     _state_builtin_classes(state)
-    _state_builtin_class_members(state)
-
-    // TODO: utility functions
     // TODO: classes
+
+    _state_utility_functions(state)
+    _state_builtin_class_members(state)
+    // TODO: class members
+
     // TODO: singletons
     // TODO: native structures
 
@@ -218,19 +247,71 @@ _state_global_enums :: proc(state: ^State) {
 }
 
 @(private)
+_state_utility_functions :: proc(state: ^State) {
+    state.utility_functions = make(map[string]StateUtilityFunction)
+
+    for function in &state.api.util_functions {
+        state_function := StateUtilityFunction{
+            backing_proc_name = _utility_function_backing_proc_name(state, &function),
+            proc_name = _utility_function_proc_name(state, &function),
+            godot_name = function.name,
+            odin_return_type = _get_correct_class_odin_name(state, function.return_type),
+            snake_return_type = _get_correct_class_snake_name(state, function.return_type),
+            godot_return_type = function.return_type,
+            category = function.category,
+            is_vararg = function.is_vararg,
+            hash = function.hash,
+            arguments = make([]StateFunctionArgument, len(function.arguments)),
+        }
+        for arg, i in function.arguments {
+            state_function.arguments[i] = StateFunctionArgument {
+                name = arg.name,
+                odin_type = _get_correct_class_odin_name(state, arg.name),
+                snake_type = _get_correct_class_snake_name(state, arg.name),
+                godot_type = arg.type,
+                default_value = arg.default_value,
+            }
+        }
+        state.utility_functions[function.name] = state_function
+    }
+}
+
+@(private)
+_utility_function_backing_proc_name :: proc(state: ^State, function: ^ApiUtilityFunction) -> (name: string) {
+    sb := strings.builder_make()
+    defer strings.builder_destroy(&sb)
+
+    fmt.sbprintf(&sb, "__%v__%v", function.name, function.hash)
+
+    name = strings.clone(strings.to_string(sb))
+    return
+}
+
+@(private)
+_utility_function_proc_name :: proc(state: ^State, function: ^ApiUtilityFunction) -> (name: string) {
+    name = function.name
+    return
+}
+
+@(private)
 _state_builtin_classes :: proc(state: ^State) {
     state.builtin_classes = make(map[string]StateBuiltinClass)
 
     // cache info about classes first for lookup later
     for class in &state.api.builtin_classes {
+        odin_name := godot_to_odin_case(class.name)
+        snake_name := godot_to_snake_case(class.name)
         state.builtin_classes[class.name] = StateBuiltinClass {
+            odin_name = odin_name,
+            snake_name = snake_name,
             godot_name     = class.name,
             is_keyed       = class.is_keyed,
             has_destructor = class.has_destructor,
+            base_constructor_name = _builtin_class_constructor_base_proc_name(state, snake_name),
         }
         state.type_package_map[class.name] = "variant"
-        state.type_odin_names[class.name] = godot_to_odin_case(class.name)
-        state.type_snake_names[class.name] = godot_to_snake_case(class.name)
+        state.type_odin_names[class.name] = odin_name
+        state.type_snake_names[class.name] = snake_name
     }
 }
 
@@ -374,15 +455,20 @@ _state_builtin_class_operators :: proc(state: ^State, class: ^StateBuiltinClass,
             group = &class.operators[operator.name]
         }
 
-        append(
-            &group.overloads,
-            StateClassOperatorOverload{
-                backing_func_name = _class_operator_backing_func_name(state, api_class, &operator),
-                proc_name = _class_operator_overload_proc_name(state, api_class, &operator),
-                return_type = operator.return_type,
-                right_type = operator.right_type,
-            },
-        )
+        overload := StateClassOperatorOverload{
+            backing_func_name = _class_operator_backing_func_name(state, api_class, &operator),
+            proc_name = _class_operator_overload_proc_name(state, api_class, &operator),
+            odin_return_type = _get_correct_class_odin_name(state, operator.return_type),
+            snake_return_type = _get_correct_class_snake_name(state, operator.return_type),
+            godot_return_type = operator.return_type,
+        }
+        if right_type, has_right_type := operator.right_type.(string); has_right_type {
+            overload.odin_right_type = _get_correct_class_odin_name(state, right_type)
+            overload.snake_right_type = _get_correct_class_snake_name(state, right_type)
+            overload.godot_right_type = right_type
+        }
+
+        append(&group.overloads, overload)
 
         if right_type, not_nil := operator.right_type.(string); not_nil {
             if right_type_package, in_map := state.type_package_map[right_type]; in_map {
@@ -402,17 +488,31 @@ _state_builtin_class_methods :: proc(
 ) {
     cons = make(map[string]StateBuiltinClassMethod)
     for method in &api_class.methods {
-        cons[method.name] = StateBuiltinClassMethod {
+        state_method := StateBuiltinClassMethod {
             godot_name        = method.name,
             backing_func_name = _builtin_class_method_backing_func_name(state, api_class, &method),
             proc_name         = _builtin_class_method_proc_name(state, api_class, &method),
-            return_type       = method.return_type,
             is_const          = method.is_const,
             is_static         = method.is_static,
             is_vararg         = method.is_vararg,
             hash              = method.hash,
             arguments         = make([]StateFunctionArgument, len(method.arguments)),
         }
+        for arg, i in method.arguments {
+            state_method.arguments[i] = StateFunctionArgument {
+                name = arg.name,
+                odin_type = _get_correct_class_odin_name(state, arg.type),
+                snake_type = _get_correct_class_snake_name(state, arg.type),
+                godot_type = arg.type,
+                default_value = arg.default_value,
+            }
+        }
+        if return_type, has_return_type := method.return_type.(string); has_return_type {
+            state_method.odin_return_type = _get_correct_class_odin_name(state, return_type)
+            state_method.snake_return_type = _get_correct_class_snake_name(state, return_type)
+            state_method.godot_return_type = return_type
+        }
+        cons[method.name] = state_method
     }
     return
 }
@@ -423,11 +523,15 @@ _state_builtin_class_constructors :: proc(state: ^State, class: ^StateBuiltinCla
     for constructor in &api_class.constructors {
         state_constructor := StateClassConstructor {
             index     = constructor.index,
+            backing_proc_name = _builtin_class_constructor_backing_proc_name(state, class, &constructor)
+            proc_name = _builtin_class_constructor_proc_name(state, class, &constructor)
             arguments = make([]StateFunctionArgument, len(constructor.arguments)),
         }
 
         for arg, i in constructor.arguments {
             state_constructor.arguments[i] = StateFunctionArgument {
+                odin_type = _get_correct_class_odin_name(state, arg.type),
+                snake_type = _get_correct_class_snake_name(state, arg.type),
                 godot_type    = arg.type,
                 name          = arg.name,
                 default_value = arg.default_value,
