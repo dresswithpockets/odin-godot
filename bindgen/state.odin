@@ -569,7 +569,7 @@ _builtin_class_constructor_proc_name :: proc(state: ^State, class: ^StateBuiltin
     defer strings.builder_destroy(&sb)
     
     fmt.sbprint(&sb, class.base_constructor_name)
-    if len(constructor.arguments) > 0 {
+    if len(constructor.arguments) == 0 {
         fmt.sbprint(&sb, "_default")
         name = strings.clone(strings.to_string(sb))
         return
