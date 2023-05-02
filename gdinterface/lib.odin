@@ -2,7 +2,7 @@ package gdinterface
 
 import "core:c"
 
-BUILD_CONFIG :: #config(BUILD_CONFIG, "float_32")
+BUILD_CONFIG :: #config(BUILD_CONFIG, "float_64")
 
 VariantPtr :: distinct rawptr
 StringNamePtr :: distinct rawptr
@@ -214,7 +214,7 @@ ExtensionClassCreationInfo :: struct {
     // (Default) constructor; mandatory. If the class is not instantiable, consider making it virtual or abstract.
     create_instance_func:     ExtensionClassCreateInstance,
     // Destructor; mandatory.
-    free_instance_Func:       ExtensionClassFreeInstance,
+    free_instance_func:       ExtensionClassFreeInstance,
     // Queries a virtual function by name and returns a callback to invoke the requested virtual function.
     get_virtual_func:         ExtensionClassGetVirtual,
     get_rid_func:             ExtensionClassGetRid,
