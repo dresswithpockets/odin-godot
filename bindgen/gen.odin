@@ -69,7 +69,7 @@ generate_bindings :: proc(state: ^State) {
             fmt.sbprint(&sb, "import \"../core\"\n")
             fmt.sbprint(&sb, "import \"../gdinterface\"\n")
             for package_name in class.depends_on_packages {
-                if package_name == "core" {
+                if package_name == "core" || package_name == "gdinterface" || package_name == "variant" {
                     continue
                 }
                 fmt.sbprintf(&sb, "import \"../%v\"\n", package_name)
