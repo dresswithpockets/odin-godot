@@ -242,7 +242,7 @@ generate_builtin_class_frontend_procs :: proc(state: ^State, class: ^StateBuilti
             class.odin_name,
         )
         fmt.sbprintln(sb, "    using gdinterface")
-        fmt.sbprintln(sb, "    cstr, err := strings.clone_to_cstring(from)")
+        fmt.sbprintln(sb, "    cstr := strings.clone_to_cstring(from)")
         fmt.sbprintf(sb, "    ret = %v{{}}\n", class.odin_name)
         // TODO: does string_new_with_latin1_chars work with StringName and NodePath?
         fmt.sbprintln(sb, "    core.interface.string_new_with_latin1_chars(cast(StringPtr)&ret._opaque, cstr)")
