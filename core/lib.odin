@@ -3,6 +3,7 @@ package core
 import "../gdinterface"
 
 interface: ^gdinterface.Interface
+library: gdinterface.ExtensionClassLibraryPtr
 
 /*
     Copyright 2023 Dresses Digital
