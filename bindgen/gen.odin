@@ -270,9 +270,6 @@ generate_builtin_class_frontend_procs :: proc(state: ^State, class: ^StateBuilti
     for constructor in class.constructors {
         fmt.sbprintf(sb, "    %v,\n", constructor.proc_name)
     }
-    if is_special_string_type {
-        fmt.sbprintf(sb, "    %v_odin,\n", class.base_constructor_name)
-    }
     fmt.sbprint(sb, "}\n\n")
 
     // generate frontend operator procs
