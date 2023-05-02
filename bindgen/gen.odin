@@ -309,7 +309,7 @@ generate_builtin_class_frontend_procs :: proc(state: ^State, class: ^StateBuilti
 }
 
 generate_builtin_class_initialization_proc :: proc(state: ^State, class: ^StateBuiltinClass, sb: ^strings.Builder) {
-    fmt.sbprintf(sb, "init_%v_bindings :: proc() {{\n", class.snake_name)
+    fmt.sbprintf(sb, "init_%v_bindings :: proc \"contextless\" () {{\n", class.snake_name)
     fmt.sbprintln(sb, "    using gdinterface")
 
     for constructor in class.constructors {
