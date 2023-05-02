@@ -5,6 +5,7 @@ core/enums.odin
 variant/
 !variant/common.odin
 
+*.exp
 *.dll
 *.exe
 *.so
