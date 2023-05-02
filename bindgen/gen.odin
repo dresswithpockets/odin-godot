@@ -355,7 +355,7 @@ generate_builtin_class_initialization_proc :: proc(state: ^State, class: ^StateB
     if len(class.methods) > 0 {
         fmt.sbprint(sb, "    function_name: StringName\n\n")
         for _, method in class.methods {
-            fmt.sbprintf(sb, "    function_name = new_string_name(\"%v\")\n")
+            fmt.sbprintf(sb, "    function_name = new_string_name_cstring(\"%v\")\n", method.godot_name)
             fmt.sbprintf(
                 sb,
                 "    %v = core.interface.variant_get_ptr_builtin_method(VariantType.%v, cast(StringNamePtr)&function_name._opaque, %v)\n",
