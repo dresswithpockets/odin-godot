@@ -235,6 +235,7 @@ generate_builtin_class_frontend_procs :: proc(state: ^State, class: ^StateBuilti
     // generate frontend for special string constructors
     is_special_string_type := slice.contains(types_with_odin_string_constructors, class.godot_name)
     if is_special_string_type {
+        // odin strings
         fmt.sbprintf(
             sb,
             "%v_odin :: proc(from: string) -> (ret: %v) {{\n",
