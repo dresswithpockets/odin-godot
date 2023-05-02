@@ -248,6 +248,20 @@ generate_builtin_class_frontend_procs :: proc(state: ^State, class: ^StateBuilti
         fmt.sbprintln(sb, "    core.interface.string_new_with_latin1_chars(cast(StringPtr)&ret._opaque, cstr)")
         fmt.sbprintln(sb, "    return")
         fmt.sbprint(sb, "}\n\n")
+
+        // cstring
+        fmt.sbprintf(
+            sb,
+            "%v_cstring :: proc \"contextless\" (from: cstring) -> (ret: %v) {{\n",
+            class.base_constructor_name,
+            class.odin_name,
+        )
+        fmt.sbprintln(sb, "    using gdinterface")
+        fmt.sbprintf(sb, "    ret = %v{{}}\n", class.odin_name)
+        // TODO: does string_new_with_latin1_chars work with StringName and NodePath?
+        fmt.sbprintln(sb, "    core.interface.string_new_with_latin1_chars(cast(StringPtr)&ret._opaque, from)")
+        fmt.sbprintln(sb, "    return")
+        fmt.sbprint(sb, "}\n\n")
     }
 
     // generate overloads for constructors
