@@ -34,10 +34,10 @@ initialize_example_module :: proc "c" (user_data: rawptr, level: gd.Initializati
         var.init_string_name_bindings()
 
         core.interface.print_warning("[odin-godot:example] new_string_name_odin(ExampleClass)", nil, nil, -1, true)
-        class_name := var.new_string_name_odin("ExampleClass")
+        class_name := var.new_string_name_cstring("ExampleClass")
 
         core.interface.print_warning("[odin-godot:example] new_string_name_odin(Node2D)", nil, nil, -1, true)
-        parent_name := var.new_string_name_odin("Node2D")
+        parent_name := var.new_string_name_cstring("Node2D")
 
         class_info := gd.ExtensionClassCreationInfo{
             is_virtual = false,
