@@ -13,8 +13,6 @@ example_library_init :: proc "c" (
     initialization: ^gd.Initialization,
 ) -> bool {
     // do usual initialization
-
-
     core.interface = interface
     core.library = library
 
