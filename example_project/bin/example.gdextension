@@ -1,6 +1,6 @@
 [configuration]
 
-entry_symbol = "example_init"
+entry_symbol = "example_library_init"
 
 [libraries]
 

@@ -7,7 +7,7 @@ import var "../variant"
 // import "core:strings"
 
 @(export)
-example_init :: proc "c" (
+example_library_init :: proc "c" (
     interface: ^gd.Interface,
     library: gd.ExtensionClassLibraryPtr,
     initialization: ^gd.Initialization,
