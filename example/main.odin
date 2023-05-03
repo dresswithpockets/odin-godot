@@ -28,6 +28,9 @@ initialize_example_module :: proc "c" (user_data: rawptr, level: gd.Initializati
 
     if level == .Core {
         core.interface.print_warning("[odin-godot:example] init_string_name_bindings", nil, nil, -1, true)
+        var.init_string_constructors()
+        var.init_string_name_constructors()
+        var.init_string_bindings()
         var.init_string_name_bindings()
 
         core.interface.print_warning("[odin-godot:example] new_string_name_odin(ExampleClass)", nil, nil, -1, true)
