@@ -310,7 +310,7 @@ generate_builtin_class_frontend_procs :: proc(state: ^State, class: ^StateBuilti
 }
 
 generate_builtin_class_initialization_proc :: proc(state: ^State, class: ^StateBuiltinClass, sb: ^strings.Builder) {
-    fmt.sbprintf(sb, "init_%v_bindings :: proc() {{\n", class.snake_name)
+    fmt.sbprintf(sb, "init_%v_constructors :: proc() {{\n", class.snake_name)
     fmt.sbprintln(sb, "    using gdinterface")
 
     for constructor in class.constructors {
@@ -322,7 +322,7 @@ generate_builtin_class_initialization_proc :: proc(state: ^State, class: ^StateB
             constructor.index,
         )
     }
-
+    
     if class.has_destructor {
         fmt.sbprintf(
             sb,
@@ -331,6 +331,11 @@ generate_builtin_class_initialization_proc :: proc(state: ^State, class: ^StateB
             class.odin_name,
         )
     }
+
+    fmt.sbprint(sb, "}\n\n")
+
+    fmt.sbprintf(sb, "init_%v_bindings :: proc() {{\n", class.snake_name)
+    fmt.sbprintln(sb, "    using gdinterface")
 
     for _, operator in class.operators {
         for overload in operator.overloads {
