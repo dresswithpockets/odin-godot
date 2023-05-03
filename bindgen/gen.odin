@@ -246,7 +246,22 @@ generate_builtin_class_frontend_procs :: proc(state: ^State, class: ^StateBuilti
         fmt.sbprintln(sb, "    cstr := strings.clone_to_cstring(from)")
         fmt.sbprintf(sb, "    ret = %v{{}}\n", class.odin_name)
         // TODO: does string_new_with_latin1_chars work with StringName and NodePath?
-        fmt.sbprintln(sb, "    core.interface.string_new_with_latin1_chars(cast(StringPtr)&ret._opaque, cstr)")
+        fmt.sbprintln(sb, "    core.interface.string_new_with_latin1_chars_and_len(cast(StringPtr)&ret._opaque, cstr, cast(i64)len(cstr))")
+        fmt.sbprintln(sb, "    return")
+        fmt.sbprint(sb, "}\n\n")
+
+        
+        // odin strings
+        fmt.sbprintf(
+            sb,
+            "%v_cstring :: proc(from: cstring) -> (ret: %v) {{\n",
+            class.base_constructor_name,
+            class.odin_name,
+        )
+        fmt.sbprintln(sb, "    using gdinterface")
+        fmt.sbprintf(sb, "    ret = %v{{}}\n", class.odin_name)
+        // TODO: does string_new_with_latin1_chars work with StringName and NodePath?
+        fmt.sbprintln(sb, "    core.interface.string_new_with_latin1_chars(cast(StringPtr)&ret._opaque, from)")
         fmt.sbprintln(sb, "    return")
         fmt.sbprint(sb, "}\n\n")
     }
@@ -257,7 +272,7 @@ generate_builtin_class_frontend_procs :: proc(state: ^State, class: ^StateBuilti
         fmt.sbprintf(sb, "    %v,\n", constructor.proc_name)
     }
     if is_special_string_type {
-        fmt.sbprintf(sb, "    %v_odin,\n", class.base_constructor_name)
+        fmt.sbprintf(sb, "    %v_cstring,\n", class.base_constructor_name)
     }
     fmt.sbprint(sb, "}\n\n")
 
@@ -361,7 +376,7 @@ generate_builtin_class_initialization_proc :: proc(state: ^State, class: ^StateB
     if len(class.methods) > 0 {
         fmt.sbprint(sb, "    function_name: StringName\n\n")
         for _, method in class.methods {
-            fmt.sbprintf(sb, "    function_name = new_string_name_odin(\"%v\")\n", method.godot_name)
+            fmt.sbprintf(sb, "    function_name = new_string_name_cstring(\"%v\")\n", method.godot_name)
             fmt.sbprintf(
                 sb,
                 "    %v = core.interface.variant_get_ptr_builtin_method(VariantType.%v, cast(StringNamePtr)&function_name._opaque, %v)\n",
