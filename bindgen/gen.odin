@@ -41,7 +41,7 @@ pod_types :: []string{
 }
 
 @(private)
-types_with_odin_string_constructors :: []string{"String", "StringName", "NodePath"}
+types_with_odin_string_constructors :: []string{"String"}
 
 generate_bindings :: proc(state: ^State) {
     sb := strings.builder_make()
