@@ -27,9 +27,9 @@ cd odin-godot
 
 ## Creating a GDExtension
 
-See [the example godot project](example_project/)
+See [the example godot project](example_project/) for a working usage of these bindings.
 
-Create and export an entrypoint for your extension:
+Otherwise, create and export an entrypoint for your extension:
 
 ```odin
 package example
