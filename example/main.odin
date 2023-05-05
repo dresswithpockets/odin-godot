@@ -35,8 +35,6 @@ initialize_example_module :: proc "c" (user_data: rawptr, level: gd.Initializati
     }
 
     class_name := var.new_string_name_cstring("ExampleClass")
-
-    core.interface.print_warning("[odin-godot:example] new_string_name_odin(Node2D)", nil, nil, -1, true)
     parent_name := var.new_string_name_cstring("Node2D")
 
     class_info := gd.ExtensionClassCreationInfo{
@@ -58,7 +56,6 @@ initialize_example_module :: proc "c" (user_data: rawptr, level: gd.Initializati
         get_rid_func = nil,
         class_user_data = nil,
     }
-    core.interface.print_warning("[odin-godot:example] classdb_register_extension_class", nil, nil, -1, true)
     core.interface.classdb_register_extension_class(core.library, cast(gd.StringNamePtr)&class_name._opaque, cast(gd.StringNamePtr)&parent_name._opaque, &class_info)
 }
 
@@ -108,12 +105,10 @@ example_class_property_get_revert :: proc "c" (
 
 example_class_notification_func :: proc "c" (instance: gd.ExtensionClassInstancePtr, what: i32) {
     context = core.godot_context()
-    
 }
 
 example_class_to_string :: proc "c" (instance: gd.ExtensionClassInstancePtr, is_valid: ^bool, out: gd.StringPtr) {
     context = core.godot_context()
-    
 }
 
 example_class_create :: proc "c" (user_data: rawptr) -> gd.ObjectPtr {
@@ -123,7 +118,6 @@ example_class_create :: proc "c" (user_data: rawptr) -> gd.ObjectPtr {
 
 example_class_free :: proc "c" (user_data: rawptr, instance: gd.ExtensionClassInstancePtr) {
     context = core.godot_context()
-    
 }
 
 class_db_get_virtual_func :: proc "c" (user_data: rawptr, name: gd.StringNamePtr) -> gd.ExtensionClassCallVirtual {
