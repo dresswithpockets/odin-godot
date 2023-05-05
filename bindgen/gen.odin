@@ -241,11 +241,13 @@ generate_builtin_class_frontend_procs :: proc(state: ^State, class: ^StateBuilti
         fmt.sbprintln(sb, "    cstr := strings.clone_to_cstring(from)")
         fmt.sbprintf(sb, "    ret = %v{{}}\n", class.odin_name)
         // TODO: does string_new_with_latin1_chars work with StringName and NodePath?
-        fmt.sbprintln(sb, "    core.interface.string_new_with_latin1_chars_and_len(cast(StringPtr)&ret._opaque, cstr, cast(i64)len(cstr))")
+        fmt.sbprintln(
+            sb,
+            "    core.interface.string_new_with_latin1_chars_and_len(cast(StringPtr)&ret._opaque, cstr, cast(i64)len(cstr))",
+        )
         fmt.sbprintln(sb, "    return")
         fmt.sbprint(sb, "}\n\n")
 
-        
         // odin strings
         fmt.sbprintf(
             sb,
@@ -332,7 +334,7 @@ generate_builtin_class_initialization_proc :: proc(state: ^State, class: ^StateB
             constructor.index,
         )
     }
-    
+
     if class.has_destructor {
         fmt.sbprintf(
             sb,

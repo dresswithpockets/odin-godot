@@ -541,8 +541,16 @@ Interface :: struct {
         valid: ^bool,
         oob: ^bool,
     ),
-    variant_iter_init:                                  proc "c" (self: VariantPtr, iter: VariantPtr, valid: ^bool) -> bool,
-    variant_iter_next:                                  proc "c" (self: VariantPtr, iter: VariantPtr, valid: ^bool) -> bool,
+    variant_iter_init:                                  proc "c" (
+        self: VariantPtr,
+        iter: VariantPtr,
+        valid: ^bool,
+    ) -> bool,
+    variant_iter_next:                                  proc "c" (
+        self: VariantPtr,
+        iter: VariantPtr,
+        valid: ^bool,
+    ) -> bool,
     variant_iter_get:                                   proc "c" (
         self: VariantPtr,
         iter: VariantPtr,
@@ -558,7 +566,11 @@ Interface :: struct {
     variant_get_type:                                   proc "c" (self: VariantPtr) -> VariantType,
     variant_has_method:                                 proc "c" (self: VariantPtr, method: StringNamePtr) -> bool,
     variant_has_member:                                 proc "c" (type: VariantType, method: StringNamePtr) -> bool,
-    variant_has_key:                                    proc "c" (self: VariantPtr, key: VariantPtr, valid: ^bool) -> bool,
+    variant_has_key:                                    proc "c" (
+        self: VariantPtr,
+        key: VariantPtr,
+        valid: ^bool,
+    ) -> bool,
     variant_get_type_name:                              proc "c" (type: VariantType, name: StringPtr),
     variant_can_convert:                                proc "c" (from: VariantType, to: VariantType) -> bool,
     variant_can_convert_strict:                         proc "c" (from: VariantType, to: VariantType) -> bool,
@@ -576,7 +588,10 @@ Interface :: struct {
         method: StringNamePtr,
         hash: i64,
     ) -> PtrBuiltInMethod,
-    variant_get_ptr_constructor:                        proc "c" (type: VariantType, constructor: i32) -> PtrConstructor,
+    variant_get_ptr_constructor:                        proc "c" (
+        type: VariantType,
+        constructor: i32,
+    ) -> PtrConstructor,
     variant_get_ptr_destructor:                         proc "c" (type: VariantType) -> PtrDestructor,
     variant_construct:                                  proc "c" (
         type: VariantType,
@@ -585,8 +600,14 @@ Interface :: struct {
         argument_count: i32,
         error: ^CallError,
     ),
-    variant_get_ptr_setter:                             proc "c" (type: VariantType, member: StringNamePtr) -> PtrSetter,
-    variant_get_ptr_getter:                             proc "c" (type: VariantType, member: StringNamePtr) -> PtrGetter,
+    variant_get_ptr_setter:                             proc "c" (
+        type: VariantType,
+        member: StringNamePtr,
+    ) -> PtrSetter,
+    variant_get_ptr_getter:                             proc "c" (
+        type: VariantType,
+        member: StringNamePtr,
+    ) -> PtrGetter,
     variant_get_ptr_indexed_setter:                     proc "c" (type: VariantType) -> PtrIndexedSetter,
     variant_get_ptr_indexed_getter:                     proc "c" (type: VariantType) -> PtrIndexedGetter,
     variant_get_ptr_keyed_setter:                       proc "c" (type: VariantType) -> PtrKeyedSetter,
@@ -597,7 +618,10 @@ Interface :: struct {
         constant: StringNamePtr,
         ret: VariantPtr,
     ),
-    variant_get_ptr_utility_function:                   proc "c" (function: StringNamePtr, hash: i64) -> PtrUtilityFunction,
+    variant_get_ptr_utility_function:                   proc "c" (
+        function: StringNamePtr,
+        hash: i64,
+    ) -> PtrUtilityFunction,
 
     // extra utilities
     string_new_with_latin1_chars:                       proc "c" (dest: StringPtr, contents: cstring),
@@ -628,8 +652,16 @@ Interface :: struct {
         text: cstring,
         max_write_len: i64,
     ) -> i64,
-    string_to_utf16_chars:                              proc "c" (self: StringPtr, text: ^u16, max_write_len: i64) -> i64,
-    string_to_utf32_chars:                              proc "c" (self: StringPtr, text: ^u32, max_write_len: i64) -> i64,
+    string_to_utf16_chars:                              proc "c" (
+        self: StringPtr,
+        text: ^u16,
+        max_write_len: i64,
+    ) -> i64,
+    string_to_utf32_chars:                              proc "c" (
+        self: StringPtr,
+        text: ^u32,
+        max_write_len: i64,
+    ) -> i64,
     string_to_wide_chars:                               proc "c" (
         self: StringPtr,
         text: ^c.wchar_t,
