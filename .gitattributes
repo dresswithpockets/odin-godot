@@ -1,2 +1,1 @@
-odin-godot.rdbg filter=lfs diff=lfs merge=lfs -text
-odin-godot_root-godot.rdbg filter=lfs diff=lfs merge=lfs -text
+*.rdbg filter=lfs diff=lfs merge=lfs -text

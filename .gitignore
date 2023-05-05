@@ -13,3 +13,8 @@ variant/
 *.o
 *.lib
 *.pdb
+*.ilk
+*.obj
+
+# remedybg session
+*.rdbg
