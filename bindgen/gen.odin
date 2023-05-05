@@ -240,7 +240,6 @@ generate_builtin_class_frontend_procs :: proc(state: ^State, class: ^StateBuilti
         fmt.sbprintln(sb, "    using gdinterface")
         fmt.sbprintln(sb, "    cstr := strings.clone_to_cstring(from)")
         fmt.sbprintf(sb, "    ret = %v{{}}\n", class.odin_name)
-        // TODO: does string_new_with_latin1_chars work with StringName and NodePath?
         fmt.sbprintln(
             sb,
             "    core.interface.string_new_with_latin1_chars_and_len(cast(StringPtr)&ret._opaque, cstr, cast(i64)len(cstr))",
@@ -248,7 +247,7 @@ generate_builtin_class_frontend_procs :: proc(state: ^State, class: ^StateBuilti
         fmt.sbprintln(sb, "    return")
         fmt.sbprint(sb, "}\n\n")
 
-        // odin strings
+        // cstrings
         fmt.sbprintf(
             sb,
             "%v_cstring :: proc(from: cstring) -> (ret: %v) {{\n",
@@ -257,7 +256,6 @@ generate_builtin_class_frontend_procs :: proc(state: ^State, class: ^StateBuilti
         )
         fmt.sbprintln(sb, "    using gdinterface")
         fmt.sbprintf(sb, "    ret = %v{{}}\n", class.odin_name)
-        // TODO: does string_new_with_latin1_chars work with StringName and NodePath?
         fmt.sbprintln(sb, "    core.interface.string_new_with_latin1_chars(cast(StringPtr)&ret._opaque, from)")
         fmt.sbprintln(sb, "    return")
         fmt.sbprint(sb, "}\n\n")
