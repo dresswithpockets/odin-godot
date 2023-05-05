@@ -27,6 +27,8 @@ cd odin-godot
 
 ## Creating a GDExtension
 
+See [the example godot project](example_project/)
+
 Create and export an entrypoint for your extension:
 
 ```odin
