@@ -160,7 +160,6 @@ operator_name_map := map[string]string {
     "in"     = "in",
 }
 
-
 operator_enum_map := map[string]string {
     // comparison
     "=="     = "Equal",
@@ -219,7 +218,6 @@ create_state :: proc(options: Options, api: ^Api) -> (state: ^State) {
     return
 }
 
-
 _state_size_configurations :: proc(state: ^State) {
     state.size_configurations = make(map[string]StateSizeConfiguration)
 
@@ -234,7 +232,6 @@ _state_size_configurations :: proc(state: ^State) {
         state.size_configurations[builtin_config.configuration] = configuration
     }
 }
-
 
 _state_global_enums :: proc(state: ^State) {
     state.enums = make(map[string]StateEnum)
@@ -256,7 +253,6 @@ _state_global_enums :: proc(state: ^State) {
         state.type_snake_names[api_enum.name] = godot_to_snake_case(api_enum.name)
     }
 }
-
 
 _state_utility_functions :: proc(state: ^State) {
     state.utility_functions = make(map[string]StateUtilityFunction)
@@ -287,7 +283,6 @@ _state_utility_functions :: proc(state: ^State) {
     }
 }
 
-
 _utility_function_backing_proc_name :: proc(state: ^State, function: ^ApiUtilityFunction) -> (name: string) {
     sb := strings.builder_make()
     defer strings.builder_destroy(&sb)
@@ -298,12 +293,10 @@ _utility_function_backing_proc_name :: proc(state: ^State, function: ^ApiUtility
     return
 }
 
-
 _utility_function_proc_name :: proc(state: ^State, function: ^ApiUtilityFunction) -> (name: string) {
     name = function.name
     return
 }
-
 
 _state_builtin_classes :: proc(state: ^State) {
     state.builtin_classes = make(map[string]StateBuiltinClass)
@@ -325,7 +318,6 @@ _state_builtin_classes :: proc(state: ^State) {
         state.type_snake_names[class.name] = snake_name
     }
 }
-
 
 _state_builtin_class_members :: proc(state: ^State) {
     for class in &state.api.builtin_classes {
@@ -355,7 +347,6 @@ _builtin_class_method_backing_func_name :: proc(
     name = strings.clone(strings.to_string(sb))
     return
 }
-
 
 _builtin_class_method_proc_name :: proc(
     state: ^State,
@@ -450,7 +441,6 @@ _class_operator_backing_func_name :: proc(
     return
 }
 
-
 _state_builtin_class_operators :: proc(state: ^State, class: ^StateBuiltinClass, api_class: ^ApiBuiltinClass) {
     class.operators = make(map[string]StateClassOperator)
 
@@ -490,7 +480,6 @@ _state_builtin_class_operators :: proc(state: ^State, class: ^StateBuiltinClass,
     return
 }
 
-
 _state_builtin_class_methods :: proc(
     state: ^State,
     api_class: ^ApiBuiltinClass,
@@ -528,7 +517,6 @@ _state_builtin_class_methods :: proc(
     return
 }
 
-
 _state_builtin_class_constructors :: proc(state: ^State, class: ^StateBuiltinClass, api_class: ^ApiBuiltinClass) {
     class.constructors = make([]StateClassConstructor, len(api_class.constructors))
     for constructor in &api_class.constructors {
@@ -553,7 +541,6 @@ _state_builtin_class_constructors :: proc(state: ^State, class: ^StateBuiltinCla
     }
 }
 
-
 _builtin_class_constructor_backing_proc_name :: proc(
     state: ^State,
     class: ^StateBuiltinClass,
@@ -570,7 +557,6 @@ _builtin_class_constructor_backing_proc_name :: proc(
     return
 }
 
-
 _builtin_class_constructor_base_proc_name :: proc(state: ^State, class_snake_name: string) -> (name: string) {
     sb := strings.builder_make()
     defer strings.builder_destroy(&sb)
@@ -579,7 +565,6 @@ _builtin_class_constructor_base_proc_name :: proc(state: ^State, class_snake_nam
     name = strings.clone(strings.to_string(sb))
     return
 }
-
 
 _builtin_class_constructor_proc_name :: proc(
     state: ^State,
@@ -607,7 +592,6 @@ _builtin_class_constructor_proc_name :: proc(
     return
 }
 
-
 _get_correct_class_odin_name :: proc(state: ^State, name: string) -> string {
     if n, ok := state.type_odin_names[name]; ok {
         return n
@@ -615,7 +599,6 @@ _get_correct_class_odin_name :: proc(state: ^State, name: string) -> string {
 
     return name
 }
-
 
 _get_correct_class_snake_name :: proc(state: ^State, name: string) -> string {
     if n, ok := state.type_snake_names[name]; ok {

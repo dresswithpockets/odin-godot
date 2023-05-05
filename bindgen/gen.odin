@@ -443,13 +443,11 @@ godot_to_odin_case :: proc(name: string) -> (s: string) {
     return
 }
 
-
 godot_to_snake_case :: proc(name: string) -> (s: string) {
     // lol (:
     s = odin_to_snake_case(godot_to_odin_case(name))
     return
 }
-
 
 odin_to_snake_case :: proc(name: string) -> (s: string) {
     assert(len(name) > 0)
@@ -476,7 +474,6 @@ odin_to_snake_case :: proc(name: string) -> (s: string) {
     return
 }
 
-
 odin_to_const_case :: proc(name: string) -> (s: string) {
     assert(len(name) > 0)
 
@@ -501,7 +498,6 @@ odin_to_const_case :: proc(name: string) -> (s: string) {
     s = strings.clone(strings.to_string(sb))
     return
 }
-
 
 const_to_odin_case :: proc(name: string) -> (s: string) {
     assert(len(name) > 0)
