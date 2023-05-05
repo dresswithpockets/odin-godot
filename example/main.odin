@@ -14,6 +14,12 @@ example_library_init :: proc "c" (
     core.interface = interface
     core.library = library
 
+    context = core.godot_context()
+    var.init_string_constructors()
+    var.init_string_name_constructors()
+    var.init_string_bindings()
+    var.init_string_name_bindings()
+
     initialization.initialize = initialize_example_module
     initialization.deinitialize = uninitialize_example_module
     initialization.minimum_initialization_level = .Core
@@ -28,13 +34,6 @@ initialize_example_module :: proc "c" (user_data: rawptr, level: gd.Initializati
         return
     }
 
-    core.interface.print_warning("[odin-godot:example] init_string_name_bindings", nil, nil, -1, true)
-    var.init_string_constructors()
-    var.init_string_name_constructors()
-    var.init_string_bindings()
-    var.init_string_name_bindings()
-
-    core.interface.print_warning("[odin-godot:example] new_string_name_odin(ExampleClass)", nil, nil, -1, true)
     class_name := var.new_string_name_cstring("ExampleClass")
 
     core.interface.print_warning("[odin-godot:example] new_string_name_odin(Node2D)", nil, nil, -1, true)
