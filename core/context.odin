@@ -62,11 +62,11 @@ godot_allocator_proc :: proc(
     return nil, nil
 }
 
-godot_allocator :: proc "contextless" () -> (a: runtime.Allocator) {
+godot_allocator :: #force_inline proc "contextless" () -> (a: runtime.Allocator) {
     return mem.Allocator{procedure = godot_allocator_proc, data = interface}
 }
 
-godot_context :: proc "contextless" () -> (c: runtime.Context) {
+godot_context :: #force_inline proc "contextless" () -> (c: runtime.Context) {
     c.allocator = godot_allocator()
     return
 }
