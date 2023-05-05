@@ -1,8 +1,8 @@
 package example
 
-import gd "../gdinterface"
-import core "../core"
-import var "../variant"
+import gd "../../gdinterface"
+import core "../../core"
+import var "../../variant"
 
 @(export)
 example_library_init :: proc "c" (
