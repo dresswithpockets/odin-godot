@@ -1,0 +1,125 @@
+package {{package_name}}
+
+import gd "{{gdextension_import_path}}"
+import var "{{variant_import_path}}"
+
+@(private="file")
+_{{class_name}}_StringName: var.StringName
+
+@(private="file")
+_{{parent_name}}_StringName: var.StringName
+
+register_{{class_snake_name}} :: proc() {
+    _{{class_name}}_StringName = var.new_string_name_cstring("{{class_name}}")
+    _{{parent_name}}_StringName = var.new_string_name_cstring("{{parent_name}}")
+
+    class_info := gd.ExtensionClassCreationInfo {
+        is_virtual               = {{is_virtual}},
+        is_abstract              = {{is_abstract}},
+        set_func                 = {{class_snake_name}}_set,
+        get_func                 = {{class_snake_name}}_get,
+        get_property_list_func   = {{class_snake_name}}_get_property_list,
+        free_property_list_func  = {{class_snake_name}}_free_property_list,
+        property_can_revert_func = {{class_snake_name}}_property_can_revert,
+        property_get_revert_func = {{class_snake_name}}_property_get_revert,
+        notification_func        = {{class_snake_name}}_notification,
+        to_string_func           = {{class_snake_name}}_to_string,
+        reference_func           = {{class_snake_name}}_reference,
+        unreference_func         = {{class_snake_name}}_unreferece,
+        create_instance_func     = {{class_snake_name}}_create,
+        free_instance_func       = {{class_snake_name}}_free,
+        get_virtual_func         = {{class_snake_name}}_get_virtual,
+        get_rid_func             = {{class_snake_name}}_get_rid,
+        class_user_data          = &_{{class_name}}_StringName,
+    }
+    gd.register_class("{{class_name}}", "{{parent_name}}", &class_info)
+
+    bind_{{class_snake_name}}_methods(_{{class_name}}_StringName)
+}
+
+unregister_{{class_snake_name}} :: proc() {
+    core.interface.classdb.unregister_extension_class(core.library, cast(gd.StringNamePtr)&class_name._opaque)
+    var.free_string_name(_{{class_name}}_StringName)
+    var.free_string_name(_{{parent_name}}_StringName)
+}
+
+@(private="file")
+{{class_snake_name}}_set :: proc "c" (
+    instance: gd.ExtensionClassInstancePtr,
+    name: gd.StringNamePtr,
+    value: gd.VariantPtr,
+) -> bool {
+    context = core.godot_context()
+    return false
+}
+
+@(private="file")
+{{class_snake_name}}_get :: proc "c" (
+    instance: gd.ExtensionClassInstancePtr,
+    name: gd.StringNamePtr,
+    ret: gd.VariantPtr,
+) -> bool {
+    context = core.godot_context()
+    return false
+}
+
+@(private="file")
+{{class_snake_name}}_get_property_list :: proc "c" (
+    instance: gd.ExtensionClassInstancePtr,
+    count: u32,
+) -> [^]gd.PropertyInfo {
+    context = core.godot_context()
+    return nil
+}
+
+@(private="file")
+{{class_snake_name}}_free_property_list :: proc "c" (instance: gd.ExtensionClassInstancePtr, list: ^gd.PropertyInfo) {
+    context = core.godot_context()
+
+}
+
+@(private="file")
+{{class_snake_name}}_property_can_revert :: proc "c" (
+    instance: gd.ExtensionClassInstancePtr,
+    name: gd.StringNamePtr,
+) -> bool {
+    context = core.godot_context()
+    return false
+}
+
+@(private="file")
+{{class_snake_name}}_property_get_revert :: proc "c" (
+    instance: gd.ExtensionClassInstancePtr,
+    name: gd.StringNamePtr,
+    ret: gd.VariantPtr,
+) -> bool {
+    context = core.godot_context()
+    return false
+}
+
+@(private="file")
+{{class_snake_name}}_notification :: proc "c" (instance: gd.ExtensionClassInstancePtr, what: i32) {
+    context = core.godot_context()
+}
+
+@(private="file")
+{{class_snake_name}}_to_string :: proc "c" (instance: gd.ExtensionClassInstancePtr, is_valid: ^bool, out: gd.StringPtr) {
+    context = core.godot_context()
+}
+
+@(private="file")
+{{class_snake_name}}_create :: proc "c" (user_data: rawptr) -> gd.ObjectPtr {
+    context = core.godot_context()
+    return nil
+}
+
+@(private="file")
+{{class_snake_name}}_free :: proc "c" (user_data: rawptr, instance: gd.ExtensionClassInstancePtr) {
+    context = core.godot_context()
+}
+
+@(private="file")
+{{class_snake_name}}_get_virtual_func :: proc "c" (user_data: rawptr, name: gd.StringNamePtr) -> gd.ExtensionClassCallVirtual {
+    context = core.godot_context()
+    return nil
+}

@@ -1,0 +1,22 @@
+package {{package_name}}
+
+{{class_name}} :: struct {
+
+}
+
+bind_{{class_snake_name}}_methods :: proc(class_name: StringName) {
+
+}
+
+new_{{class_snake_name}} :: proc() -> ^{{class_name}} {
+
+}
+
+free_{{class_snake_name}} :: proc(self: ^{{class_name}}) {
+
+}
+
+@(private="file")
+_process :: proc(self: ^{{class_name}}, delta: f64) {
+
+}
