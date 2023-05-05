@@ -1,3 +1,4 @@
+//+private
 package bindgen
 
 import "core:fmt"
@@ -13,15 +14,12 @@ operator_evaluator_type :: "gdinterface.PtrOperatorEvaluator"
 builtin_method_type :: "gdinterface.PtrBuiltInMethod"
 
 // these are already in gdinterface
-@(private)
 ignore_enums_by_name :: []string{"Variant.Operator", "Variant.Type"}
 
-@(private)
 enum_prefix_alias := map[string]string {
     "Error" = "Err",
 }
 
-@(private)
 pod_types :: []string{
     "Nil",
     "void",
@@ -40,7 +38,6 @@ pod_types :: []string{
     "uint64_t",
 }
 
-@(private)
 types_with_odin_string_constructors :: []string{"String"}
 
 generate_bindings :: proc(state: ^State) {
@@ -60,7 +57,7 @@ generate_bindings :: proc(state: ^State) {
         for name, class in &state.builtin_classes {
             fmt.sbprint(&sb, "package variant\n\n")
 
-            // used in the special constructor for some string types
+            // used in the special constructor for some strin``g types
             if slice.contains(types_with_odin_string_constructors, name) {
                 fmt.sbprint(&sb, "import \"core:strings\"\n")
             }
@@ -414,7 +411,6 @@ generate_builtin_class_backend_procs :: proc(state: ^State, class: ^StateBuiltin
 
 // godot uses ACRONYMPascalCase, but we use AcronymPascalCase
 // return string must be freed
-@(private)
 godot_to_odin_case :: proc(name: string) -> (s: string) {
     assert(len(name) > 0)
 
@@ -447,14 +443,14 @@ godot_to_odin_case :: proc(name: string) -> (s: string) {
     return
 }
 
-@(private)
+
 godot_to_snake_case :: proc(name: string) -> (s: string) {
     // lol (:
     s = odin_to_snake_case(godot_to_odin_case(name))
     return
 }
 
-@(private)
+
 odin_to_snake_case :: proc(name: string) -> (s: string) {
     assert(len(name) > 0)
 
@@ -480,7 +476,7 @@ odin_to_snake_case :: proc(name: string) -> (s: string) {
     return
 }
 
-@(private)
+
 odin_to_const_case :: proc(name: string) -> (s: string) {
     assert(len(name) > 0)
 
@@ -506,7 +502,7 @@ odin_to_const_case :: proc(name: string) -> (s: string) {
     return
 }
 
-@(private)
+
 const_to_odin_case :: proc(name: string) -> (s: string) {
     assert(len(name) > 0)
 

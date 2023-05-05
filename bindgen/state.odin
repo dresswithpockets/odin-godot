@@ -1,8 +1,10 @@
+//+private file
 package bindgen
 
 import "core:fmt"
 import "core:strings"
 
+@(private)
 State :: struct {
     options:             Options,
     api:                 ^Api,
@@ -20,17 +22,20 @@ State :: struct {
     builtin_classes:     map[string]StateBuiltinClass,
 }
 
+@(private)
 StateSizeConfiguration :: struct {
     name:  string,
     sizes: map[string]uint,
 }
 
+@(private)
 StateEnum :: struct {
     godot_name:  string,
     is_bitfield: bool,
     values:      map[string]int,
 }
 
+@(private)
 StateUtilityFunction :: struct {
     backing_proc_name: string,
     godot_name:        string,
@@ -44,6 +49,7 @@ StateUtilityFunction :: struct {
     arguments:         []StateFunctionArgument,
 }
 
+@(private)
 StateBuiltinClass :: struct {
     odin_name:             string,
     snake_name:            string,
@@ -57,6 +63,7 @@ StateBuiltinClass :: struct {
     depends_on_packages:   map[string]bool,
 }
 
+@(private)
 StateClassOperator :: struct {
     // the actual operator, e.g '=='
     operator:        string,
@@ -68,6 +75,7 @@ StateClassOperator :: struct {
     overloads:       [dynamic]StateClassOperatorOverload,
 }
 
+@(private)
 StateClassOperatorOverload :: struct {
     // name of the odin function to generate to invoke this operator
     // e.g 'string_name_equal_string_name'
@@ -82,6 +90,7 @@ StateClassOperatorOverload :: struct {
     godot_return_type: string,
 }
 
+@(private)
 StateBuiltinClassMethod :: struct {
     backing_func_name: string,
     godot_name:        string,
@@ -97,6 +106,7 @@ StateBuiltinClassMethod :: struct {
     arguments:         []StateFunctionArgument,
 }
 
+@(private)
 StateClassConstructor :: struct {
     index:             u64,
     backing_proc_name: string,
@@ -104,6 +114,7 @@ StateClassConstructor :: struct {
     arguments:         []StateFunctionArgument,
 }
 
+@(private)
 StateFunctionArgument :: struct {
     name:          string,
     odin_type:     string,
@@ -112,7 +123,6 @@ StateFunctionArgument :: struct {
     default_value: Maybe(string),
 }
 
-@(private)
 operator_name_map := map[string]string {
     // comparison
     "=="     = "equal",
@@ -150,7 +160,7 @@ operator_name_map := map[string]string {
     "in"     = "in",
 }
 
-@(private)
+
 operator_enum_map := map[string]string {
     // comparison
     "=="     = "Equal",
@@ -188,6 +198,7 @@ operator_enum_map := map[string]string {
     "in"     = "In",
 }
 
+@(private)
 create_state :: proc(options: Options, api: ^Api) -> (state: ^State) {
     state = new(State)
     state.options = options
@@ -208,7 +219,7 @@ create_state :: proc(options: Options, api: ^Api) -> (state: ^State) {
     return
 }
 
-@(private)
+
 _state_size_configurations :: proc(state: ^State) {
     state.size_configurations = make(map[string]StateSizeConfiguration)
 
@@ -224,7 +235,7 @@ _state_size_configurations :: proc(state: ^State) {
     }
 }
 
-@(private)
+
 _state_global_enums :: proc(state: ^State) {
     state.enums = make(map[string]StateEnum)
 
@@ -246,7 +257,7 @@ _state_global_enums :: proc(state: ^State) {
     }
 }
 
-@(private)
+
 _state_utility_functions :: proc(state: ^State) {
     state.utility_functions = make(map[string]StateUtilityFunction)
 
@@ -276,7 +287,7 @@ _state_utility_functions :: proc(state: ^State) {
     }
 }
 
-@(private)
+
 _utility_function_backing_proc_name :: proc(state: ^State, function: ^ApiUtilityFunction) -> (name: string) {
     sb := strings.builder_make()
     defer strings.builder_destroy(&sb)
@@ -287,13 +298,13 @@ _utility_function_backing_proc_name :: proc(state: ^State, function: ^ApiUtility
     return
 }
 
-@(private)
+
 _utility_function_proc_name :: proc(state: ^State, function: ^ApiUtilityFunction) -> (name: string) {
     name = function.name
     return
 }
 
-@(private)
+
 _state_builtin_classes :: proc(state: ^State) {
     state.builtin_classes = make(map[string]StateBuiltinClass)
 
@@ -315,7 +326,7 @@ _state_builtin_classes :: proc(state: ^State) {
     }
 }
 
-@(private)
+
 _state_builtin_class_members :: proc(state: ^State) {
     for class in &state.api.builtin_classes {
         state_class := &state.builtin_classes[class.name]
@@ -327,7 +338,7 @@ _state_builtin_class_members :: proc(state: ^State) {
 
 // formats the name for a builtin class method's backing func ptr
 // format is like __ClassName__METHODHASH
-@(private)
+
 _builtin_class_method_backing_func_name :: proc(
     state: ^State,
     class: ^ApiBuiltinClass,
@@ -345,7 +356,7 @@ _builtin_class_method_backing_func_name :: proc(
     return
 }
 
-@(private)
+
 _builtin_class_method_proc_name :: proc(
     state: ^State,
     class: ^ApiBuiltinClass,
@@ -365,7 +376,7 @@ _builtin_class_method_proc_name :: proc(
 
 // formats the name for a class operator's public proc group
 // format is like class_name_op_name, used for proc overloading
-@(private)
+
 _class_operator_proc_name :: proc(
     state: ^State,
     class: ^ApiBuiltinClass,
@@ -386,7 +397,7 @@ _class_operator_proc_name :: proc(
 
 // formats the name for a class operator's public proc overload
 // format is like class_name_op_name_other_type
-@(private)
+
 _class_operator_overload_proc_name :: proc(
     state: ^State,
     class: ^ApiBuiltinClass,
@@ -415,7 +426,7 @@ _class_operator_overload_proc_name :: proc(
 
 // formats the name for a class operator's backing func ptr
 // format is like __ClassName__OpName__RightType
-@(private)
+
 _class_operator_backing_func_name :: proc(
     state: ^State,
     class: ^ApiBuiltinClass,
@@ -439,7 +450,7 @@ _class_operator_backing_func_name :: proc(
     return
 }
 
-@(private)
+
 _state_builtin_class_operators :: proc(state: ^State, class: ^StateBuiltinClass, api_class: ^ApiBuiltinClass) {
     class.operators = make(map[string]StateClassOperator)
 
@@ -479,7 +490,7 @@ _state_builtin_class_operators :: proc(state: ^State, class: ^StateBuiltinClass,
     return
 }
 
-@(private)
+
 _state_builtin_class_methods :: proc(
     state: ^State,
     api_class: ^ApiBuiltinClass,
@@ -517,7 +528,7 @@ _state_builtin_class_methods :: proc(
     return
 }
 
-@(private)
+
 _state_builtin_class_constructors :: proc(state: ^State, class: ^StateBuiltinClass, api_class: ^ApiBuiltinClass) {
     class.constructors = make([]StateClassConstructor, len(api_class.constructors))
     for constructor in &api_class.constructors {
@@ -542,7 +553,7 @@ _state_builtin_class_constructors :: proc(state: ^State, class: ^StateBuiltinCla
     }
 }
 
-@(private)
+
 _builtin_class_constructor_backing_proc_name :: proc(
     state: ^State,
     class: ^StateBuiltinClass,
@@ -559,7 +570,7 @@ _builtin_class_constructor_backing_proc_name :: proc(
     return
 }
 
-@(private)
+
 _builtin_class_constructor_base_proc_name :: proc(state: ^State, class_snake_name: string) -> (name: string) {
     sb := strings.builder_make()
     defer strings.builder_destroy(&sb)
@@ -569,7 +580,7 @@ _builtin_class_constructor_base_proc_name :: proc(state: ^State, class_snake_nam
     return
 }
 
-@(private)
+
 _builtin_class_constructor_proc_name :: proc(
     state: ^State,
     class: ^StateBuiltinClass,
@@ -596,7 +607,7 @@ _builtin_class_constructor_proc_name :: proc(
     return
 }
 
-@(private)
+
 _get_correct_class_odin_name :: proc(state: ^State, name: string) -> string {
     if n, ok := state.type_odin_names[name]; ok {
         return n
@@ -605,7 +616,7 @@ _get_correct_class_odin_name :: proc(state: ^State, name: string) -> string {
     return name
 }
 
-@(private)
+
 _get_correct_class_snake_name :: proc(state: ^State, name: string) -> string {
     if n, ok := state.type_snake_names[name]; ok {
         return n

@@ -1,3 +1,4 @@
+//+private
 package bindgen
 
 Api :: struct {
