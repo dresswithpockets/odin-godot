@@ -1,70 +1,59 @@
 package godin
-/*
-Usage:
-    godin class <package name> <class name> [inherits]
 
-Parameters:
-
-    class name - the PascalCase class name to use for code generation
-
-    inherits - an inheritance expression
-*/
 
 import "core:fmt"
 import "core:os"
+import "core:strings"
 
-class_help ::
-    ""
+cmd_build :: proc() {
 
-base_help ::
-    "godin is a tool to aid Godot dev with Odin\n" +
-    "Usage:\n" +
-    "    godin <command|topic> [args...]\n" +
-    "\n" +
-    "Commands:\n" +
-    "    class - generates Odin code to create and register an Extension Class\n" +
-    "\n" +
-    "Topics:\n" +
-    "    inherits - special syntax for describing inheritance\n" +
-    "\n" +
-    "For more information about a command or a topic, invoke help command:\n" +
-    "    e.g. `godin help class` or `godin help inherits`\n" +
-    "\n" +
-    "You may also just invoke the topic on its own to see its help:\n" +
-    "    e.g. `godin inherits`\n"
-
-help_targets := map[string]string{
-    "class" = class_help,
 }
 
-cmd_help :: proc() {
-    if len(os.args) == 2 {
-        fmt.println(base_help)
-        return
-    }
+help_base :: #load("help.md", string)
+help_build :: #load("help.build.md", string)
+help_syntax :: #load("help.syntax.md", string)
 
-    help_target := os.args[2]
-    if help_target not_in help_targets {
-        
-    }
-}
-
-cmd_class :: proc() {
-
+help_docs := map[string]string {
+    "build" = help_build,
+    "syntax" = help_syntax,
 }
 
 main :: proc() {
+
     if len(os.args) <= 1 {
-        fmt.println(base_help)
+        fmt.println(help_base)
         return
     }
 
     command := os.args[1]
     switch command {
-        case "class":
-            cmd_class()
+        case "build":
+            cmd_build()
+        case "syntax":
+            fmt.println(help_syntax)
         case "help":
-            cmd_help()
-            return
+            {
+                if len(os.args) == 2 {
+                    fmt.println(help_base)
+                    return
+                }
+
+                help_target := os.args[2]
+                if help_doc, ok := help_docs[help_target]; ok {
+                    fmt.println(help_doc)
+                    return
+                }
+
+                fmt.println(help_base)
+            }
+        case:
+            {
+                if help_doc, ok := help_docs[command]; ok {
+                    fmt.println(help_doc)
+                    return
+                }
+
+                fmt.println(help_base)
+            }
     }
 }
