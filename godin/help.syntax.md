@@ -74,7 +74,7 @@ Setters use similar syntax:
 
 To declare a class signal, use the signal declaration:
 
-    //+class Player extends Node2D @some_file.odin
+    //+class Player extends Node2D
     Player :: struct {
         // ...
 
