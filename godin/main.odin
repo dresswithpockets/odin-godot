@@ -2,7 +2,6 @@ package godin
 
 import "core:fmt"
 import "core:os"
-import "core:strings"
 
 help_base :: #load("help.md", string)
 help_build :: #load("help.build.md", string)
