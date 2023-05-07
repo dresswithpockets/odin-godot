@@ -1,21 +1,28 @@
 # 1. Godin Syntax
 
-Godot's native interface is very tedious to use. For every class or class member you want to define, there is a significant amount of boilerplate needed.
+Godot's native interface is very tedious to use. For every class or class member
+you want to define, there is a significant amount of boilerplate needed.
 
-Godin provides a simple syntax to inform the preprocessor what bindings need to be generated.
+Godin provides a simple syntax to inform the preprocessor what bindings need to
+be generated.
 
 # 1. Classes
 
-To declare an Extension Class to be registered with Godot's ClassDB, use the class declaration:
+To declare an Extension Class to be registered with Godot's ClassDB, use the class
+declaration:
 
     //+class Player extends Node2D
     Player :: struct {
         health: i64,
     }
 
-Unlike in GDScript, the `extends` declaration is required and indicates what this class inherits from. In GDScript, classes inherit from RefCounted by default.
+Unlike in GDScript, the `extends` declaration is required and indicates what this
+class inherits from. In GDScript, classes inherit from RefCounted by default.
 
-By default, directives will always produce code in a separate file named `{FILE}_gde_backend.odin`. For example, if the previous example was written in a file `player.odin`, then the output bindings will be in `player_gde_backend.odin`. This behaviour can be changed with an @-declaration in the directive:
+By default, directives will always produce code in a separate file named `{FILE}_gde_backend.odin`.
+For example, if the previous example was written in a file `player.odin`, then
+the output bindings will be in `player_gde_backend.odin`. This behaviour can be
+changed with an @-declaration in the directive:
 
     //+class Player extends Node2D @some_file.odin
     Player :: struct {
