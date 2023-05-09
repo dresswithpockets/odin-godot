@@ -1,8 +1,10 @@
-# Odin Bindings for Godot GDExtension
+# Godot Toolkit for Odin
 
-This binding is WIP and not stable. Its currently targeting Godot v4.0.2.
+| :warning: This toolkit is not in a usable state!                                                  |
+|:--------------------------------------------------------------------------------------------------|
+| If you are using parts of it, beware of sudden major changes to the API, structure, and features. |
 
-At the moment, the bindings generator only produces global enums.
+Godin currently targets Godot v4.0.2.
 
 ## C API Bindings
 
