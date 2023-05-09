@@ -95,12 +95,12 @@ parse_build_args :: proc(args: []string) -> (options: BuildOptions, success: boo
         }
 
         // store a list of every valid odin file, recursively
-        _recurse_files :: proc(files: []os.File_Info, target_files: ^[dynamic]os.Handle) {
+        _recurse_files :: proc(files: []os.File_Info, target_files: ^[dynamic]os.Handle, ignore_suffix: string) {
             directories := [dynamic]os.File_Info{}
             for file in files {
                 if file.is_dir {
                     append(&directories, file)
-                } else if strings.has_suffix(file.fullpath, ".odin") {
+                } else if strings.has_suffix(file.fullpath, ".odin") && !strings.has_suffix(file.fullpath, ignore_suffix) {
                     odin_file, odin_file_err := os.open(file.fullpath)
                     if odin_file_err != 0 {
                         print_err(odin_file_err, file.fullpath)
@@ -124,11 +124,11 @@ parse_build_args :: proc(args: []string) -> (options: BuildOptions, success: boo
                     return
                 }
 
-                _recurse_files(dir_files, target_files)
+                _recurse_files(dir_files, target_files, ignore_suffix)
             }
         }
 
-        _recurse_files(files, &options.target_files)
+        _recurse_files(files, &options.target_files, options.backend_suffix)
 
         if len(options.target_files) == 0 {
             fmt.printf("Error: There are no valid .odin files in the directory '%v' and its subdirectories.\n", options.target_path)
