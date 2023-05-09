@@ -12,7 +12,7 @@ State :: struct {
 StateClass :: struct {
     name: string,
     extends: string,
-    out_file: Maybe(string),
+    out_file: string,
 
     source: Source,
     odin_struct_name: string,
