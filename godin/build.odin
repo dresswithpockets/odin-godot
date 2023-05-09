@@ -172,18 +172,8 @@ build_state :: proc(state: ^State, options: BuildOptions) {
     }
 
     for class in &state.classes {
-        out_file, out_file_ok := class.out_file.(string)
-        if out_file_ok {
-            if !is_abs_path(out_file) {
-                base_path := strings.trim_suffix(class.source.file.fullpath, class.source.file.name)
-                out_file = strings.concatenate([]string{base_path, out_file})
-            }
-        } else {
-            out_file = strings.trim_suffix(class.source.file.fullpath, ".odin")
-            out_file = strings.concatenate([]string{out_file, options.backend_suffix})
-        }
-
-        class.out_file = out_file
+        class.out_file = strings.trim_suffix(class.source.file.fullpath, ".odin")
+        class.out_file = strings.concatenate([]string{class.out_file, options.backend_suffix})
     }
 }
 
