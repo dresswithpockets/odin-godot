@@ -167,23 +167,6 @@ scan_state_class :: proc(scanner: ^scan.Scanner) -> (class: StateClass, success:
         return
     }
 
-    tok = scan.scan(scanner)
-    if tok != scan.EOF {
-        if tok != '@' {
-            scan.errorf(scanner, "Unexpected '%v' at end of class declaration.", scan.token_string(tok))
-            return
-        }
-
-        if scan.peek(scanner) == scan.EOF {
-            scan.error(scanner, "Expected filename after @ in class declaration, got EOL instead.")
-            return
-        }
-
-        class.out_file = scanner.src[scanner.pos.offset+1:]
-        for tok != scan.EOF {
-            tok = scan.scan(scanner)
-        }
-    }
     class.extends = strings.clone(class.extends)
 
     success = true
