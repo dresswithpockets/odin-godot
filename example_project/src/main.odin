@@ -79,7 +79,9 @@ initialize_example_module :: proc "c" (user_data: rawptr, level: gd.Initializati
 
     if level != .Scene {
         return
-    }    
+    }
+
+    init_example_class_bindings()
 }
 
 uninitialize_example_module :: proc "c" (user_data: rawptr, level: gd.InitializationLevel) {
