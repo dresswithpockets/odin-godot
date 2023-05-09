@@ -11,6 +11,8 @@ BuildOptions :: struct {
 
     target_path_handle: os.Handle,
     target_files: [dynamic]os.Handle,
+
+    godot_import_prefix: string,
 }
 
 parse_build_args :: proc(args: []string) -> (options: BuildOptions, success: bool) {
@@ -43,6 +45,13 @@ parse_build_args :: proc(args: []string) -> (options: BuildOptions, success: boo
                     return
                 }
                 options.backend_suffix = right_val
+            case "-godot-import-path":
+                right_val, ok := right_arg.(string)
+                if !ok {
+                    fmt.println("Error: '-godot-import-path' was given without a value. Correct example usage: `-godot-import-path:shared:godot/`.")
+                    return
+                }
+                options.godot_import_prefix = right_val
         }
     }
 
