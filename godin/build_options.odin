@@ -41,7 +41,7 @@ parse_build_args :: proc(args: []string) -> (options: BuildOptions, success: boo
             case "-backend-suffix":
                 right_val, ok := right_arg.(string)
                 if !ok {
-                    fmt.printf("Error: '-backend-suffix' was given without a value. Correct example usage: `-backend-suffix:_my_suffix.odin`.\n")
+                    fmt.println("Error: '-backend-suffix' was given without a value. Correct example usage: `-backend-suffix:_my_suffix.odin`.")
                     return
                 }
                 options.backend_suffix = right_val
