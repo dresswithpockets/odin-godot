@@ -1,4 +1,4 @@
-package gdinterface
+package gdextension
 
 interface: ^Interface
 library: ExtensionClassLibraryPtr

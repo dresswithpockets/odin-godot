@@ -1,6 +1,6 @@
 package example
 
-import gd "../../gdinterface"
+import gd "../../gdextension"
 import core "../../core"
 import var "../../variant"
 

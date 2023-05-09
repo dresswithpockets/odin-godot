@@ -1,6 +1,6 @@
 package {0:s}
 
-import gd "{1:s}gdinterface"
+import gd "{1:s}gdextension"
 import var "{1:s}variant"
 
 @(private="file")

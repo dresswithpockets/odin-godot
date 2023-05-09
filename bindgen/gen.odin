@@ -8,12 +8,12 @@ import "core:strings"
 import "core:unicode"
 import "core:unicode/utf8"
 
-constructor_type :: "gdinterface.PtrConstructor"
-destructor_type :: "gdinterface.PtrDestructor"
-operator_evaluator_type :: "gdinterface.PtrOperatorEvaluator"
-builtin_method_type :: "gdinterface.PtrBuiltInMethod"
+constructor_type :: "gdextension.PtrConstructor"
+destructor_type :: "gdextension.PtrDestructor"
+operator_evaluator_type :: "gdextension.PtrOperatorEvaluator"
+builtin_method_type :: "gdextension.PtrBuiltInMethod"
 
-// these are already in gdinterface
+// these are already in gdextension
 ignore_enums_by_name :: []string{"Variant.Operator", "Variant.Type"}
 
 enum_prefix_alias := map[string]string {
@@ -64,9 +64,9 @@ generate_bindings :: proc(state: ^State) {
 
             // import the dependency list
             fmt.sbprint(&sb, "import \"../core\"\n")
-            fmt.sbprint(&sb, "import \"../gdinterface\"\n")
+            fmt.sbprint(&sb, "import \"../gdextension\"\n")
             for package_name in class.depends_on_packages {
-                if package_name == "core" || package_name == "gdinterface" || package_name == "variant" {
+                if package_name == "core" || package_name == "gdextension" || package_name == "variant" {
                     continue
                 }
                 fmt.sbprintf(&sb, "import \"../%v\"\n", package_name)
@@ -94,7 +94,7 @@ generate_bindings :: proc(state: ^State) {
 generate_global_enums :: proc(state: ^State, sb: ^strings.Builder) {
     for name, global_enum in state.enums {
         // we ignore some enums by name, such as those pre-implemented
-        // in gdinterface
+        // in gdextension
         if slice.contains(ignore_enums_by_name, name) {
             continue
         }
@@ -184,7 +184,7 @@ generate_builtin_class :: proc(state: ^State, class: ^StateBuiltinClass, sb: ^st
             fmt.sbprint(sb, " else when ")
         }
 
-        fmt.sbprintf(sb, "gdinterface.BUILD_CONFIG == \"%v\" {{\n", config_name)
+        fmt.sbprintf(sb, "gdextension.BUILD_CONFIG == \"%v\" {{\n", config_name)
         fmt.sbprintf(sb, "    __%vOpaqueType :: [%v]u8\n", class.odin_name, size)
         fmt.sbprint(sb, "}")
     }
@@ -207,7 +207,7 @@ generate_builtin_class_frontend_procs :: proc(state: ^State, class: ^StateBuilti
             fmt.sbprintf(sb, "%v: %v", arg.name, arg.odin_type)
         }
         fmt.sbprintf(sb, ") -> (ret: %v) {{\n", class.odin_name)
-        fmt.sbprintln(sb, "    using gdinterface")
+        fmt.sbprintln(sb, "    using gdextension")
         for arg in constructor.arguments {
             fmt.sbprintf(sb, "    %v := %v\n", arg.name, arg.name)
         }
@@ -234,7 +234,7 @@ generate_builtin_class_frontend_procs :: proc(state: ^State, class: ^StateBuilti
             class.base_constructor_name,
             class.odin_name,
         )
-        fmt.sbprintln(sb, "    using gdinterface")
+        fmt.sbprintln(sb, "    using gdextension")
         fmt.sbprintln(sb, "    cstr := strings.clone_to_cstring(from)")
         fmt.sbprintf(sb, "    ret = %v{{}}\n", class.odin_name)
         fmt.sbprintln(
@@ -251,7 +251,7 @@ generate_builtin_class_frontend_procs :: proc(state: ^State, class: ^StateBuilti
             class.base_constructor_name,
             class.odin_name,
         )
-        fmt.sbprintln(sb, "    using gdinterface")
+        fmt.sbprintln(sb, "    using gdextension")
         fmt.sbprintf(sb, "    ret = %v{{}}\n", class.odin_name)
         fmt.sbprintln(sb, "    interface.string_new_with_latin1_chars(cast(StringPtr)&ret._opaque, from)")
         fmt.sbprintln(sb, "    return")
@@ -278,7 +278,7 @@ generate_builtin_class_frontend_procs :: proc(state: ^State, class: ^StateBuilti
                 fmt.sbprintf(sb, ", other: %v", odin_right_type)
             }
             fmt.sbprintf(sb, ") -> (ret: %v) {{\n", overload.odin_return_type)
-            fmt.sbprintln(sb, "    using gdinterface")
+            fmt.sbprintln(sb, "    using gdextension")
             fmt.sbprintln(sb, "    self := self")
             if has_right_type {
                 fmt.sbprintln(sb, "    other := other")
@@ -309,7 +309,7 @@ generate_builtin_class_frontend_procs :: proc(state: ^State, class: ^StateBuilti
     // generate frontend for destructors
     if class.has_destructor {
         fmt.sbprintf(sb, "free_%v :: proc(self: %v) {{\n", class.snake_name, class.odin_name)
-        fmt.sbprintln(sb, "    using gdinterface")
+        fmt.sbprintln(sb, "    using gdextension")
         fmt.sbprintln(sb, "    self := self")
         fmt.sbprintf(sb, "    __%v__destructor(cast(TypePtr)&self._opaque)\n", class.godot_name)
         fmt.sbprint(sb, "}\n\n")
@@ -318,7 +318,7 @@ generate_builtin_class_frontend_procs :: proc(state: ^State, class: ^StateBuilti
 
 generate_builtin_class_initialization_proc :: proc(state: ^State, class: ^StateBuiltinClass, sb: ^strings.Builder) {
     fmt.sbprintf(sb, "init_%v_constructors :: proc() {{\n", class.snake_name)
-    fmt.sbprintln(sb, "    using gdinterface")
+    fmt.sbprintln(sb, "    using gdextension")
 
     for constructor in class.constructors {
         fmt.sbprintf(
@@ -342,7 +342,7 @@ generate_builtin_class_initialization_proc :: proc(state: ^State, class: ^StateB
     fmt.sbprint(sb, "}\n\n")
 
     fmt.sbprintf(sb, "init_%v_bindings :: proc() {{\n", class.snake_name)
-    fmt.sbprintln(sb, "    using gdinterface")
+    fmt.sbprintln(sb, "    using gdextension")
 
     for _, operator in class.operators {
         for overload in operator.overloads {

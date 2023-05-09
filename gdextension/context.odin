@@ -1,6 +1,6 @@
-package gdinterface
+package gdextension
 
-import "../gdinterface"
+import "../gdextension"
 import "core:c"
 import "core:runtime"
 import "core:mem"
@@ -17,7 +17,7 @@ godot_allocator_proc :: proc(
     mem.Allocator_Error,
 ) {
 
-    interface := cast(^gdinterface.Interface)allocator_data
+    interface := cast(^gdextension.Interface)allocator_data
 
     switch mode {
     case .Alloc, .Alloc_Non_Zeroed:

@@ -8,7 +8,7 @@ Godin currently targets Godot v4.0.2.
 
 ## C API Bindings
 
-The C bindings are in `./gdinterface/`. They're based on `godot-cpp/gdextension/gdextension_interface.h`.
+The C bindings are in `./gdextension/lib.odin`. They're based on `godot-cpp/gdextension/gdextension_interface.h`.
 
 ## Generating Complete Bindings
 
@@ -37,7 +37,7 @@ Otherwise, create and export an entrypoint for your extension:
 package example
 
 // assuming odin-godot was cloned into your defacto shared collection
-import gd "shared:odin-godot/gdinterface"
+import gd "shared:odin-godot/gdextension"
 
 @(export)
 example_init :: proc "c" (

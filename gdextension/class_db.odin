@@ -1,4 +1,4 @@
-package gdinterface
+package gdextension
 
 // called by Godot the first time i calls a virtual func, it caches the result per object instance.
 // So, it can happen from different threads at once. 
