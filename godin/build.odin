@@ -190,6 +190,40 @@ add_state_from_decl :: proc(state: ^State, decl: string, source: Source) {
                 return
             }
             state_class.source = source
+            // verify that there is a struct definition after our class declaration
+            {
+                t := scan.scan(parent_scanner)
+                text := scan.token_text(parent_scanner)
+                if t != scan.Ident {
+                    scan.errorf(parent_scanner, "Expected a Identifier for a struct declaration after class declaration, got '%v' instead.", )
+                    return
+                }
+
+                state_class.odin_struct_name = text
+
+                t_comp : rune = ':'
+                t = scan.scan(parent_scanner)
+                text = scan.token_text(parent_scanner)
+                if t != ':' {
+                    scan.errorf(parent_scanner, "Expected '::' in struct declaration, got '%v' (%v) instead.", text, cast(int)t)
+                    return
+                }
+
+                t = scan.scan(parent_scanner)
+                text = scan.token_text(parent_scanner)
+                if t != ':' {
+                    scan.errorf(parent_scanner, "Expected '::' in struct declaration, got '%v' (%v) instead.", text, cast(int)t)
+                    return
+                }
+
+                t = scan.scan(parent_scanner)
+                text = scan.token_text(parent_scanner)
+                if t != scan.Ident || text != "struct" {
+                    scan.errorf(parent_scanner, "Expected struct delcaration after class declaration, got '%v' instead..", text)
+                    return
+                }
+            }
+
             append(&state.classes, state_class)
         case "static":
             unimplemented()
