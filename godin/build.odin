@@ -71,7 +71,22 @@ build_state :: proc(state: ^State, options: BuildOptions) {
         scanner := scan.Scanner{}
         scan.init(&scanner, contents, file_info.fullpath)
 
-        // skip everything except for Comments
+        // we need to refer to the package later, so grab the package name, skipping over any comments
+        t := scan.scan(&scanner)
+        token_text := scan.token_text(&scanner)
+        if t != scan.Ident || token_text!= "package" {
+            scan.errorf(&scanner, "Expected a package declaration, got '%v' instead.", token_text)
+            return
+        }
+
+        t = scan.scan(&scanner)
+        package_name := strings.clone(strings.trim_right_space(scan.token_text(&scanner)))
+        if t != scan.Ident {
+            scan.errorf(&scanner, "Expected a package declaration, got '%v' instead.", package_name)
+            return
+        }
+
+        // from now on, skip everything except for Comments
         scanner.flags -= {.Skip_Comments}
         scanner.error = scanner_error
 
