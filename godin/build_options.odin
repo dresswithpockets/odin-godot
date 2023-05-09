@@ -143,7 +143,9 @@ parse_build_args :: proc(args: []string) -> (options: BuildOptions, success: boo
 setup_build_options :: proc(options: ^BuildOptions) {
     // no default target_path
     options.allow_single_file = false
-    options.backend_suffix = "_gde_backend.odin"
+    options.backend_suffix = ".gen.odin"
+
+    options.godot_import_prefix = "shared:odin-godot/"
 
     options.target_files = make([dynamic]os.Handle)
 }
