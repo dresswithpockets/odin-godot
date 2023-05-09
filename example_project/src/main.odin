@@ -1,8 +1,55 @@
 package example
 
 import gd "../../gdextension"
-import core "../../core"
 import var "../../variant"
+
+// TODO: add class gen
+// TODO: add static method gen
+// TODO: add method gen
+// TODO: add property get gen
+// TODO: add property set gen
+// TODO: add property get+set gen
+// TODO: add enum gen
+
+//+class ExampleClass extends Sprite2D @example_class_backend.odin
+ExampleClass :: struct {
+    thing: i64,
+
+    
+    // +signal(ExampleClass) on_thing(a: String, b: ExampleClass)
+    // +group(ExampleClass) Test group: group_
+    // +subgroup(ExampleClass) Test subgroup: group_subgroup_
+}
+
+// +static method(ExampleClass) do_thing_static(a: int, b: int) -> int
+example_class_do_thing_static :: proc(a, b: i64) -> i64 {
+    return a + b
+}
+
+// +method(ExampleClass) do_thing()
+example_class_do_thing :: proc(self: ^ExampleClass) {
+    self.thing -= 50
+}
+
+// +property(ExampleClass) thing get: int
+example_class_get_thing :: proc(self: ^ExampleClass) -> i64 {
+    return self.thing
+}
+
+// +property(ExampleClass) thing set: int
+example_class_set_thing :: proc(self: ^ExampleClass, value: i64) {
+    self.thing = value
+}
+
+// +enum(ExampleClass) ExampleEnum
+ExampleEnum :: enum {
+    A,
+    B,
+    C,
+    D,
+}
+
+
 
 @(export)
 example_library_init :: proc "c" (
@@ -11,10 +58,10 @@ example_library_init :: proc "c" (
     initialization: ^gd.Initialization,
 ) -> bool {
     // do usual initialization
-    core.interface = interface
-    core.library = library
+    gd.interface = interface
+    gd.library = library
 
-    context = core.godot_context()
+    context = gd.godot_context()
     var.init_string_constructors()
     var.init_string_name_constructors()
     var.init_string_bindings()
@@ -28,119 +75,136 @@ example_library_init :: proc "c" (
 }
 
 initialize_example_module :: proc "c" (user_data: rawptr, level: gd.InitializationLevel) {
-    context = core.godot_context()
+    context = gd.godot_context()
 
     if level != .Scene {
         return
-    }
-
-    class_name := var.new_string_name_cstring("ExampleClass")
-    parent_name := var.new_string_name_cstring("Node2D")
-
-    class_info := gd.ExtensionClassCreationInfo {
-        is_virtual               = false,
-        is_abstract              = false,
-        set_func                 = example_class_set,
-        get_func                 = example_class_get,
-        get_property_list_func   = example_class_get_property_list,
-        free_property_list_func  = example_class_free_property_list,
-        property_can_revert_func = example_class_property_can_revert,
-        property_get_revert_func = example_class_property_get_revert,
-        notification_func        = example_class_notification_func,
-        to_string_func           = example_class_to_string,
-        reference_func           = nil,
-        unreference_func         = nil,
-        create_instance_func     = example_class_create,
-        free_instance_func       = example_class_free,
-        get_virtual_func         = class_db_get_virtual_func,
-        get_rid_func             = nil,
-        class_user_data          = nil,
-    }
-    core.interface.classdb_register_extension_class(
-        core.library,
-        cast(gd.StringNamePtr)&class_name._opaque,
-        cast(gd.StringNamePtr)&parent_name._opaque,
-        &class_info,
-    )
+    }    
 }
 
 uninitialize_example_module :: proc "c" (user_data: rawptr, level: gd.InitializationLevel) {
-    context = core.godot_context()
+    context = gd.godot_context()
 
     if level != .Scene {
         return
     }
-
-    class_name := var.new_string_name_cstring("ExampleClass")
-    core.interface.classdb_unregister_extension_class(core.library, cast(gd.StringNamePtr)&class_name)
+    
 }
 
-example_class_set :: proc "c" (
-    instance: gd.ExtensionClassInstancePtr,
-    name: gd.StringNamePtr,
-    value: gd.VariantPtr,
-) -> bool {
-    context = core.godot_context()
-    return false
-}
+// initialize_example_module :: proc "c" (user_data: rawptr, level: gd.InitializationLevel) {
+//     context = gd.godot_context()
 
-example_class_get :: proc "c" (
-    instance: gd.ExtensionClassInstancePtr,
-    name: gd.StringNamePtr,
-    ret: gd.VariantPtr,
-) -> bool {
-    context = core.godot_context()
-    return false
-}
+//     if level != .Scene {
+//         return
+//     }
 
-example_class_get_property_list :: proc "c" (
-    instance: gd.ExtensionClassInstancePtr,
-    count: u32,
-) -> [^]gd.PropertyInfo {
-    context = core.godot_context()
-    return nil
-}
+//     class_name := var.new_string_name_cstring("ExampleClass")
+//     parent_name := var.new_string_name_cstring("Node2D")
 
-example_class_free_property_list :: proc "c" (instance: gd.ExtensionClassInstancePtr, list: ^gd.PropertyInfo) {
-    context = core.godot_context()
+//     class_info := gd.ExtensionClassCreationInfo {
+//         is_virtual               = false,
+//         is_abstract              = false,
+//         set_func                 = example_class_set,
+//         get_func                 = example_class_get,
+//         get_property_list_func   = example_class_get_property_list,
+//         free_property_list_func  = example_class_free_property_list,
+//         property_can_revert_func = example_class_property_can_revert,
+//         property_get_revert_func = example_class_property_get_revert,
+//         notification_func        = example_class_notification_func,
+//         to_string_func           = example_class_to_string,
+//         reference_func           = nil,
+//         unreference_func         = nil,
+//         create_instance_func     = example_class_create,
+//         free_instance_func       = example_class_free,
+//         get_virtual_func         = class_db_get_virtual_func,
+//         get_rid_func             = nil,
+//         class_user_data          = nil,
+//     }
+//     gd.interface.classdb_register_extension_class(
+//         gd.library,
+//         cast(gd.StringNamePtr)&class_name._opaque,
+//         cast(gd.StringNamePtr)&parent_name._opaque,
+//         &class_info,
+//     )
+// }
 
-}
+// uninitialize_example_module :: proc "c" (user_data: rawptr, level: gd.InitializationLevel) {
+//     context = gd.godot_context()
 
-example_class_property_can_revert :: proc "c" (
-    instance: gd.ExtensionClassInstancePtr,
-    name: gd.StringNamePtr,
-) -> bool {
-    context = core.godot_context()
-    return false
-}
+//     if level != .Scene {
+//         return
+//     }
 
-example_class_property_get_revert :: proc "c" (
-    instance: gd.ExtensionClassInstancePtr,
-    name: gd.StringNamePtr,
-    ret: gd.VariantPtr,
-) -> bool {
-    context = core.godot_context()
-    return false
-}
+//     class_name := var.new_string_name_cstring("ExampleClass")
+//     gd.interface.classdb_unregister_extension_class(gd.library, cast(gd.StringNamePtr)&class_name)
+// }
 
-example_class_notification_func :: proc "c" (instance: gd.ExtensionClassInstancePtr, what: i32) {
-    context = core.godot_context()
-}
+// example_class_set :: proc "c" (
+//     instance: gd.ExtensionClassInstancePtr,
+//     name: gd.StringNamePtr,
+//     value: gd.VariantPtr,
+// ) -> bool {
+//     context = gd.godot_context()
+//     return false
+// }
 
-example_class_to_string :: proc "c" (instance: gd.ExtensionClassInstancePtr, is_valid: ^bool, out: gd.StringPtr) {
-    context = core.godot_context()
-}
+// example_class_get :: proc "c" (
+//     instance: gd.ExtensionClassInstancePtr,
+//     name: gd.StringNamePtr,
+//     ret: gd.VariantPtr,
+// ) -> bool {
+//     context = gd.godot_context()
+//     return false
+// }
 
-example_class_create :: proc "c" (user_data: rawptr) -> gd.ObjectPtr {
-    context = core.godot_context()
-    return nil
-}
+// example_class_get_property_list :: proc "c" (
+//     instance: gd.ExtensionClassInstancePtr,
+//     count: ^u32,
+// ) -> [^]gd.PropertyInfo {
+//     context = gd.godot_context()
+//     return nil
+// }
 
-example_class_free :: proc "c" (user_data: rawptr, instance: gd.ExtensionClassInstancePtr) {
-    context = core.godot_context()
-}
+// example_class_free_property_list :: proc "c" (instance: gd.ExtensionClassInstancePtr, list: ^gd.PropertyInfo) {
+//     context = gd.godot_context()
 
-class_db_get_virtual_func :: proc "c" (user_data: rawptr, name: gd.StringNamePtr) -> gd.ExtensionClassCallVirtual {
-    context = core.godot_context()
-    return nil
-}
+// }
+
+// example_class_property_can_revert :: proc "c" (
+//     instance: gd.ExtensionClassInstancePtr,
+//     name: gd.StringNamePtr,
+// ) -> bool {
+//     context = gd.godot_context()
+//     return false
+// }
+
+// example_class_property_get_revert :: proc "c" (
+//     instance: gd.ExtensionClassInstancePtr,
+//     name: gd.StringNamePtr,
+//     ret: gd.VariantPtr,
+// ) -> bool {
+//     context = gd.godot_context()
+//     return false
+// }
+
+// example_class_notification_func :: proc "c" (instance: gd.ExtensionClassInstancePtr, what: i32) {
+//     context = gd.godot_context()
+// }
+
+// example_class_to_string :: proc "c" (instance: gd.ExtensionClassInstancePtr, is_valid: ^bool, out: gd.StringPtr) {
+//     context = gd.godot_context()
+// }
+
+// example_class_create :: proc "c" (user_data: rawptr) -> gd.ObjectPtr {
+//     context = gd.godot_context()
+//     return nil
+// }
+
+// example_class_free :: proc "c" (user_data: rawptr, instance: gd.ExtensionClassInstancePtr) {
+//     context = gd.godot_context()
+// }
+
+// class_db_get_virtual_func :: proc "c" (user_data: rawptr, name: gd.StringNamePtr) -> gd.ExtensionClassCallVirtual {
+//     context = gd.godot_context()
+//     return nil
+// }
