@@ -145,15 +145,15 @@ scan_state_class :: proc(scanner: ^scan.Scanner) -> (class: StateClass, success:
 
     tok := scan.scan(scanner)
     class.name = scan.token_text(scanner)
-
     if tok != scan.Ident {
         scan.errorf(scanner, "Expected a class name identifier in class declaration, got '%v' (%v) instead.", class.name, scan.token_string(tok))
         return
     }
 
+    class.name = strings.clone(class.name)
+
     tok = scan.scan(scanner)
     extends := scan.token_text(scanner)
-
     if tok != scan.Ident || extends != "extends" {
         scan.errorf(scanner, "Expected an Ident, 'extends' in class declaration. Got '%v' (%v) instead.", extends, scan.token_string(tok))
         return
@@ -184,6 +184,7 @@ scan_state_class :: proc(scanner: ^scan.Scanner) -> (class: StateClass, success:
             tok = scan.scan(scanner)
         }
     }
+    class.extends = strings.clone(class.extends)
 
     success = true
     return
