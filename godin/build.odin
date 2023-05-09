@@ -15,6 +15,7 @@ StateClass :: struct {
     out_file: Maybe(string),
 
     source: Source,
+    odin_struct_name: string,
 }
 
 Source :: struct {
