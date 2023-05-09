@@ -1,6 +1,6 @@
 package test
 
-//+class Player extends Node2D 
+//+class Player extends Node2D
 Player :: struct {
     health: i64,
 }
