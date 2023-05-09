@@ -1,22 +1,76 @@
-package {{package_name}}
+package {0:s}
 
-{{class_name}} :: struct {
-
-}
-
-bind_{{class_snake_name}}_methods :: proc(class_name: StringName) {
-
-}
-
-new_{{class_snake_name}} :: proc() -> ^{{class_name}} {
-
-}
-
-free_{{class_snake_name}} :: proc(self: ^{{class_name}}) {
-
-}
+import gd "{1:s}gdinterface"
+import var "{1:s}variant"
 
 @(private="file")
-_process :: proc(self: ^{{class_name}}, delta: f64) {
+__{2:s}__Class__StringName: var.StringName
 
-}
+@(private="file")
+__{2:s}__Parent__StringName: var.StringName
+
+init_{4:s}_bindings :: proc() {{
+    using gd
+    __{2:s}__Class__StringName = var.new_string_name_cstring("{2:s}")
+    __{2:s}__Parent__StringName = var.new_string_name_cstring("{3:s}")
+    class_info := ExtensionClassCreationInfo {{
+        is_virtual               = false,
+        is_abstract              = false,
+        set_func                 = {4:s}_set_bind,
+        get_func                 = {4:s}_get_bind,
+        get_property_list_func   = {4:s}_get_property_list_bind,
+        free_property_list_func  = {4:s}_free_property_list_bind,
+        property_can_revert_func = {4:s}_property_can_revert_bind,
+        property_get_revert_func = {4:s}_property_get_revert_bind,
+        notification_func        = {4:s}_notification_bind,
+        to_string_func           = {4:s}_to_string_bind,
+        reference_func           = nil,
+        unreference_func         = nil,
+        create_instance_func     = {4:s}_create,
+        free_instance_func       = {4:s}_free,
+        get_virtual_func         = gd.class_db_get_virtual_func,
+        get_rid_func             = nil,
+        class_user_data          = &__{2:s}__Class__StringName,
+    }}
+    gd.interface.classdb_register_extension_class(gd.library, cast(StringNamePtr)&__{2:s}__Class__StringName._opaque, cast(StringNamePtr)&__{2:s}__Parent__StringName._opaque, &class_info)
+}}
+
+{4:s}_set_bind :: proc "c" (instance: gd.ExtensionClassInstancePtr, name: gd.StringNamePtr, value: gd.VariantPtr) -> bool {{
+    return false
+}}
+
+{4:s}_get_bind :: proc "c" (instance: gd.ExtensionClassInstancePtr, name: gd.StringNamePtr, ret: gd.VariantPtr) -> bool {{
+    return false
+}}
+
+{4:s}_get_property_list_bind :: proc "c" (instance: gd.ExtensionClassInstancePtr, count: ^u32) -> [^]gd.PropertyInfo {{
+    return nil
+}}
+
+{4:s}_free_property_list_bind :: proc "c" (instance: gd.ExtensionClassInstancePtr, list: ^gd.PropertyInfo) {{
+    
+}}
+
+{4:s}_property_can_revert_bind :: proc "c" (instance: gd.ExtensionClassInstancePtr, name: gd.StringNamePtr) -> bool {{
+    return false
+}}
+
+{4:s}_property_get_revert_bind :: proc "c" (instance: gd.ExtensionClassInstancePtr, name: gd.StringNamePtr, ret: gd.VariantPtr) -> bool {{
+    return false
+}}
+
+{4:s}_notification_bind :: proc "c" (instance: gd.ExtensionClassInstancePtr, what: i32) {{
+    
+}}
+
+{4:s}_to_string_bind :: proc "c" (instance: gd.ExtensionClassInstancePtr, is_valid: ^bool, out: gd.StringPtr) {{
+    
+}}
+
+{4:s}_create :: proc "c" (data: rawptr) -> gd.ObjectPtr {{
+    return nil
+}}
+
+{4:s}_free :: proc "c" (data: rawptr, ptr: gd.ExtensionClassInstancePtr) {{
+    
+}}
