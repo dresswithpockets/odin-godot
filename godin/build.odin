@@ -23,6 +23,7 @@ Source :: struct {
     handle: os.Handle,
     line: int,
     col: int,
+    package_name: string,
 }
 
 cmd_build :: proc() {
