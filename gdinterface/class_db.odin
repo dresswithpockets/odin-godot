@@ -6,7 +6,7 @@ package gdinterface
 //
 // for our implementation, we dont support virtual method binding (yet), so this will always return
 // nil
-class_db_get_virtual_func :: proc(user_data: rawptr, name: StringNamePtr) -> ExtensionClassCallVirtual {
+class_db_get_virtual_func :: proc "c" (user_data: rawptr, name: StringNamePtr) -> ExtensionClassCallVirtual {
     return nil
 }
 
