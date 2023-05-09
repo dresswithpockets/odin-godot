@@ -45,6 +45,30 @@ cmd_build :: proc() {
     gen_backend(state, options)
 }
 
+/*
+class_template
+
+This is a template string that expects the following format parameters, 
+in the order given:
+
+ 0: package_name
+ 1: godot_import_path
+ 2: class_godot_name
+ 3: class_parent_name
+ 4: class_snake_name
+*/
+class_template :: #load("templates/class.odin.template", string)
+
+template_format_class :: proc(package_name, godot_import_path, class_godot_name, class_parent_name, class_snake_name: string) -> string {
+    sb := strings.Builder{}
+    strings.builder_init(&sb)
+    defer strings.builder_destroy(&sb)
+
+    fmt.sbprintf(&sb, class_template, package_name, godot_import_path, class_godot_name, class_parent_name, class_snake_name)
+
+    return strings.clone(strings.to_string(sb))
+}
+
 gen_backend :: proc(state: State, options: BuildOptions) {
     for class in state.classes {
         fmt.printf("Found StateClass '%v', extends '%v', backend path: '%v'.\n", class.name, class.extends, class.out_file)
@@ -71,35 +95,15 @@ gen_backend :: proc(state: State, options: BuildOptions) {
         strings.builder_init(&sb)
         defer strings.builder_destroy(&sb)
 
-        fmt.sbprintf(&sb, "package %v\n\n", class.source.package_name)
+        class_snake_name := odin_to_snake_case(class.name)
+        defer delete(class_snake_name)
+
+        class_backend := template_format_class(class.source.package_name, options.godot_import_prefix, class.name, class.extends, class_snake_name)
+        defer delete(class_backend)
+
+        io.write_string(writer, class_backend)
 
         // TODO: import dependent packages (i.e other generated classes)
-
-        // core imports
-        fmt.sbprintf(&sb, "import \"%vcore\"\n", options.godot_import_prefix)
-        fmt.sbprintf(&sb, "import gd \"%vgdinterface\"\n", options.godot_import_prefix)
-        fmt.sbprintf(&sb, "import var \"%vvariant\"\n", options.godot_import_prefix)
-
-        fmt.sbprintln(&sb)
-
-        // string names
-        fmt.sbprintln(&sb, "@(private=\"file\")")
-        fmt.sbprintf(&sb, "__%v__Class__StringName: var.StringName\n", class.name)
-
-        fmt.sbprintln(&sb)
-
-        fmt.sbprintln(&sb, "@(private=\"file\")")
-        fmt.sbprintf(&sb, "__%v__Parent__StringName: var.StringName\n", class.name)
-
-        fmt.sbprintln(&sb)
-
-        // init bindings
-        class_snake_name := odin_to_snake_case(class.name)
-        fmt.sbprintf(&sb, "init_%v_bindings :: proc() {{\n", class_snake_name)
-        fmt.sbprintln(&sb, "    using gd")
-        // TODO: setup Class and Parent StringNames
-        fmt.sbprintf(&sb, "    core.interface.classdb_register_extension_class(core.library, cast(StringNamePtr)__%v__Class__StringName._opaque, cast(StringNamePtr)__%v__Parent__StringName._opaque, &class_info)\n", class.name, class.name)
-        fmt.sbprint(&sb, "}\n\n")
 
         io.write_string(writer, strings.to_string(sb))
     }
