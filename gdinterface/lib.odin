@@ -181,7 +181,7 @@ MethodInfo :: struct {
     default_arguments:      [^]VariantPtr,
 }
 
-ExtensionClassGetPropertyList :: #type proc "c" (instance: ExtensionClassInstancePtr, count: u32) -> [^]PropertyInfo
+ExtensionClassGetPropertyList :: #type proc "c" (instance: ExtensionClassInstancePtr, count: ^u32) -> [^]PropertyInfo
 ExtensionClassFreePropertyList :: #type proc "c" (instance: ExtensionClassInstancePtr, list: ^PropertyInfo)
 ExtensionClassPropertyCanRevert :: #type proc "c" (instance: ExtensionClassInstancePtr, name: StringNamePtr) -> bool
 ExtensionClassPropertyGetRevert :: #type proc "c" (
