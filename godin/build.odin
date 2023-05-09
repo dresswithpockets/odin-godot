@@ -145,8 +145,8 @@ build_state :: proc(state: ^State, options: BuildOptions) {
         scanner.flags -= {.Skip_Comments}
         scanner.error = scanner_error
 
-        t = scan.scan(&scanner)
         for {
+            t = scan.scan(&scanner)
             for t != scan.Comment && t != scan.EOF {
                 t = scan.scan(&scanner)
             }
@@ -170,8 +170,6 @@ build_state :: proc(state: ^State, options: BuildOptions) {
                 package_name = package_name,
             }
             add_state_from_decl(state, decl, source, &scanner)
-
-            t = scan.scan(&scanner)
         }
     }
 
