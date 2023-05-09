@@ -114,7 +114,7 @@ build_state :: proc(state: ^State, options: BuildOptions) {
                 handle = file,
                 package_name = package_name,
             }
-            add_state_from_decl(state, decl, source)
+            add_state_from_decl(state, decl, source, &scanner)
 
             t = scan.scan(&scanner)
         }
@@ -173,7 +173,7 @@ scan_state_class :: proc(scanner: ^scan.Scanner) -> (class: StateClass, success:
     return
 }
 
-add_state_from_decl :: proc(state: ^State, decl: string, source: Source) {
+add_state_from_decl :: proc(state: ^State, decl: string, source: Source, parent_scanner: ^scan.Scanner) {
     scanner := scan.Scanner{}
     scan.init(&scanner, decl, source.file.fullpath)
     scanner.error = scanner_error
