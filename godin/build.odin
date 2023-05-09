@@ -186,8 +186,8 @@ add_state_from_decl :: proc(state: ^State, decl: string, source: Source) {
     decl_type := scan.token_text(&scanner)
     switch decl_type {
         case "class":
-            state_class, ok := scan_state_class(&scanner)
-            if !ok {
+            state_class, class_ok := scan_state_class(&scanner)
+            if !class_ok {
                 fmt.println("There were errors parsing.")
                 return
             }
