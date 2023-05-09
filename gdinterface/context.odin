@@ -1,4 +1,4 @@
-package core
+package gdinterface
 
 import "../gdinterface"
 import "core:c"

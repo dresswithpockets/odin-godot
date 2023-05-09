@@ -1,5 +1,8 @@
 package gdinterface
 
+interface: ^Interface
+library: ExtensionClassLibraryPtr
+
 when BUILD_CONFIG == "float_32" {
     float :: f32
 } else when BUILD_CONFIG == "float_64" {
