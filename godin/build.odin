@@ -4,6 +4,7 @@ import "core:os"
 import "core:fmt"
 import "core:strings"
 import scan "core:text/scanner"
+import "core:io"
 
 State :: struct {
     classes: [dynamic]StateClass,
@@ -46,12 +47,62 @@ cmd_build :: proc() {
 
 gen_backend :: proc(state: State, options: BuildOptions) {
     for class in state.classes {
-        assert(class.out_file != nil, "Class out_file should never be nil in gen_backend")
         fmt.printf("Found StateClass '%v', extends '%v', backend path: '%v'.\n", class.name, class.extends, class.out_file)
-        // TODO: write generated backend to out_file
-    }
+        
+        out_file_handle, err := os.open(class.out_file, os.O_CREATE | os.O_TRUNC | os.O_RDWR)
+        if err != 0 {
+            print_err(err, class.out_file)
+            return
+        }
 
-    unimplemented()
+        // streams take ownership of the handle, so we dont need to close the handle ourselves
+        stream := os.stream_from_handle(out_file_handle)
+        defer io.destroy(stream)
+
+        writer, ok := io.to_writer(stream)
+        if !ok {
+            fmt.printf("There was an error opening a writer on the file: %v\n", class.out_file)
+            return
+        }
+
+        fmt.println("Package name: ", class.source.package_name)
+
+        sb := strings.Builder{}
+        strings.builder_init(&sb)
+        defer strings.builder_destroy(&sb)
+
+        fmt.sbprintf(&sb, "package %v\n\n", class.source.package_name)
+
+        // TODO: import dependent packages (i.e other generated classes)
+
+        // core imports
+        fmt.sbprintf(&sb, "import \"%vcore\"\n", options.godot_import_prefix)
+        fmt.sbprintf(&sb, "import gd \"%vgdinterface\"\n", options.godot_import_prefix)
+        fmt.sbprintf(&sb, "import var \"%vvariant\"\n", options.godot_import_prefix)
+
+        fmt.sbprintln(&sb)
+
+        // string names
+        fmt.sbprintln(&sb, "@(private=\"file\")")
+        fmt.sbprintf(&sb, "__%v__Class__StringName: var.StringName\n", class.name)
+
+        fmt.sbprintln(&sb)
+
+        fmt.sbprintln(&sb, "@(private=\"file\")")
+        fmt.sbprintf(&sb, "__%v__Parent__StringName: var.StringName\n", class.name)
+
+        fmt.sbprintln(&sb)
+
+        // init bindings
+        class_snake_name := odin_to_snake_case(class.name)
+        fmt.sbprintf(&sb, "init_%v_bindings :: proc() {{\n", class_snake_name)
+        fmt.sbprintln(&sb, "    using gd")
+        // TODO: setup Class and Parent StringNames
+        fmt.sbprintf(&sb, "    core.interface.classdb_register_extension_class(core.library, cast(StringNamePtr)__%v__Class__StringName._opaque, cast(StringNamePtr)__%v__Parent__StringName._opaque, &class_info)\n", class.name, class.name)
+        fmt.sbprint(&sb, "}\n\n")
+
+        io.write_string(writer, strings.to_string(sb))
+    }
 }
 
 build_state :: proc(state: ^State, options: BuildOptions) {
