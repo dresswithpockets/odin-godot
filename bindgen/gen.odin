@@ -63,7 +63,6 @@ generate_bindings :: proc(state: ^State) {
             }
 
             // import the dependency list
-            fmt.sbprint(&sb, "import \"../core\"\n")
             fmt.sbprint(&sb, "import \"../gdextension\"\n")
             for package_name in class.depends_on_packages {
                 if package_name == "core" || package_name == "gdextension" || package_name == "variant" {
