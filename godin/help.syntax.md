@@ -19,17 +19,9 @@ declaration:
 Unlike in GDScript, the `extends` declaration is required and indicates what this
 class inherits from. In GDScript, classes inherit from RefCounted by default.
 
-By default, directives will always produce code in a separate file named `{FILE}_gde_backend.odin`.
+By default, directives will always produce code in a separate file named `{FILE}.gen.odin`.
 For example, if the previous example was written in a file `player.odin`, then
-the output bindings will be in `player_gde_backend.odin`. This behaviour can be
-changed with an @-declaration in the directive:
-
-    //+class Player extends Node2D @some_file.odin
-    Player :: struct {
-        health: i64,
-    }
-
-This will produce the bindings in `some_file.odin` instead of `player_gde_backend.odin`.
+the output bindings will be in `player.gen.odin`.
 
 ## 1.1 Methods
 
@@ -60,6 +52,32 @@ You can declare a static method by prepending `static` to a method declaration:
     player_do_thing :: proc(a, b: i64) -> i64 {
         return a + b
     }
+
+### 1.1.1 Special Methods
+
+You may override the default behaviour of some pre-defined methods by name:
+
+    //+method(Player) _set(property: StringName, value: Variant) -> bool
+    player_set :: proc(self: ^Player, property: var.StringName, value: var.Variant) -> bool {
+        // check property name and field value on self
+        // return true if property found & set, false otherwise
+    }
+
+These are the methods you may override by name:
+
+    _init()
+    _notification(what: int)
+    _set(property: StringName, value: Variant) -> bool
+    _get(property: StringName, value: ^Variant) -> bool
+    _get_property_list() -> Dictionary
+    _property_can_revert(name: StringName) -> bool
+    _property_get_revert(name: StringName, value: ^Variant) -> bool
+    _to_string() -> String
+
+See https://docs.godotengine.org/en/latest/classes/class_object.html for more
+details on these methods
+
+You may also override `_destroy`, which will be called when the object is freed.
 
 ## 1.2 Properties
 
