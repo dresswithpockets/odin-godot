@@ -56,15 +56,16 @@ in the order given:
  2: class_godot_name
  3: class_parent_name
  4: class_snake_name
+ 5: class_struct_name
 */
 class_template :: #load("templates/class.odin.template", string)
 
-template_format_class :: proc(package_name, godot_import_path, class_godot_name, class_parent_name, class_snake_name: string) -> string {
+template_format_class :: proc(package_name, godot_import_path, class_godot_name, class_parent_name, class_snake_name, class_struct_name: string) -> string {
     sb := strings.Builder{}
     strings.builder_init(&sb)
     defer strings.builder_destroy(&sb)
 
-    fmt.sbprintf(&sb, class_template, package_name, godot_import_path, class_godot_name, class_parent_name, class_snake_name)
+    fmt.sbprintf(&sb, class_template, package_name, godot_import_path, class_godot_name, class_parent_name, class_snake_name, class_struct_name)
 
     return strings.clone(strings.to_string(sb))
 }
@@ -98,7 +99,7 @@ gen_backend :: proc(state: State, options: BuildOptions) {
         class_snake_name := odin_to_snake_case(class.name)
         defer delete(class_snake_name)
 
-        class_backend := template_format_class(class.source.package_name, options.godot_import_prefix, class.name, class.extends, class_snake_name)
+        class_backend := template_format_class(class.source.package_name, options.godot_import_prefix, class.name, class.extends, class_snake_name, class.odin_struct_name)
         defer delete(class_backend)
 
         io.write_string(writer, class_backend)
@@ -273,6 +274,7 @@ add_state_from_decl :: proc(state: ^State, decl: string, source: Source, parent_
         case "static":
             unimplemented()
         case "method":
+            // TODO: support special method overriding
             unimplemented()
         case "property":
             unimplemented()
