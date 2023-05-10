@@ -68,9 +68,51 @@ init_{4:s}_bindings :: proc() {{
 }}
 
 {4:s}_create :: proc "c" (data: rawptr) -> gd.ObjectPtr {{
+    context = gd.godot_context()
+
+    instance := new({2:s})
+    {4:s}_init(instance)
+    instance._owner = gd.interface.classdb_construct_object(cast(gd.StringNamePtr)&__{2:s}__Class__StringName._opaque)
+    __{2:s}__post_initialization(instance)
+
     return nil
 }}
 
 {4:s}_free :: proc "c" (data: rawptr, ptr: gd.ExtensionClassInstancePtr) {{
-    
+    if data == nil {{
+        return
+    }}
+
+    context = gd.godot_context()
+
+    instance := cast(^{5:s})ptr
+    {4:s}_destroy(instance)
+    free(instance)
+}}
+
+@(private)
+__{2:s}__post_initialization :: proc(self: ^{5:s}) {{
+    interface.object_set_instance(self._owner, cast(StringNamePtr)&__{2:s}__Class__StringName._opaque, self)
+    interface.object_set_instance_binding(self._owner, library, self, &__{2:s}__BindingCallbacks)
+}}
+
+@(private)
+__{2:s}__BindingCallbacks :: gd.InstanceBindingCallbacks {{
+    __{2:s}__create_callback,
+    __{2:s}__free_callback,
+    __{2:s}__reference_callback,
+}}
+
+@(private)
+__{2:s}__create_callback :: proc "c" (token: rawptr, instance: rawptr) -> rawptr {{
+    return nil
+}}
+
+@(private)
+__{2:s}__free_callback :: proc "c" (token: rawptr, instance: rawptr, binding: rawptr) {{
+}}
+
+@(private)
+__{2:s}__reference_callback :: proc "c" (token: rawptr, instance: rawptr, reference: bool) -> bool {{
+    return true
 }}
