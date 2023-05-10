@@ -2,7 +2,7 @@ package example
 
 import gd "../../gdextension"
 import var "../../variant"
-
+import "core:strings"
 
 
 // TODO: add class gen
@@ -65,6 +65,10 @@ example_library_init :: proc "c" (
     gd.library = library
 
     context = gd.godot_context()
+
+    test_str := strings.clone("uwu")
+    delete(test_str)
+
     var.init_string_constructors()
     var.init_string_name_constructors()
     var.init_string_bindings()
@@ -83,6 +87,9 @@ initialize_example_module :: proc "c" (user_data: rawptr, level: gd.Initializati
     if level != .Scene {
         return
     }
+
+    test_str := strings.clone("uwu")
+    delete(test_str)
 
     init_example_class_bindings()
 }
