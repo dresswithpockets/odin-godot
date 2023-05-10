@@ -3,6 +3,8 @@ package example
 import gd "../../gdextension"
 import var "../../variant"
 
+
+
 // TODO: add class gen
 // TODO: add static method gen
 // TODO: add method gen
@@ -11,10 +13,11 @@ import var "../../variant"
 // TODO: add property get+set gen
 // TODO: add enum gen
 
-//+class ExampleClass extends Sprite2D @example_class_backend.odin
+//+class ExampleClass extends Sprite2D
 ExampleClass :: struct {
-    thing: i64,
+    _owner: gd.ObjectPtr,
 
+    thing: i64,
     
     // +signal(ExampleClass) on_thing(a: String, b: ExampleClass)
     // +group(ExampleClass) Test group: group_
