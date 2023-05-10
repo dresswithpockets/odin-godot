@@ -79,6 +79,7 @@ default_temp_godot_allocator := runtime.Allocator{runtime.arena_allocator_proc, 
 
 godot_context :: #force_inline proc "contextless" () -> (c: runtime.Context) {
     c.allocator = default_godot_allocator
+    c.allocator.data = interface
     c.temp_allocator = default_temp_godot_allocator
     return
 }
