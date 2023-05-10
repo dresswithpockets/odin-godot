@@ -66,8 +66,20 @@ godot_allocator :: #force_inline proc "contextless" () -> (a: runtime.Allocator)
     return mem.Allocator{procedure = godot_allocator_proc, data = interface}
 }
 
+@(private)
+default_godot_allocator := godot_allocator()
+
+@(private)
+temp_arena := runtime.Arena{
+    backing_allocator = default_godot_allocator,
+}
+
+@(private)
+default_temp_godot_allocator := runtime.Allocator{runtime.arena_allocator_proc, &temp_arena}
+
 godot_context :: #force_inline proc "contextless" () -> (c: runtime.Context) {
-    c.allocator = godot_allocator()
+    c.allocator = default_godot_allocator
+    c.temp_allocator = default_temp_godot_allocator
     return
 }
 
