@@ -4,7 +4,6 @@ import gd "../../gdextension"
 import var "../../variant"
 import "core:strings"
 
-
 // TODO: add class gen
 // TODO: add static method gen
 // TODO: add method gen
@@ -16,9 +15,8 @@ import "core:strings"
 //+class ExampleClass extends Sprite2D
 ExampleClass :: struct {
     _owner: gd.ObjectPtr,
+    thing:  i64,
 
-    thing: i64,
-    
     // +signal(ExampleClass) on_thing(a: String, b: ExampleClass)
     // +group(ExampleClass) Test group: group_
     // +subgroup(ExampleClass) Test subgroup: group_subgroup_
@@ -51,8 +49,6 @@ ExampleEnum :: enum {
     C,
     D,
 }
-
-
 
 @(export)
 example_library_init :: proc "c" (
@@ -100,7 +96,7 @@ uninitialize_example_module :: proc "c" (user_data: rawptr, level: gd.Initializa
     if level != .Scene {
         return
     }
-    
+
 }
 
 // initialize_example_module :: proc "c" (user_data: rawptr, level: gd.InitializationLevel) {

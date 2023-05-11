@@ -11,19 +11,18 @@ State :: struct {
 }
 
 StateClass :: struct {
-    name: string,
-    extends: string,
-    out_file: string,
-
-    source: Source,
+    name:             string,
+    extends:          string,
+    out_file:         string,
+    source:           Source,
     odin_struct_name: string,
 }
 
 Source :: struct {
-    file: os.File_Info,
-    handle: os.Handle,
-    line: int,
-    col: int,
+    file:         os.File_Info,
+    handle:       os.Handle,
+    line:         int,
+    col:          int,
     package_name: string,
 }
 
@@ -68,20 +67,36 @@ in the order given:
 */
 class_template :: #load("templates/class.odin.template", string)
 
-template_format_class :: proc(package_name, godot_import_path, class_godot_name, class_parent_name, class_snake_name, class_struct_name: string) -> string {
+template_format_class :: proc(
+    package_name, godot_import_path, class_godot_name, class_parent_name, class_snake_name, class_struct_name: string,
+) -> string {
     sb := strings.Builder{}
     strings.builder_init(&sb)
     defer strings.builder_destroy(&sb)
 
-    fmt.sbprintf(&sb, class_template, package_name, godot_import_path, class_godot_name, class_parent_name, class_snake_name, class_struct_name)
+    fmt.sbprintf(
+        &sb,
+        class_template,
+        package_name,
+        godot_import_path,
+        class_godot_name,
+        class_parent_name,
+        class_snake_name,
+        class_struct_name,
+    )
 
     return strings.clone(strings.to_string(sb))
 }
 
 gen_backend :: proc(state: State, options: BuildOptions) {
     for class in state.classes {
-        fmt.printf("Found StateClass '%v', extends '%v', backend path: '%v'.\n", class.name, class.extends, class.out_file)
-        
+        fmt.printf(
+            "Found StateClass '%v', extends '%v', backend path: '%v'.\n",
+            class.name,
+            class.extends,
+            class.out_file,
+        )
+
         out_file_handle, err := os.open(class.out_file, os.O_CREATE | os.O_TRUNC | os.O_RDWR)
         if err != 0 {
             print_err(err, class.out_file)
@@ -107,7 +122,14 @@ gen_backend :: proc(state: State, options: BuildOptions) {
         class_snake_name := odin_to_snake_case(class.name)
         defer delete(class_snake_name)
 
-        class_backend := template_format_class(class.source.package_name, options.godot_import_prefix, class.name, class.extends, class_snake_name, class.odin_struct_name)
+        class_backend := template_format_class(
+            class.source.package_name,
+            options.godot_import_prefix,
+            class.name,
+            class.extends,
+            class_snake_name,
+            class.odin_struct_name,
+        )
         defer delete(class_backend)
 
         io.write_string(writer, class_backend)
@@ -138,7 +160,7 @@ build_state :: proc(state: ^State, options: BuildOptions) {
         // we need to refer to the package later, so grab the package name, skipping over any comments
         t := scan.scan(&scanner)
         token_text := scan.token_text(&scanner)
-        if t != scan.Ident || token_text!= "package" {
+        if t != scan.Ident || token_text != "package" {
             scan.errorf(&scanner, "Expected a package declaration, got '%v' instead.", token_text)
             return
         }
@@ -171,11 +193,11 @@ build_state :: proc(state: ^State, options: BuildOptions) {
             }
 
             decl := comment[3:]
-            source := Source{
-                col = 0,
-                line = scanner.line - 1,
-                file = file_info,
-                handle = file,
+            source := Source {
+                col          = 0,
+                line         = scanner.line - 1,
+                file         = file_info,
+                handle       = file,
                 package_name = package_name,
             }
             add_state_from_decl(state, decl, source, &scanner)
@@ -198,7 +220,12 @@ scan_state_class :: proc(scanner: ^scan.Scanner) -> (class: StateClass, success:
     tok := scan.scan(scanner)
     class.name = scan.token_text(scanner)
     if tok != scan.Ident {
-        scan.errorf(scanner, "Expected a class name identifier in class declaration, got '%v' (%v) instead.", class.name, scan.token_string(tok))
+        scan.errorf(
+            scanner,
+            "Expected a class name identifier in class declaration, got '%v' (%v) instead.",
+            class.name,
+            scan.token_string(tok),
+        )
         return
     }
 
@@ -207,7 +234,12 @@ scan_state_class :: proc(scanner: ^scan.Scanner) -> (class: StateClass, success:
     tok = scan.scan(scanner)
     extends := scan.token_text(scanner)
     if tok != scan.Ident || extends != "extends" {
-        scan.errorf(scanner, "Expected an Ident, 'extends' in class declaration. Got '%v' (%v) instead.", extends, scan.token_string(tok))
+        scan.errorf(
+            scanner,
+            "Expected an Ident, 'extends' in class declaration. Got '%v' (%v) instead.",
+            extends,
+            scan.token_string(tok),
+        )
         return
     }
 
@@ -215,7 +247,12 @@ scan_state_class :: proc(scanner: ^scan.Scanner) -> (class: StateClass, success:
     class.extends = scan.token_text(scanner)
 
     if tok != scan.Ident {
-        scan.errorf(scanner, "Expected a class name identifier in class 'extends' declaration, got '%v' (%v) instead.", class.extends, scan.token_string(tok))
+        scan.errorf(
+            scanner,
+            "Expected a class name identifier in class 'extends' declaration, got '%v' (%v) instead.",
+            class.extends,
+            scan.token_string(tok),
+        )
         return
     }
 
@@ -229,7 +266,7 @@ add_state_from_decl :: proc(state: ^State, decl: string, source: Source, parent_
     scanner := scan.Scanner{}
     scan.init(&scanner, decl, source.file.fullpath)
     scanner.error = scanner_error
-    
+
     tok := scan.scan(&scanner)
     if tok != scan.Ident {
         return
@@ -237,65 +274,82 @@ add_state_from_decl :: proc(state: ^State, decl: string, source: Source, parent_
 
     decl_type := scan.token_text(&scanner)
     switch decl_type {
-        case "class":
-            state_class, class_ok := scan_state_class(&scanner)
-            if !class_ok {
-                fmt.println("There were errors parsing.")
+    case "class":
+        state_class, class_ok := scan_state_class(&scanner)
+        if !class_ok {
+            fmt.println("There were errors parsing.")
+            return
+        }
+        state_class.source = source
+        // verify that there is a struct definition after our class declaration
+        {
+            t := scan.scan(parent_scanner)
+            text := scan.token_text(parent_scanner)
+            if t != scan.Ident {
+                scan.errorf(
+                    parent_scanner,
+                    "Expected a Identifier for a struct declaration after class declaration, got '%v' instead.",
+                )
                 return
             }
-            state_class.source = source
-            // verify that there is a struct definition after our class declaration
-            {
-                t := scan.scan(parent_scanner)
-                text := scan.token_text(parent_scanner)
-                if t != scan.Ident {
-                    scan.errorf(parent_scanner, "Expected a Identifier for a struct declaration after class declaration, got '%v' instead.", )
-                    return
-                }
 
-                state_class.odin_struct_name = text
+            state_class.odin_struct_name = text
 
-                t_comp : rune = ':'
-                t = scan.scan(parent_scanner)
-                text = scan.token_text(parent_scanner)
-                if t != ':' {
-                    scan.errorf(parent_scanner, "Expected '::' in struct declaration, got '%v' (%v) instead.", text, cast(int)t)
-                    return
-                }
-
-                t = scan.scan(parent_scanner)
-                text = scan.token_text(parent_scanner)
-                if t != ':' {
-                    scan.errorf(parent_scanner, "Expected '::' in struct declaration, got '%v' (%v) instead.", text, cast(int)t)
-                    return
-                }
-
-                t = scan.scan(parent_scanner)
-                text = scan.token_text(parent_scanner)
-                if t != scan.Ident || text != "struct" {
-                    scan.errorf(parent_scanner, "Expected struct delcaration after class declaration, got '%v' instead..", text)
-                    return
-                }
+            t_comp: rune = ':'
+            t = scan.scan(parent_scanner)
+            text = scan.token_text(parent_scanner)
+            if t != ':' {
+                scan.errorf(
+                    parent_scanner,
+                    "Expected '::' in struct declaration, got '%v' (%v) instead.",
+                    text,
+                    cast(int)t,
+                )
+                return
             }
 
-            append(&state.classes, state_class)
-        case "static":
-            unimplemented()
-        case "method":
-            // TODO: support special method overriding
-            unimplemented()
-        case "property":
-            unimplemented()
-        case "enum":
-            unimplemented()
-        case "signal":
-            unimplemented()
-        case "group":
-            unimplemented()
-        case "subgroup":
-            unimplemented()
-        case "const":
-            unimplemented()
+            t = scan.scan(parent_scanner)
+            text = scan.token_text(parent_scanner)
+            if t != ':' {
+                scan.errorf(
+                    parent_scanner,
+                    "Expected '::' in struct declaration, got '%v' (%v) instead.",
+                    text,
+                    cast(int)t,
+                )
+                return
+            }
+
+            t = scan.scan(parent_scanner)
+            text = scan.token_text(parent_scanner)
+            if t != scan.Ident || text != "struct" {
+                scan.errorf(
+                    parent_scanner,
+                    "Expected struct delcaration after class declaration, got '%v' instead..",
+                    text,
+                )
+                return
+            }
+        }
+
+        append(&state.classes, state_class)
+    case "static":
+        unimplemented()
+    case "method":
+        // TODO: support special method overriding
+        unimplemented()
+    case "property":
+        unimplemented()
+    case "enum":
+        unimplemented()
+    case "signal":
+        unimplemented()
+    case "group":
+        unimplemented()
+    case "subgroup":
+        unimplemented()
+    case "const":
+        unimplemented()
     }
 }
 

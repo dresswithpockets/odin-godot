@@ -70,7 +70,7 @@ godot_allocator :: #force_inline proc "contextless" () -> (a: runtime.Allocator)
 default_godot_allocator := godot_allocator()
 
 @(private)
-temp_arena := runtime.Arena{
+temp_arena := runtime.Arena {
     backing_allocator = default_godot_allocator,
 }
 

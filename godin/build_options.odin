@@ -5,13 +5,11 @@ import "core:strings"
 import "core:fmt"
 
 BuildOptions :: struct {
-    target_path: string,
-    allow_single_file: bool,
-    backend_suffix: string,
-
-    target_path_handle: os.Handle,
-    target_files: [dynamic]os.Handle,
-
+    target_path:         string,
+    allow_single_file:   bool,
+    backend_suffix:      string,
+    target_path_handle:  os.Handle,
+    target_files:        [dynamic]os.Handle,
     godot_import_prefix: string,
 }
 
@@ -26,7 +24,7 @@ parse_build_args :: proc(args: []string) -> (options: BuildOptions, success: boo
     // the rest are options
     for i := 1; i < len(args); i += 1 {
         left_arg := args[i]
-        right_arg : Maybe(string) = nil
+        right_arg: Maybe(string) = nil
         if strings.contains_rune(left_arg, ':') {
             split := strings.split_n(left_arg, ":", 2)
             defer delete(split)
@@ -36,22 +34,26 @@ parse_build_args :: proc(args: []string) -> (options: BuildOptions, success: boo
         }
 
         switch left_arg {
-            case "-file":
-                options.allow_single_file = true
-            case "-backend-suffix":
-                right_val, ok := right_arg.(string)
-                if !ok {
-                    fmt.println("Error: '-backend-suffix' was given without a value. Correct example usage: `-backend-suffix:_my_suffix.odin`.")
-                    return
-                }
-                options.backend_suffix = right_val
-            case "-godot-import-path":
-                right_val, ok := right_arg.(string)
-                if !ok {
-                    fmt.println("Error: '-godot-import-path' was given without a value. Correct example usage: `-godot-import-path:shared:godot/`.")
-                    return
-                }
-                options.godot_import_prefix = right_val
+        case "-file":
+            options.allow_single_file = true
+        case "-backend-suffix":
+            right_val, ok := right_arg.(string)
+            if !ok {
+                fmt.println(
+                    "Error: '-backend-suffix' was given without a value. Correct example usage: `-backend-suffix:_my_suffix.odin`.",
+                )
+                return
+            }
+            options.backend_suffix = right_val
+        case "-godot-import-path":
+            right_val, ok := right_arg.(string)
+            if !ok {
+                fmt.println(
+                    "Error: '-godot-import-path' was given without a value. Correct example usage: `-godot-import-path:shared:godot/`.",
+                )
+                return
+            }
+            options.godot_import_prefix = right_val
         }
     }
 
@@ -100,7 +102,8 @@ parse_build_args :: proc(args: []string) -> (options: BuildOptions, success: boo
             for file in files {
                 if file.is_dir {
                     append(&directories, file)
-                } else if strings.has_suffix(file.fullpath, ".odin") && !strings.has_suffix(file.fullpath, ignore_suffix) {
+                } else if strings.has_suffix(file.fullpath, ".odin") &&
+                   !strings.has_suffix(file.fullpath, ignore_suffix) {
                     odin_file, odin_file_err := os.open(file.fullpath)
                     if odin_file_err != 0 {
                         print_err(odin_file_err, file.fullpath)
@@ -131,7 +134,10 @@ parse_build_args :: proc(args: []string) -> (options: BuildOptions, success: boo
         _recurse_files(files, &options.target_files, options.backend_suffix)
 
         if len(options.target_files) == 0 {
-            fmt.printf("Error: There are no valid .odin files in the directory '%v' and its subdirectories.\n", options.target_path)
+            fmt.printf(
+                "Error: There are no valid .odin files in the directory '%v' and its subdirectories.\n",
+                options.target_path,
+            )
             return
         }
     }
@@ -166,7 +172,7 @@ when ODIN_OS == .Windows {
         os.ERROR_FILE_NOT_FOUND = "That file or directory couldn't be found.",
     }
 } else {
-    _err_map := map[os.Errno]string {}
+    _err_map := map[os.Errno]string{}
 }
 
 print_err :: proc(err: os.Errno, file: string) {
