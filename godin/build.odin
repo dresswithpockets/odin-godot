@@ -69,21 +69,83 @@ class_template :: #load("templates/class.odin.template", string)
 
 template_format_class :: proc(
     package_name, godot_import_path, class_godot_name, class_parent_name, class_snake_name, class_struct_name: string,
+    has_set_func, has_get_func, has_get_property_list_func, has_property_can_revert_func, has_notification_func: bool,
 ) -> string {
     sb := strings.Builder{}
     strings.builder_init(&sb)
     defer strings.builder_destroy(&sb)
 
+    set_func := "nil"
+    get_func := "nil"
+    get_property_list_func := "nil"
+    free_property_list_func := "nil"
+    property_can_revert_func := "nil"
+    property_get_revert_func := "nil"
+    notification_func := "nil"
+
+    if has_set_func {
+        set_func = strings.concatenate({class_snake_name, "_set_bind"})
+    }
+
+    if has_get_func {
+        get_func = strings.concatenate({class_snake_name, "_get_bind"})
+    }
+
+    if has_get_property_list_func {
+        get_property_list_func = strings.concatenate({class_snake_name, "_get_property_list_bind"})
+        free_property_list_func = strings.concatenate({class_snake_name, "_free_property_list_bind"})
+    }
+
+    if has_property_can_revert_func {
+        property_can_revert_func = strings.concatenate({class_snake_name, "_property_can_revert_bind"})
+        property_get_revert_func = strings.concatenate({class_snake_name, "_property_get_revert_bind"})
+    }
+
+    if has_notification_func {
+        notification_func = strings.concatenate({class_snake_name, "_notification_bind"})
+    }
+
     fmt.sbprintf(
         &sb,
         class_template,
+
         package_name,
         godot_import_path,
         class_godot_name,
         class_parent_name,
         class_snake_name,
         class_struct_name,
+
+        set_func,
+        get_func,
+        get_property_list_func,
+        free_property_list_func,
+        property_can_revert_func,
+        property_get_revert_func,
+        notification_func,
     )
+
+    if has_set_func {
+        delete(set_func)
+    }
+
+    if has_get_func {
+        delete(get_func)
+    }
+
+    if has_get_property_list_func {
+        delete(get_property_list_func)
+        delete(free_property_list_func)
+    }
+
+    if has_property_can_revert_func {
+        delete(property_can_revert_func)
+        delete(property_get_revert_func)
+    }
+
+    if has_notification_func {
+        delete(notification_func)
+    }
 
     return strings.clone(strings.to_string(sb))
 }
@@ -129,6 +191,11 @@ gen_backend :: proc(state: State, options: BuildOptions) {
             class.extends,
             class_snake_name,
             class.odin_struct_name,
+            false,
+            false,
+            false,
+            false,
+            false,
         )
         defer delete(class_backend)
 
