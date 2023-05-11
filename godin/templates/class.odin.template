@@ -2,6 +2,8 @@ package {0:s}
 
 import gd "{1:s}gdextension"
 import var "{1:s}variant"
+import "core:strings"
+import "core:fmt"
 
 @(private="file")
 __{2:s}__Class__StringName: var.StringName
