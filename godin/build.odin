@@ -57,6 +57,14 @@ in the order given:
  3: class_parent_name
  4: class_snake_name
  5: class_struct_name
+
+ 6:  set_func                 = {4:s}_set_bind
+ 7:  get_func                 = {4:s}_get_bind
+ 8:  get_property_list_func   = {4:s}_get_property_list_bind
+ 9:  free_property_list_func  = {4:s}_free_property_list_bind
+ 10: property_can_revert_func = {4:s}_property_can_revert_bind
+ 11: property_get_revert_func = {4:s}_property_get_revert_bind
+ 12: notification_func        = {4:s}_notification_bind
 */
 class_template :: #load("templates/class.odin.template", string)
 
