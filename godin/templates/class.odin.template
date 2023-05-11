@@ -67,7 +67,7 @@ init_{4:s}_bindings :: proc() {{
 }}
 
 {4:s}_notification_bind :: proc "c" (instance: gd.ExtensionClassInstancePtr, what: i32) {{
-    
+    // override _notification to provide your own implementation
 }}
 
 {4:s}_to_string_bind :: proc "c" (instance: gd.ExtensionClassInstancePtr, is_valid: ^bool, out: gd.StringPtr) {{
