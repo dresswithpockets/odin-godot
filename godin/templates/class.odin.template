@@ -71,7 +71,8 @@ init_{4:s}_bindings :: proc() {{
 }}
 
 {4:s}_to_string_bind :: proc "c" (instance: gd.ExtensionClassInstancePtr, is_valid: ^bool, out: gd.StringPtr) {{
-    
+    out^ = var.new_string_cstring("[{2:s}:0]")
+    is_valid^ = true
 }}
 
 {4:s}_create :: proc "c" (data: rawptr) -> gd.ObjectPtr {{
