@@ -203,12 +203,6 @@ generate_global_enums :: proc(state: ^State, sb: ^strings.Builder) {
 }
 
 generate_utility_functions :: proc(state: ^State, sb: ^strings.Builder) {
-    // PtrUtilityFunction :: #type proc "c" (returns: TypePtr, args: [^]TypePtr, arg_count: int)
-    /*
-    @private
-    __%v__: gdextension.PtrUtilityFunction
-    */
-
     fmt.sbprint(sb, "import \"../gdextension\"\n")
     fmt.sbprint(sb, "import \"../variant\"\n\n")
 
