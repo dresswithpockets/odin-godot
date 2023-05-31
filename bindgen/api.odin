@@ -64,7 +64,7 @@ ApiEnumValue :: struct {
 
 ApiUtilityFunction :: struct {
     name:        string `json:"name"`,
-    return_type: string `json:"return_type"`,
+    return_type: Maybe(string) `json:"return_type"`,
     category:    string `json:"category"`,
     is_vararg:   bool `json:"is_vararg"`,
     hash:        i64 `json:"hash"`,
