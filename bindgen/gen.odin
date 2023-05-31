@@ -38,11 +38,28 @@ pod_types :: []string{
     "uint64_t",
 }
 
+pod_type_map := map[string]string{
+    "bool"     = "bool",
+    "real_t"   = "f64",
+    "float"    = "f64",
+    "double"   = "f64",
+    "int"      = "int",
+    "int8_t"   = "i8",
+    "int16_t"  = "i16",
+    "int32_t"  = "i32",
+    "int64_t"  = "i64",
+    "uint8_t"  = "u8",
+    "uint16_t" = "u16",
+    "uint32_t" = "u32",
+    "uint64_t" = "u64",
+}
+
 types_with_odin_string_constructors :: []string{"String"}
 
 generate_bindings :: proc(state: ^State) {
     sb := strings.builder_make()
 
+    // enums
     {
         fmt.sbprint(&sb, "package core\n\n")
         generate_global_enums(state, &sb)
@@ -53,8 +70,25 @@ generate_bindings :: proc(state: ^State) {
         strings.builder_reset(&sb)
     }
 
+    // utility functions
+    {
+        fmt.sbprint(&sb, "package core\n\n")
+        generate_utility_functions(state, &sb)
+
+        functions_output := strings.to_string(sb)
+        os.write_entire_file("core/util.odin", transmute([]byte)functions_output)
+
+        strings.builder_reset(&sb)
+    }
+
+    // builtin classes
     {
         for name, class in &state.builtin_classes {
+            // POD data types are covered by native odin types
+            if slice.contains(pod_types, name) {
+                continue
+            }
+
             fmt.sbprint(&sb, "package variant\n\n")
 
             // used in the special constructor for some strin``g types
@@ -85,7 +119,9 @@ generate_bindings :: proc(state: ^State) {
         }
     }
 
-    // TODO: more gen (:
+    // TODO: engine (non-builtin) classes
+    // TODO: singletons (?)
+    // TODO: native structures (?)
 
     strings.builder_destroy(&sb)
 }
@@ -166,6 +202,63 @@ generate_global_enums :: proc(state: ^State, sb: ^strings.Builder) {
     return
 }
 
+generate_utility_functions :: proc(state: ^State, sb: ^strings.Builder) {
+    // PtrUtilityFunction :: #type proc "c" (returns: TypePtr, args: [^]TypePtr, arg_count: int)
+    /*
+    @private
+    __%v__: gdextension.PtrUtilityFunction
+    */
+
+    fmt.sbprint(sb, "import \"../gdextension\"\n")
+    fmt.sbprint(sb, "import \"../variant\"\n\n")
+
+    // generate frontend
+    for function in state.utility_functions {
+        fmt.sbprintf(sb, "%v :: proc(", function.proc_name)
+        for argument, i in function.arguments {
+            if i > 0 {
+                fmt.sbprint(sb, ", ")
+            }
+            fmt.sbprintf(sb, "%v: ", argument.name)
+            if pod_type, is_pod_type := argument.arg_type.pod_type.(string); is_pod_type {
+                fmt.sbprint(sb, pod_type)
+            } else {
+                fmt.sbprintf(sb, "variant.%v", argument.arg_type.odin_type)
+            }
+        }
+        // TODO: is_vararg
+        fmt.sbprint(sb, ")")
+        if return_type, ok := function.return_type.(StateType); ok {
+            fmt.sbprint(sb, " -> ")
+            // POD-mapped types use native odin types instead of classes
+            if pod_type, is_pod_type := return_type.pod_type.(string); is_pod_type {
+                fmt.sbprint(sb, pod_type)
+            } else {
+                fmt.sbprintf(sb, "variant.%v", return_type.odin_type)
+            }
+        }
+        fmt.sbprint(sb, " {\n")
+
+        fmt.sbprintln(sb, "}\n")
+    }
+
+    // generate initializer
+    fmt.sbprintln(sb, "init_utility_functions :: proc() {")
+    fmt.sbprintln(sb, "    using gdextension")
+    fmt.sbprintln(sb, "    function_name: StringName")
+    for function in state.utility_functions {
+        fmt.sbprintf(sb, "    function_name = variant.new_string_name_cstring(\"%v\")\n", function.godot_name)
+        fmt.sbprintf(sb, "    __%v__Ptr = interface.variant_get_ptr_utility_function(function_name, %v)\n", function.godot_name, function.hash)
+    }
+    fmt.sbprintln(sb, "}\n")
+
+    // generate backend
+    for function in state.utility_functions {
+        fmt.sbprintln(sb, "@private")
+        fmt.sbprintf(sb, "__%v__Ptr: gdextension.PtrUtilityFunction\n\n", function.godot_name)
+    }
+}
+
 generate_builtin_class :: proc(state: ^State, class: ^StateBuiltinClass, sb: ^strings.Builder) {
     fmt.sbprintf(sb, "%v :: struct {{\n", class.odin_name)
     fmt.sbprintf(sb, "    _opaque: __%vOpaqueType,\n", class.odin_name)
@@ -203,7 +296,7 @@ generate_builtin_class_frontend_procs :: proc(state: ^State, class: ^StateBuilti
             if i > 0 {
                 fmt.sbprint(sb, ", ")
             }
-            fmt.sbprintf(sb, "%v: %v", arg.name, arg.odin_type)
+            fmt.sbprintf(sb, "%v: %v", arg.name, arg.arg_type.prio_type)
         }
         fmt.sbprintf(sb, ") -> (ret: %v) {{\n", class.odin_name)
         fmt.sbprintln(sb, "    using gdextension")
@@ -272,11 +365,11 @@ generate_builtin_class_frontend_procs :: proc(state: ^State, class: ^StateBuilti
         for overload in operator.overloads {
             fmt.sbprintf(sb, "%v :: proc(self: %v", overload.proc_name, class.odin_name)
 
-            odin_right_type, has_right_type := overload.odin_right_type.(string)
+            odin_right_type, has_right_type := overload.right_type.(StateType)
             if has_right_type {
-                fmt.sbprintf(sb, ", other: %v", odin_right_type)
+                fmt.sbprintf(sb, ", other: %v", odin_right_type.prio_type)
             }
-            fmt.sbprintf(sb, ") -> (ret: %v) {{\n", overload.odin_return_type)
+            fmt.sbprintf(sb, ") -> (ret: %v) {{\n", overload.return_type.prio_type)
             fmt.sbprintln(sb, "    using gdextension")
             fmt.sbprintln(sb, "    self := self")
             if has_right_type {
@@ -292,7 +385,7 @@ generate_builtin_class_frontend_procs :: proc(state: ^State, class: ^StateBuilti
             } else {
                 fmt.sbprintf(sb, "nil")
             }
-            fmt.sbprintf(sb, ", %v)\n", overload.odin_return_type)
+            fmt.sbprintf(sb, ", %v)\n", overload.return_type.prio_type)
             fmt.sbprint(sb, "}\n\n")
         }
 
@@ -345,7 +438,10 @@ generate_builtin_class_initialization_proc :: proc(state: ^State, class: ^StateB
 
     for _, operator in class.operators {
         for overload in operator.overloads {
-            right_type := overload.odin_right_type.(string) or_else "Nil"
+            right_type := "Nil"
+            if right_state_type, has_right_type := overload.right_type.(StateType); has_right_type {
+                right_type = right_state_type.prio_type
+            }
             // Variant just gets passed to this lookup as Nil for some reason, despite
             // Nil also being used for unary operators. Godot is silly sometimes
             if right_type == "Variant" {
