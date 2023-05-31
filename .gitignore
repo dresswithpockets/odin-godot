@@ -1,6 +1,7 @@
 .vscode/
 
 core/enums.odin
+core/util.odin
 
 *.gen.odin
 

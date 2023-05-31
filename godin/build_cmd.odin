@@ -19,7 +19,7 @@ cmd_build :: proc() {
     }
 
     state := State{
-        classes = make(map[string]StateClass)
+        classes = make(map[string]StateClass),
     }
     build_state(&state, options)
 
