@@ -228,7 +228,8 @@ generate_utility_functions :: proc(state: ^State, sb: ^strings.Builder) {
         }
         // TODO: is_vararg
         fmt.sbprint(sb, ")")
-        if return_type, ok := function.return_type.(StateType); ok {
+        return_type, has_return_type := function.return_type.(StateType)
+        if has_return_type {
             fmt.sbprint(sb, " -> ")
             // POD-mapped types use native odin types instead of classes
             if pod_type, is_pod_type := return_type.pod_type.(string); is_pod_type {
@@ -238,6 +239,31 @@ generate_utility_functions :: proc(state: ^State, sb: ^strings.Builder) {
             }
         }
         fmt.sbprint(sb, " {\n")
+
+        // we have to re-declare parameters in order to take their address
+        for argument in function.arguments {
+            fmt.sbprintf(sb, "    %v := %v\n", argument.name, argument.name)
+        }
+
+        if has_return_type {
+            fmt.sbprintf(sb, "    return gdextension.call_utility_function_ptr_ret(__%v__Ptr", function.godot_name)
+            if pod_type, is_pod_type := return_type.pod_type.(string); is_pod_type {
+                fmt.sbprintf(sb, ", %v", pod_type)
+            } else {
+                fmt.sbprintf(sb, ", variant.%v", return_type.odin_type)
+            }
+        } else {
+            fmt.sbprintf(sb, "    gdextension.call_utility_function_ptr_no_ret(__%v__Ptr", function.godot_name)
+        }
+
+        for argument in function.arguments {
+            fmt.sbprintf(sb, ", cast(gdextension.TypePtr)&%v", argument.name)
+            if argument.arg_type.pod_type == nil {
+                fmt.sbprint(sb, "._opaque")
+            }
+        }
+        // TODO: is_vararg
+        fmt.sbprintln(sb, ")")
 
         fmt.sbprintln(sb, "}\n")
     }
@@ -307,7 +333,7 @@ generate_builtin_class_frontend_procs :: proc(state: ^State, class: ^StateBuilti
         fmt.sbprintf(sb, "    call_builtin_constructor(%v, cast(TypePtr)&ret._opaque", constructor.backing_proc_name)
         for arg in constructor.arguments {
             fmt.sbprintf(sb, ", cast(TypePtr)&%v", arg.name)
-            if !slice.contains(pod_types, arg.name) {
+            if arg.arg_type.pod_type == nil {
                 fmt.sbprint(sb, "._opaque")
             }
         }
