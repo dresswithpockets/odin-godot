@@ -4,8 +4,8 @@ core/enums.odin
 
 *.gen.odin
 
-variant/
-!variant/common.odin
+variant/*.odin
+!variant/Variant.odin
 
 tools/
 
