@@ -4,7 +4,7 @@
 |:--------------------------------------------------------------------------------------------------|
 | If you are using parts of it, beware of sudden major changes to the API, structure, and features. |
 
-This currently targets Godot v4.0.2.
+This currently targets Godot v4.1.1.
 
 ## C API Bindings
 
