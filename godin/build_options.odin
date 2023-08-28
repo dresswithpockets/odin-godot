@@ -39,7 +39,7 @@ parse_build_args :: proc(args: []string) -> (options: BuildOptions, success: boo
         case "-backend-suffix":
             right_val, ok := right_arg.(string)
             if !ok {
-                fmt.println(
+                fmt.eprintln(
                     "Error: '-backend-suffix' was given without a value. Correct example usage: `-backend-suffix:_my_suffix.odin`.",
                 )
                 return
@@ -48,7 +48,7 @@ parse_build_args :: proc(args: []string) -> (options: BuildOptions, success: boo
         case "-godot-import-path":
             right_val, ok := right_arg.(string)
             if !ok {
-                fmt.println(
+                fmt.eprintln(
                     "Error: '-godot-import-path' was given without a value. Correct example usage: `-godot-import-path:shared:godot/`.",
                 )
                 return
@@ -60,7 +60,7 @@ parse_build_args :: proc(args: []string) -> (options: BuildOptions, success: boo
     // verify the options are valid together
     // path must exist
     if !os.exists(options.target_path) {
-        fmt.printf("Error: the path '%v' does not exist\n", options.target_path)
+        fmt.eprintf("Error: the path '%v' does not exist\n", options.target_path)
     }
 
     target_handle, err := os.open(options.target_path, os.O_RDWR)
@@ -76,12 +76,12 @@ parse_build_args :: proc(args: []string) -> (options: BuildOptions, success: boo
     path_is_dir := os.is_dir(options.target_path)
     if options.allow_single_file {
         if path_is_dir {
-            fmt.printf("Error: the path '%v' points to a directory, but '-file' was specified.\n", options.target_path)
+            fmt.eprintf("Error: the path '%v' points to a directory, but '-file' was specified.\n", options.target_path)
             return
         }
     } else {
         if !path_is_dir {
-            fmt.printf("Error: the path '%v' points to a directory, but '-file' was specified.\n", options.target_path)
+            fmt.eprintf("Error: the path '%v' points to a directory, but '-file' was specified.\n", options.target_path)
             return
         }
 
@@ -92,7 +92,7 @@ parse_build_args :: proc(args: []string) -> (options: BuildOptions, success: boo
         }
 
         if len(files) == 0 {
-            fmt.printf("Error: The directory '%v' is empty.\n", options.target_path)
+            fmt.eprintf("Error: The directory '%v' is empty.\n", options.target_path)
             return
         }
 
@@ -177,11 +177,11 @@ when ODIN_OS == .Windows {
 
 print_err :: proc(err: os.Errno, file: string) {
     if err_string, ok := _err_map[err]; ok {
-        fmt.printf("Error opening '%v': %v\n", file, err_string)
+        fmt.eprintf("Error opening '%v': %v\n", file, err_string)
         return
     }
 
-    fmt.printf("Unknown errno when opening '%v': %v\n", file, err)
+    fmt.eprintf("Unknown errno when opening '%v': %v\n", file, err)
 }
 
 /*
