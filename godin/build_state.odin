@@ -5,7 +5,10 @@ import "core:fmt"
 import "core:strings"
 import scan "core:text/scanner"
 
+import "core:odin/ast"
 import "core:odin/parser"
+import "core:odin/tokenizer"
+
 State :: struct {
     classes: map[string]StateClass,
     methods: [dynamic]StateMethod,
@@ -37,67 +40,105 @@ Source :: struct {
     package_name: string,
 }
 
+Godin_Comment :: struct {
+    is_godin:    bool,
+    error_count: int,
+    pos:         tokenizer.Pos,
+
+    value:       Godin_Comment_Value,
+}
+
+Godin_Comment_Value :: union {
+    Godin_Comment_Class,
+}
+
+Godin_Comment_Class :: struct {
+    name:    string,
+    extends: string,
+}
+
+Godin_Comment_Method :: struct {
+    name:      string,
+    is_static: bool,
+    class:     string,
+}
+
+get_comment_source :: proc(root: ^ast.File, comment_group: ^ast.Comment_Group) -> string {
+    return root.src[comment_group.pos.offset : comment_group.end.offset]
+}
+
+parse_godin_comment :: proc(comment: string) -> (godin_comment: ^Godin_Comment, ok: bool) {
+    godin_comment = new(Godin_Comment)
+
+    unimplemented()
+
+    // ok = true
+    // return
+}
+
 build_state :: proc(state: ^State, options: BuildOptions) {
-    for file in options.target_files {
-        file_info, err := os.fstat(file)
+    for file_handle in options.target_files {
+        file_info, err := os.fstat(file_handle)
         assert(err == 0)
 
         fmt.printf("Parsing %v\n", file_info.fullpath)
 
-        data, ok := os.read_entire_file(file)
+        data, ok := os.read_entire_file(file_handle)
         defer delete(data)
-        assert(ok)
+        assert(ok, "Error reading file.")
 
-        contents := strings.clone_from_bytes(data)
-        defer delete(contents)
-
-        scanner := scan.Scanner{}
-        scan.init(&scanner, contents, file_info.fullpath)
-
-        // we need to refer to the package later, so grab the package name, skipping over any comments
-        t := scan.scan(&scanner)
-        token_text := scan.token_text(&scanner)
-        if t != scan.Ident || token_text != "package" {
-            scan.errorf(&scanner, "Expected a package declaration, got '%v' instead.", token_text)
-            return
+        ast_parser := parser.Parser{
+            flags = {parser.Flag.Optional_Semicolons},
+            err = state.error_handler,
         }
 
-        t = scan.scan(&scanner)
-        package_name := strings.clone(strings.trim_right_space(scan.token_text(&scanner)))
-        if t != scan.Ident {
-            scan.errorf(&scanner, "Expected a package declaration, got '%v' instead.", package_name)
-            return
+        ast_file := ast.File{
+            src = string(data),
+            fullpath = file_info.fullpath,
         }
 
-        // from now on, skip everything except for Comments
-        scanner.flags -= {.Skip_Comments}
-        scanner.error = scanner_error
+        ok = parser.parse_file(&ast_parser, &ast_file)
+        assert(ok, "Error parsing file.")
+        assert(ast_parser.error_count == 0, "There were errors parsing the file.")
 
-        for {
-            t = scan.scan(&scanner)
-            for t != scan.Comment && t != scan.EOF {
-                t = scan.scan(&scanner)
+        root := ast_parser.file
+
+        // godin comments have special meaning; we build State from godin comments on types,
+        // methods, etc. The key is the line number of the end of the comment group, which we
+        // will use to match with type/proc declarations.
+        comments := make(map[int]^Godin_Comment)
+        for comment in root.comments {
+            comment_source := get_comment_source(root, comment)
+            fmt.printf("Comment: %s\n", comment_source)
+            godin_comment, ok := parse_godin_comment(comment_source)
+            assert(ok, "Error parsing comment.")
+
+            if godin_comment.is_godin {
+                comments[comment.end.line] = godin_comment
             }
 
-            if t == scan.EOF {
-                break
-            }
+            assert(godin_comment.error_count == 0, "There were errors parsing the godin comment.")
+        }
 
-            comment := scan.token_text(&scanner)
-            comment = strings.trim_right_space(comment)
-            if !strings.has_prefix(comment, "//+") {
-                continue
-            }
+        for stmt, index in root.decls {
+            if decl, ok := stmt.derived.(^ast.Value_Decl); ok {
+                godin_comment, comment_exists := comments[decl.pos.line - 1]
 
-            decl := comment[3:]
-            source := Source {
-                col          = 0,
-                line         = scanner.line - 1,
-                file         = file_info,
-                handle       = file,
-                package_name = package_name,
+                // if there isnt a godin attribute prepended to the declaration, then we can just 
+                // ignore the declaration.
+                if !comment_exists do continue
+
+                #partial switch v in decl.values[0].derived {
+                    case ^ast.Struct_Type:
+                        // TODO: state_class, ok := parse_state_class(state, v, godin_comment)
+                        // TODO: assert(ok, "There were errors parsing ")
+                        unimplemented()
+                    case ^ast.Proc_Lit:
+                        unimplemented()
+                    case ^ast.Enum_Type:
+                        unimplemented()
+                }
             }
-            add_state_from_decl(state, decl, source, &scanner)
         }
     }
 
@@ -252,7 +293,7 @@ add_state_from_decl :: proc(state: ^State, decl: string, source: Source, parent_
             fmt.println("There were errors parsing.")
             return
         }
-        
+
         method.source = source
         if !ensure_proc_follows_method(parent_scanner, &method) {
             return
