@@ -54,6 +54,21 @@ pod_type_map := map[string]string{
     "uint64_t" = "u64",
 }
 
+native_odin_types :: []string {
+    "bool",
+    "f32",
+    "f64",
+    "int",
+    "i8",
+    "i16",
+    "i32",
+    "i64",
+    "u8",
+    "u16",
+    "u32",
+    "u64",
+}
+
 types_with_odin_string_constructors :: []string{"String", "StringName"}
 
 generate_bindings :: proc(state: ^State) {
@@ -400,7 +415,9 @@ generate_builtin_class_frontend_procs :: proc(state: ^State, class: ^StateBuilti
                 "    return call_builtin_operator_ptr(%v, cast(TypePtr)&self._opaque, cast(TypePtr)",
                 overload.backing_func_name,
             )
-            if has_right_type {
+            if has_right_type && slice.contains(native_odin_types, odin_right_type.prio_type) {
+                fmt.sbprintf(sb, "&other")
+            } else if has_right_type {
                 fmt.sbprintf(sb, "&other._opaque")
             } else {
                 fmt.sbprintf(sb, "nil")
