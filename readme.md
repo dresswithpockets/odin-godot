@@ -57,6 +57,24 @@ odin build . -build-mode:shared
 
 Then, follow the instructions for [using the extension module](https://docs.godotengine.org/en/stable/tutorials/scripting/gdextension/gdextension_cpp_example.html#using-the-gdextension-module).
 
-## Using Generated Bindings
+## Godin
 
-WIP
+Godin is a preprocessor which generates most of the boilerplate for Extension Classes, Methods, Enums, Properties, Signals, Groups, and Subgroups.
+
+For example, the following Odin code will produce all of the boilerplate for an extension class "Player" that extends "Node2D".
+```odin
+package test
+
+//+class Player extends Node2D
+Player :: struct {
+    health: i64,
+}
+```
+
+To build Godin:
+```sh
+# while in the odin-godot directory
+./build_godin.sh
+```
+
+Run `godin help` for usage details, including documentation about the Godin preprocessor syntax.
