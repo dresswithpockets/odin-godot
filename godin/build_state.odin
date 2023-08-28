@@ -9,6 +9,9 @@ import "core:odin/ast"
 import "core:odin/parser"
 import "core:odin/tokenizer"
 
+GODIN_COMMENT_PREFIX :: "//+"
+DEFAULT_BASE_CLASS :: "Node"
+
 State :: struct {
     classes: map[string]StateClass,
     methods: [dynamic]StateMethod,
@@ -19,24 +22,22 @@ State :: struct {
 StateClass :: struct {
     name:             string,
     extends:          string,
-    out_file:         string,
     odin_struct_name: string,
     source:           Source,
+    out_file:         string,
 }
 
 StateMethod :: struct {
     name:           string,
     is_static:      bool,
     class:          string,
-    source:         Source,
     odin_proc_name: string,
+    source:         Source,
 }
 
 Source :: struct {
     file:         os.File_Info,
-    handle:       os.Handle,
-    line:         int,
-    col:          int,
+    pos:          tokenizer.Pos,
     package_name: string,
 }
 
@@ -54,7 +55,7 @@ Godin_Comment_Value :: union {
 
 Godin_Comment_Class :: struct {
     name:    string,
-    extends: string,
+    extends: Maybe(string),
 }
 
 Godin_Comment_Method :: struct {
@@ -67,13 +68,107 @@ get_comment_source :: proc(root: ^ast.File, comment_group: ^ast.Comment_Group) -
     return root.src[comment_group.pos.offset : comment_group.end.offset]
 }
 
-parse_godin_comment :: proc(comment: string) -> (godin_comment: ^Godin_Comment, ok: bool) {
+parse_godin_comment_class :: proc(scanner: ^scan.Scanner) -> (comment_class: Godin_Comment_Class, success: bool) {
+    success = false
+
+    tok := scan.scan(scanner)
+    comment_class.name = scan.token_text(scanner)
+    if tok != scan.Ident {
+        scan.errorf(
+            scanner,
+            "Expected a class name identifier in class declaration, got '%v' (%v) instead.",
+            comment_class.name,
+            scan.token_string(tok),
+        )
+        return
+    }
+
+    comment_class.name = strings.clone(comment_class.name)
+
+    tok = scan.scan(scanner)
+    extends := scan.token_text(scanner)
+    if tok != scan.Ident || extends != "extends" {
+        scan.errorf(
+            scanner,
+            "Expected an Ident, 'extends' in class declaration. Got '%v' (%v) instead.",
+            extends,
+            scan.token_string(tok),
+        )
+        return
+    }
+
+    tok = scan.scan(scanner)
+    comment_class.extends = scan.token_text(scanner)
+
+    if tok != scan.Ident {
+        scan.errorf(
+            scanner,
+            "Expected a class name identifier in class 'extends' declaration, got '%v' (%v) instead.",
+            comment_class.extends,
+            scan.token_string(tok),
+        )
+        return
+    }
+
+    comment_class.extends = strings.clone(comment_class.extends.(string))
+
+    success = true
+    return
+}
+
+parse_godin_comment :: proc(comment: string, filepath: string) -> (godin_comment: ^Godin_Comment, success: bool) {
     godin_comment = new(Godin_Comment)
 
-    unimplemented()
+    scanner := scan.Scanner{}
+    scan.init(&scanner, comment, filepath)
+    scanner.error = scanner_error
 
-    // ok = true
-    // return
+    success = true
+    tok := scan.scan(&scanner)
+    if tok != scan.Ident {
+        godin_comment.is_godin = false
+        return
+    }
+
+    godin_comment.is_godin = true
+    decl_type := scan.token_text(&scanner)
+    switch decl_type {
+    case "class":
+        godin_comment.value, success = parse_godin_comment_class(&scanner)
+    case "static":
+        unimplemented()
+    case "method":
+        unimplemented()
+    case "property":
+        unimplemented()
+    case "enum":
+        unimplemented()
+    case "signal":
+        unimplemented()
+    case "group":
+        unimplemented()
+    case "subgroup":
+        unimplemented()
+    case "const":
+        unimplemented()
+    }
+
+    return
+}
+
+parse_state_class :: proc(state: ^State, value_decl: ^ast.Value_Decl, struct_type: ^ast.Struct_Type, godin_decl: ^Godin_Comment) -> (class: StateClass, success: bool) {
+    comment_class, is_class := godin_decl.value.(Godin_Comment_Class)
+    if !is_class {
+        // TODO: properly report this error
+        success = false
+        return
+    }
+    class.odin_struct_name = value_decl.names[0].derived.(^ast.Ident).name
+    class.name = comment_class.name
+    class.extends = comment_class.extends.(string) or_else DEFAULT_BASE_CLASS
+
+    success = true
+    return
 }
 
 build_state :: proc(state: ^State, options: BuildOptions) {
@@ -107,22 +202,36 @@ build_state :: proc(state: ^State, options: BuildOptions) {
         // methods, etc. The key is the line number of the end of the comment group, which we
         // will use to match with type/proc declarations.
         comments := make(map[int]^Godin_Comment)
-        for comment in root.comments {
-            comment_source := get_comment_source(root, comment)
-            fmt.printf("Comment: %s\n", comment_source)
-            godin_comment, ok := parse_godin_comment(comment_source)
-            assert(ok, "Error parsing comment.")
+        for comment_group in root.comments {
+            comment_lines := strings.split_lines(get_comment_source(root, comment_group))
+            for line in comment_lines {
+                godin_comment_text := strings.trim_right_space(line)
 
-            if godin_comment.is_godin {
-                comments[comment.end.line] = godin_comment
+                if !strings.has_prefix(godin_comment_text, GODIN_COMMENT_PREFIX) {
+                    continue
+                }
+
+                // eat the //+ at the beginning of the declaration
+                godin_comment_text = line[3:]
+
+                godin_comment, ok := parse_godin_comment(godin_comment_text, file_info.fullpath)
+                assert(ok, "Error parsing comment.")
+
+                if godin_comment.is_godin {
+                    comments[comment_group.end.line] = godin_comment
+                }
             }
+        }
 
-            assert(godin_comment.error_count == 0, "There were errors parsing the godin comment.")
+        for line, comment in comments {
+            fmt.printf("Line %d Comment: '%s'\n", line, comment)
         }
 
         for stmt, index in root.decls {
             if decl, ok := stmt.derived.(^ast.Value_Decl); ok {
                 godin_comment, comment_exists := comments[decl.pos.line - 1]
+                fmt.printf("Checking decl: %v\n", decl)
+                fmt.printf("Comment exists: %v\n", comment_exists)
 
                 // if there isnt a godin attribute prepended to the declaration, then we can just 
                 // ignore the declaration.
@@ -130,9 +239,12 @@ build_state :: proc(state: ^State, options: BuildOptions) {
 
                 #partial switch v in decl.values[0].derived {
                     case ^ast.Struct_Type:
-                        // TODO: state_class, ok := parse_state_class(state, v, godin_comment)
-                        // TODO: assert(ok, "There were errors parsing ")
-                        unimplemented()
+                        state_class, ok := parse_state_class(state, decl, v, godin_comment)
+                        assert(ok, "There were errors parsing the class.")
+
+                        state_class.source.file = file_info
+                        state_class.source.pos = decl.pos
+                        state.classes[state_class.name] = state_class
                     case ^ast.Proc_Lit:
                         unimplemented()
                     case ^ast.Enum_Type:
@@ -150,169 +262,6 @@ build_state :: proc(state: ^State, options: BuildOptions) {
 
 scanner_error :: proc(s: ^scan.Scanner, msg: string) {
     fmt.println(msg)
-}
-
-scan_state_class :: proc(scanner: ^scan.Scanner) -> (class: StateClass, success: bool) {
-    success = false
-
-    tok := scan.scan(scanner)
-    class.name = scan.token_text(scanner)
-    if tok != scan.Ident {
-        scan.errorf(
-            scanner,
-            "Expected a class name identifier in class declaration, got '%v' (%v) instead.",
-            class.name,
-            scan.token_string(tok),
-        )
-        return
-    }
-
-    class.name = strings.clone(class.name)
-
-    tok = scan.scan(scanner)
-    extends := scan.token_text(scanner)
-    if tok != scan.Ident || extends != "extends" {
-        scan.errorf(
-            scanner,
-            "Expected an Ident, 'extends' in class declaration. Got '%v' (%v) instead.",
-            extends,
-            scan.token_string(tok),
-        )
-        return
-    }
-
-    tok = scan.scan(scanner)
-    class.extends = scan.token_text(scanner)
-
-    if tok != scan.Ident {
-        scan.errorf(
-            scanner,
-            "Expected a class name identifier in class 'extends' declaration, got '%v' (%v) instead.",
-            class.extends,
-            scan.token_string(tok),
-        )
-        return
-    }
-
-    class.extends = strings.clone(class.extends)
-
-    success = true
-    return
-}
-
-ensure_struct_follows_class :: proc(parent_scanner: ^scan.Scanner, state_class: ^StateClass) -> bool {
-    t := scan.scan(parent_scanner)
-    text := scan.token_text(parent_scanner)
-    if t != scan.Ident {
-        scan.errorf(
-            parent_scanner,
-            "Expected a Identifier for a struct declaration after class declaration, got '%v' instead.",
-        )
-        return false
-    }
-
-    state_class.odin_struct_name = text
-
-    t_comp: rune = ':'
-    t = scan.scan(parent_scanner)
-    text = scan.token_text(parent_scanner)
-    if t != ':' {
-        scan.errorf(
-            parent_scanner,
-            "Expected '::' in struct declaration, got '%v' (%v) instead.",
-            text,
-            cast(int)t,
-        )
-        return false
-    }
-
-    t = scan.scan(parent_scanner)
-    text = scan.token_text(parent_scanner)
-    if t != ':' {
-        scan.errorf(
-            parent_scanner,
-            "Expected '::' in struct declaration, got '%v' (%v) instead.",
-            text,
-            cast(int)t,
-        )
-        return false
-    }
-
-    t = scan.scan(parent_scanner)
-    text = scan.token_text(parent_scanner)
-    if t != scan.Ident || text != "struct" {
-        scan.errorf(
-            parent_scanner,
-            "Expected struct delcaration after class declaration, got '%v' instead..",
-            text,
-        )
-        return false
-    }
-    return true
-}
-
-scan_state_method :: proc(scanner: ^scan.Scanner) -> (method: StateMethod, ok: bool) {
-    unimplemented()
-}
-
-ensure_proc_follows_method :: proc(scanner: ^scan.Scanner, method: ^StateMethod) -> bool {
-    unimplemented()
-}
-
-add_state_from_decl :: proc(state: ^State, decl: string, source: Source, parent_scanner: ^scan.Scanner) {
-    scanner := scan.Scanner{}
-    scan.init(&scanner, decl, source.file.fullpath)
-    scanner.error = scanner_error
-
-    tok := scan.scan(&scanner)
-    if tok != scan.Ident {
-        return
-    }
-
-    decl_type := scan.token_text(&scanner)
-    switch decl_type {
-    case "class":
-        class, ok := scan_state_class(&scanner)
-        if !ok {
-            fmt.println("There were errors parsing.")
-            return
-        }
-        class.source = source
-        // verify that there is a struct definition after our class declaration
-        if !ensure_struct_follows_class(parent_scanner, &class) {
-            return
-        }
-
-        state.classes[class.name] = class
-    case "static":
-        unimplemented()
-    case "method":
-        // TODO: support special method overriding
-        method, ok := scan_state_method(&scanner)
-        if !ok {
-            fmt.println("There were errors parsing.")
-            return
-        }
-
-        method.source = source
-        if !ensure_proc_follows_method(parent_scanner, &method) {
-            return
-        }
-
-        append(&state.methods, method)
-    case "property":
-        unimplemented()
-    case "enum":
-        unimplemented()
-    case "signal":
-        unimplemented()
-    case "group":
-        unimplemented()
-    case "subgroup":
-        unimplemented()
-    case "const":
-        unimplemented()
-    }
 }
 
 /*
