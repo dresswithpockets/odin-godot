@@ -473,6 +473,7 @@ _state_builtin_class_operators :: proc(state: ^State, class: ^StateBuiltinClass,
 
         append(&group.overloads, overload)
 
+        // ensures that the package this type depends on gets imported
         if right_type, not_nil := operator.right_type.(string); not_nil {
             if right_type_package, in_map := state.type_package_map[right_type]; in_map {
                 class.depends_on_packages[right_type_package] = true
