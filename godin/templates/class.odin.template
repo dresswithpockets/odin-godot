@@ -12,13 +12,13 @@ __{2:s}__Class__StringName: var.StringName
 __{2:s}__Parent__StringName: var.StringName
 
 @(private="file")
-__{2:s}__Emtpy__StringName: var.StringName
+__{2:s}__Empty__StringName: var.StringName
 
 init_{4:s}_bindings :: proc() {{
     using gd
     __{2:s}__Class__StringName = var.new_string_name_cstring("{2:s}")
     __{2:s}__Parent__StringName = var.new_string_name_cstring("{3:s}")
-    __{2:s}__Emtpy__StringName = var.new_string_name_cstring("Object")
+    __{2:s}__Empty__StringName = var.new_string_name_cstring("Object")
     class_info := ExtensionClassCreationInfo {{
         is_virtual               = false,
         is_abstract              = false,
@@ -82,7 +82,7 @@ init_{4:s}_bindings :: proc() {{
 
     instance := new({2:s})
     // TODO: {4:s}_init(instance)
-    instance._owner = gd.interface.classdb_construct_object(cast(gd.StringNamePtr)&__{2:s}__Emtpy__StringName._opaque)
+    instance._owner = gd.interface.classdb_construct_object(cast(gd.StringNamePtr)&__{2:s}__Empty__StringName._opaque)
     __{2:s}__post_initialization(instance)
 
     return instance._owner
