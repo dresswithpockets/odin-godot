@@ -475,22 +475,24 @@ generate_builtin_class_initialization_proc :: proc(state: ^State, class: ^StateB
 
     for _, operator in class.operators {
         for overload in operator.overloads {
-            right_type := "Nil"
+            right_variant_type_name := "Nil"
             if right_state_type, has_right_type := overload.right_type.(StateType); has_right_type {
-                right_type = right_state_type.prio_type
+                // we dont use the prio type since this needs to be a VariantType - prio_type will use
+                // pod_type if its not nil, which will never be a VariantType.
+                right_variant_type_name = right_state_type.odin_type
             }
             // Variant just gets passed to this lookup as Nil for some reason, despite
             // Nil also being used for unary operators. Godot is silly sometimes
-            if right_type == "Variant" {
-                right_type = "Nil"
+            if right_variant_type_name == "Variant" {
+                right_variant_type_name = "Nil"
             }
             fmt.sbprintf(
                 sb,
-                "    %v = interface.variant_get_ptr_operator_evaluator(VariantOperator.%v, VariantType.%v, VariantType.%v)\n",
+                "    %s = interface.variant_get_ptr_operator_evaluator(VariantOperator.%s, VariantType.%s, VariantType.%s)\n",
                 overload.backing_func_name,
                 operator.variant_op_name,
                 class.odin_name,
-                right_type,
+                right_variant_type_name,
             )
         }
     }
