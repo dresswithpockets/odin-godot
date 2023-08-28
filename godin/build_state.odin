@@ -5,9 +5,12 @@ import "core:fmt"
 import "core:strings"
 import scan "core:text/scanner"
 
+import "core:odin/parser"
 State :: struct {
     classes: map[string]StateClass,
     methods: [dynamic]StateMethod,
+
+    error_handler: parser.Error_Handler,
 }
 
 StateClass :: struct {

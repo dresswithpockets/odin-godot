@@ -6,6 +6,8 @@ import "core:strings"
 import scan "core:text/scanner"
 import "core:io"
 
+import "core:odin/tokenizer"
+
 cmd_build :: proc() {
     if len(os.args) < 3 {
         fmt.println(help_build)
@@ -20,6 +22,11 @@ cmd_build :: proc() {
 
     state := State{
         classes = make(map[string]StateClass),
+
+        error_handler = proc(pos: tokenizer.Pos, format: string, args: ..any) {
+            fmt.printf(format, args)
+            fmt.println()
+        },
     }
     build_state(&state, options)
 
