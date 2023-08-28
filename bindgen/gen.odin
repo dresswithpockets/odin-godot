@@ -54,7 +54,7 @@ pod_type_map := map[string]string{
     "uint64_t" = "u64",
 }
 
-types_with_odin_string_constructors :: []string{"String"}
+types_with_odin_string_constructors :: []string{"String", "StringName"}
 
 generate_bindings :: proc(state: ^State) {
     sb := strings.builder_make()
