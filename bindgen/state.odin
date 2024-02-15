@@ -257,7 +257,7 @@ _state_global_enums :: proc(state: ^State) {
 _state_utility_functions :: proc(state: ^State) {
     state.utility_functions = make([]StateUtilityFunction, len(state.api.util_functions))
 
-    for function, function_index in &state.api.util_functions {
+    for &function, function_index in &state.api.util_functions {
         state_function := StateUtilityFunction {
             backing_proc_name  = _utility_function_backing_proc_name(state, &function),
             proc_name          = _utility_function_proc_name(state, &function),
@@ -325,7 +325,7 @@ _state_builtin_classes :: proc(state: ^State) {
 }
 
 _state_builtin_class_members :: proc(state: ^State) {
-    for class in &state.api.builtin_classes {
+    for &class in &state.api.builtin_classes {
         state_class := &state.builtin_classes[class.name]
         _state_builtin_class_operators(state, state_class, &class)
         _state_builtin_class_constructors(state, state_class, &class)
@@ -449,7 +449,7 @@ _class_operator_backing_func_name :: proc(
 _state_builtin_class_operators :: proc(state: ^State, class: ^StateBuiltinClass, api_class: ^ApiBuiltinClass) {
     class.operators = make(map[string]StateClassOperator)
 
-    for operator in &api_class.operators {
+    for &operator in &api_class.operators {
         group, ok := &class.operators[operator.name]
         if !ok {
             class.operators[operator.name] = StateClassOperator {
@@ -490,7 +490,7 @@ _state_builtin_class_methods :: proc(
     cons: map[string]StateBuiltinClassMethod,
 ) {
     cons = make(map[string]StateBuiltinClassMethod)
-    for method in &api_class.methods {
+    for &method in &api_class.methods {
         state_method := StateBuiltinClassMethod {
             godot_name        = method.name,
             backing_func_name = _builtin_class_method_backing_func_name(state, api_class, &method),
@@ -518,7 +518,7 @@ _state_builtin_class_methods :: proc(
 
 _state_builtin_class_constructors :: proc(state: ^State, class: ^StateBuiltinClass, api_class: ^ApiBuiltinClass) {
     class.constructors = make([]StateClassConstructor, len(api_class.constructors))
-    for constructor in &api_class.constructors {
+    for &constructor in &api_class.constructors {
         state_constructor := StateClassConstructor {
             index             = constructor.index,
             backing_proc_name = _builtin_class_constructor_backing_proc_name(state, class, &constructor),

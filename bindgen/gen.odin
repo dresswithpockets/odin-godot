@@ -96,7 +96,7 @@ generate_bindings :: proc(state: ^State) {
 
     // builtin classes
     {
-        for name, class in &state.builtin_classes {
+        for name, &class in &state.builtin_classes {
             // POD data types are covered by native odin types
             if slice.contains(pod_types, name) {
                 continue
