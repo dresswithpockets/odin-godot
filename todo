@@ -1,0 +1,13 @@
+# bindgen
+TODO rewrite codegen to use temple templating engine
+TODO add support for vararg functions
+TODO add frontend generation for class methods
+TODO add generation for engine (non-builtin) classes
+TODO add generation for built-in singletons
+TODO add generation for native structures (?)
+TODO add option to generate classes and methods in a per-package hierarchy (each class gets its own package)
+
+# godin
+TODO rewrite godin with better Odin parsing support via core:odin/parser
+TODO rewrite templating & codegen using the temple template engine
+
