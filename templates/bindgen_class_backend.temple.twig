@@ -1,0 +1,25 @@
+// operators
+{% for _, operator in this.operators %}
+{% for overload in operator.overloads %}
+@private
+{{ overload.backing_func_name }}: gdextension.PtrOperatorEvaluator
+{% end %}
+{% end %}
+
+// methods
+{% for _, method in this.methods %}
+@private
+{{ method.backing_func_name }}: gdextension.PtrBuiltInMethod
+{% end %}
+
+// constructors
+{% for constructor in this.constructors %}
+@private
+__{{ this.godot_name }}__constructor_{{ int(constructor.index) }}: gdextension.PtrConstructor
+{% end %}
+
+// destructors
+{% if this.has_destructor %}
+@private
+__{{ this.godot_name }}__destructor: gdextension.PtrDestructor
+{% end %}

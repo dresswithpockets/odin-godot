@@ -16,6 +16,7 @@ State :: struct {
     // maps a godot type name to an odin type's snake case name
     type_snake_names:    map[string]string,
     size_configurations: map[string]StateSizeConfiguration,
+    size_configurations_ordered: [dynamic]StateSizeConfiguration,
     enums:               map[string]StateEnum,
     utility_functions:   []StateUtilityFunction,
     // maps a builtin godot type name to builtin class details
@@ -43,6 +44,11 @@ StateEnum :: struct {
     godot_name:  string,
     is_bitfield: bool,
     values:      map[string]int,
+
+    // processed data used in the temple template
+    odin_skip:      bool,
+    odin_case_name: string,
+    odin_values:    map[string]int,
 }
 
 @(private)
@@ -51,6 +57,7 @@ StateUtilityFunction :: struct {
     godot_name:        string,
     proc_name:         string,
     return_type:       Maybe(StateType),
+    return_type_str:   Maybe(string),
     category:          string,
     is_vararg:         bool,
     hash:              i64,
@@ -69,6 +76,9 @@ StateBuiltinClass :: struct {
     base_constructor_name: string,
     constructors:          []StateClassConstructor,
     depends_on_packages:   map[string]bool,
+
+    odin_needs_strings: bool,
+    is_special_string_type: bool,
 }
 
 @(private)
@@ -92,6 +102,12 @@ StateClassOperatorOverload :: struct {
     // nil for unary operators
     right_type:         Maybe(StateType),
     return_type:        StateType,
+
+    right_variant_type_name: string,
+    right_type_str:          string,
+    right_type_is_native:    bool,
+    right_type_is_ref:       bool,
+    right_type_ptr_str:      string,
 }
 
 @(private)
@@ -120,6 +136,7 @@ StateClassConstructor :: struct {
 StateFunctionArgument :: struct {
     name:          string,
     arg_type:      StateType,
+    arg_type_str:  string,
     default_value: Maybe(string),
 }
 
@@ -220,6 +237,7 @@ create_state :: proc(options: Options, api: ^Api) -> (state: ^State) {
 
 _state_size_configurations :: proc(state: ^State) {
     state.size_configurations = make(map[string]StateSizeConfiguration)
+    state.size_configurations_ordered = make([dynamic]StateSizeConfiguration)
 
     for builtin_config in state.api.builtin_sizes {
         configuration := StateSizeConfiguration {
@@ -230,6 +248,7 @@ _state_size_configurations :: proc(state: ^State) {
             configuration.sizes[size.name] = size.size
         }
         state.size_configurations[builtin_config.configuration] = configuration
+        append(&state.size_configurations_ordered, configuration)
     }
 }
 
@@ -241,6 +260,7 @@ _state_global_enums :: proc(state: ^State) {
             godot_name  = api_enum.name,
             is_bitfield = api_enum.is_bitfield,
             values      = make(map[string]int),
+            odin_values = make(map[string]int),
         }
 
         for value in api_enum.values {

@@ -1,0 +1,32 @@
+init_{{ this.snake_name }}_constructors :: proc() {
+    using gdextension
+
+    // constructors
+{% for constructor in this.constructors %}
+    {{ constructor.backing_proc_name }} = interface.variant_get_ptr_constructor(VariantType.{{ this.odin_name }}, {{ u64(constructor.index) }})
+{% end %}
+{% if this.has_destructor %}
+    // destructor
+    __{{ this.odin_name }}__destructor = interface.variant_get_ptr_destructor(VariantType.{{ this.odin_name }})
+{% end %}
+}
+
+init__{{ this.snake_name }}_bindings :: proc() {
+    using gdextension
+
+    // operators
+{% for _, operator in this.operators %}
+{% for overload in operator.overloads %}
+    {{ overload.backing_func_name }} = interface.variant_get_ptr_operator_evaluator(VariantOperator.{{ operator.variant_op_name }}, VariantType.{{ this.odin_name }}, VariantType.{{ overload.right_variant_type_name }})
+{% end %}
+{% end %}
+
+{% if len(this.methods) > 0 %}
+    // methods
+    function_name: StringName
+{% for _, method in this.methods %}
+    function_name = new_string_name_cstring("{{ method.godot_name}}")
+    {{ method.backing_func_name }} = interface.variant_get_ptr_builtin_method(VariantType.{{ this.odin_name }}, cast(StringNamePtr)&function_name._opaque, {{ i64(method.hash) }})
+{% end %}
+{% end %}
+}

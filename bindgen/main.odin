@@ -54,7 +54,8 @@ main :: proc() {
     fmt.printf("Generating API for %v\n", api.version.full_name)
 
     state := create_state(options, api)
-    generate_bindings(state)
+    //generate_bindings(state)
+    generate_bindings_temple(state)
 
     // since we wanna keep state around until the end of the program's lifetime,
     // no need to be particular about freeing the bits and pieces of the struct (:
