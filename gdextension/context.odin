@@ -33,7 +33,7 @@ godot_allocator_proc :: proc(
     case .Free_All:
         return nil, .Mode_Not_Implemented
 
-    case .Resize:
+    case .Resize, .Resize_Non_Zeroed:
         ptr: rawptr
         if old_memory == nil {
             ptr = interface.mem_alloc(cast(c.size_t)size)
