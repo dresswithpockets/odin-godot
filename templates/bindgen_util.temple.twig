@@ -7,7 +7,7 @@ import __variant_package "../variant"
 {% for function in this.utility_functions %}
 {{ function.proc_name }} :: proc(
 {% for argument, i in function.arguments %}
-{% if i > 0 %}, {% end %}{{argument.name}}: {{ argument.arg_type_str }}{% if default, has_default := argument.default_value.(string); has_default %} := {{ default }}{% end %}
+{% if i > 0 %}, {% end %}{{argument.name}}: {{ argument.arg_type_str }}{% if default, has_default := argument.default_value.(string); has_default %} = {{ default }}{% end %}
 {% end %})
 {% if return_type, has_return_type := function.return_type_str.(string); has_return_type %} -> {{ return_type }}{% end %} {
 {% for argument in function.arguments %}
