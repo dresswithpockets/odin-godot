@@ -1,6 +1,7 @@
 # bindgen
 DONE rewrite codegen to use temple templating engine
-TODO add support for vararg functions
+TODO add support for vararg utility functions
+DONE add support for utility functions with default arg values
 TODO add frontend generation for class methods
 TODO add generation for engine (non-builtin) classes
 TODO add generation for built-in singletons
