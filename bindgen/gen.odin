@@ -229,7 +229,7 @@ preprocess_state_builtin_classes :: proc(state: ^State) {
     }
 }
 
-generate_global_enums_temple :: proc(state: ^State) {
+generate_global_enums :: proc(state: ^State) {
     fhandle, ferr := os.open("core/enums.odin", os.O_CREATE | os.O_TRUNC)
     if ferr != 0 {
         fmt.eprintf("Error opening core/enums.odin\n")
@@ -242,7 +242,7 @@ generate_global_enums_temple :: proc(state: ^State) {
     enums_template.with(fstream, state)
 }
 
-generate_utility_functions_temple :: proc(state: ^State) {
+generate_utility_functions :: proc(state: ^State) {
     fhandle, ferr := os.open("core/util.odin", os.O_CREATE | os.O_TRUNC)
     if ferr != 0 {
         fmt.eprintf("Error opening core/util.odin\n")
@@ -255,7 +255,7 @@ generate_utility_functions_temple :: proc(state: ^State) {
     util_template.with(fstream, state)
 }
 
-generate_builtin_classes_temple :: proc(state: ^State) {
+generate_builtin_classes :: proc(state: ^State) {
     for name, &class in &state.builtin_classes {
         // POD data types are covered by native odin types
         if slice.contains(pod_types, name) {
@@ -283,14 +283,14 @@ generate_builtin_classes_temple :: proc(state: ^State) {
     }
 }
 
-generate_bindings_temple :: proc(state: ^State) {
+generate_bindings :: proc(state: ^State) {
     preprocess_state_enums(state)
     preprocess_state_utility_functions(state)
     preprocess_state_builtin_classes(state)
 
-    generate_global_enums_temple(state)
-    generate_utility_functions_temple(state)
-    generate_builtin_classes_temple(state)
+    generate_global_enums(state)
+    generate_utility_functions(state)
+    generate_builtin_classes(state)
 }
 
 /*
