@@ -169,7 +169,6 @@ preprocess_state_utility_functions :: proc(state: ^State) {
             }
         }
         // TODO: is_vararg
-        // TODO: default value
         return_type, has_return_type := function.return_type.(StateType)
         if has_return_type {
             // POD-mapped types use native odin types instead of classes
@@ -225,6 +224,28 @@ preprocess_state_builtin_classes :: proc(state: ^State) {
         // used in the special constructor for some string types
         if slice.contains(types_with_odin_string_constructors, name) {
             class.odin_needs_strings = true
+        }
+
+        for _, &method in &class.methods {
+            return_type, has_return_type := method.return_type.(StateType)
+            if has_return_type {
+                // POD-mapped types use native odin types instead of classes
+                if pod_type, is_pod_type := return_type.pod_type.(string); is_pod_type {
+                    method.return_type_str = pod_type
+                } else {
+                    concat_strings := [2]string { "__variant_package.", return_type.odin_type }
+                    method.return_type_str = strings.concatenate(concat_strings[:])
+                }
+            }
+
+            for &argument in method.arguments {
+                if pod_type, is_pod_type := argument.arg_type.pod_type.(string); is_pod_type {
+                    argument.arg_type_str = pod_type
+                } else {
+                    concat_strings := [2]string { "__variant_package.", argument.arg_type.odin_type }
+                    argument.arg_type_str = strings.concatenate(concat_strings[:])
+                }
+            }
         }
     }
 }

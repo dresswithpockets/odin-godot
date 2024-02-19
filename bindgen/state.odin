@@ -117,6 +117,7 @@ StateBuiltinClassMethod :: struct {
     proc_name:          string,
     // return types are nil for void-returning functions
     return_type:        Maybe(StateType),
+    return_type_str:    Maybe(string),
     is_vararg:          bool,
     is_const:           bool,
     is_static:          bool,
