@@ -233,8 +233,7 @@ preprocess_state_builtin_classes :: proc(state: ^State) {
                 if pod_type, is_pod_type := return_type.pod_type.(string); is_pod_type {
                     method.return_type_str = pod_type
                 } else {
-                    concat_strings := [2]string { "__variant_package.", return_type.odin_type }
-                    method.return_type_str = strings.concatenate(concat_strings[:])
+                    method.return_type_str = return_type.odin_type
                 }
             }
 
@@ -242,8 +241,9 @@ preprocess_state_builtin_classes :: proc(state: ^State) {
                 if pod_type, is_pod_type := argument.arg_type.pod_type.(string); is_pod_type {
                     argument.arg_type_str = pod_type
                 } else {
-                    concat_strings := [2]string { "__variant_package.", argument.arg_type.odin_type }
-                    argument.arg_type_str = strings.concatenate(concat_strings[:])
+                    argument.arg_type_str = argument.arg_type.odin_type
+                }
+
                 if default_value, has_default_value := argument.default_value.(string); has_default_value {
                     // N.B. I'm pretty sure that "null" in Godot is just a 0'd out opaque pointer, so a default of {} should
                     // work for variant types
