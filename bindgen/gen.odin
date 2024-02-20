@@ -297,10 +297,6 @@ generate_builtin_classes :: proc(state: ^State) {
         fstream := os.stream_from_handle(fhandle)
         pair := ClassStatePair{state = state, class = &class}
         class_template.with(fstream, pair)
-
-        // generate_builtin_class_frontend_procs(state, class, sb)
-        // generate_builtin_class_initialization_proc(state, class, sb)
-        // generate_builtin_class_backend_procs(state, class, sb)
     }
 }
 
