@@ -244,10 +244,42 @@ preprocess_state_builtin_classes :: proc(state: ^State) {
                 } else {
                     concat_strings := [2]string { "__variant_package.", argument.arg_type.odin_type }
                     argument.arg_type_str = strings.concatenate(concat_strings[:])
+                if default_value, has_default_value := argument.default_value.(string); has_default_value {
+                    // N.B. I'm pretty sure that "null" in Godot is just a 0'd out opaque pointer, so a default of {} should
+                    // work for variant types
+                    if default_value == "null" {
+                        argument.default_value = "{}"
+                    } else if strings.has_prefix(default_value, "Vector3(") {
+                        concat := []string{"new_vector3(", default_value[len("Vector3("):]}
+                        argument.default_value = _builtin_class_method_default_arg_backing_field_name(method, argument)
+                        argument.default_value_is_backing_field = true
+                        argument.default_value_backing_field_assign = strings.concatenate(concat[:])
+                    } else if strings.has_prefix(default_value, "Vector2(") {
+                        concat := []string{"new_vector2(", default_value[len("Vector2("):]}
+                        argument.default_value = _builtin_class_method_default_arg_backing_field_name(method, argument)
+                        argument.default_value_is_backing_field = true
+                        argument.default_value_backing_field_assign = strings.concatenate(concat[:])
+                    } else if strings.has_prefix(default_value, "Color(") {
+                        concat := []string{"new_color(", default_value[len("Color("):]}
+                        argument.default_value = _builtin_class_method_default_arg_backing_field_name(method, argument)
+                        argument.default_value_is_backing_field = true
+                        argument.default_value_backing_field_assign = strings.concatenate(concat[:])
+                    } else if strings.has_prefix(default_value, "\"") && strings.has_suffix(default_value, "\"") {
+                        new_string_proc_name := "new_string_name_cstring(" if argument.arg_type_str == "StringName" else "new_string_cstring("
+                        concat := []string{new_string_proc_name, default_value, ")"}
+                        argument.default_value = _builtin_class_method_default_arg_backing_field_name(method, argument)
+                        argument.default_value_is_backing_field = true
+                        argument.default_value_backing_field_assign = strings.concatenate(concat[:])
+                    }
                 }
             }
         }
     }
+}
+
+_builtin_class_method_default_arg_backing_field_name :: proc(method: StateBuiltinClassMethod, argument: StateFunctionArgument) -> string{
+    default_concat := []string{"__", method.backing_func_name, "__default__", argument.name, "__", argument.arg_type_str}
+    return strings.concatenate(default_concat[:])
 }
 
 generate_global_enums :: proc(state: ^State) {

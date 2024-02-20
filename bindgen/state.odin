@@ -139,6 +139,9 @@ StateFunctionArgument :: struct {
     arg_type:      StateType,
     arg_type_str:  string,
     default_value: Maybe(string),
+
+    default_value_is_backing_field:     bool,
+    default_value_backing_field_assign: string,
 }
 
 operator_name_map := map[string]string {
