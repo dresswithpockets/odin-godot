@@ -77,10 +77,16 @@ BuiltinClassStatePair :: struct {
     class: ^StateBuiltinClass,
 }
 
+ClassStatePair :: struct {
+    state: ^State,
+    class: ^StateClass,
+}
+
+
 enums_template := temple.compiled("../templates/bindgen_enums.temple.twig", ^State)
 util_template := temple.compiled("../templates/bindgen_util.temple.twig", ^State)
 builtin_class_template := temple.compiled("../templates/bindgen_builtin_class.temple.twig", BuiltinClassStatePair)
-class_template := temple.compiled("../templates/bindgen_class.temple.twig")
+class_template := temple.compiled("../templates/bindgen_class.temple.twig", ClassStatePair)
 
 preprocess_state_enums :: proc(state: ^State) {
     for name, &global_enum in &state.enums {
@@ -333,6 +339,26 @@ generate_builtin_classes :: proc(state: ^State) {
     }
 }
 
+generate_classes :: proc(state: ^State) {
+    for name, &class in &state.classes {
+
+        file_name_parts := [?]string{class.package_name, "/", class.godot_name, ".odin"}
+        file_name := strings.concatenate(file_name_parts[:])
+        defer delete(file_name)
+
+        fhandle, ferr := os.open(file_name, os.O_CREATE | os.O_TRUNC)
+        if ferr != 0 {
+            fmt.eprintf("Error opening %v\n", file_name)
+            return
+        }
+        defer os.close(fhandle)
+
+        fstream := os.stream_from_handle(fhandle)
+        pair := ClassStatePair{state = state, class = &class}
+        class_template.with(fstream, pair)
+    }
+}
+
 generate_bindings :: proc(state: ^State) {
     preprocess_state_enums(state)
     preprocess_state_utility_functions(state)
@@ -341,6 +367,7 @@ generate_bindings :: proc(state: ^State) {
     generate_global_enums(state)
     generate_utility_functions(state)
     generate_builtin_classes(state)
+    generate_classes(state)
 }
 
 /*
