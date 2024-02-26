@@ -367,7 +367,7 @@ _state_classes :: proc(state: ^State) {
     for class in &state.api.classes {
         odin_name := godot_to_odin_case(class.name)
         snake_name := godot_to_snake_case(class.name)
-        state.builtin_classes[class.name] = StateClass {
+        state.classes[class.name] = StateClass {
             odin_name             = odin_name,
             snake_name            = snake_name,
             godot_name            = class.name,
