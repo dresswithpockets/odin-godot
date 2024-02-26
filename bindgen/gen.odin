@@ -85,6 +85,7 @@ ClassStatePair :: struct {
 
 enums_template := temple.compiled("../templates/bindgen_enums.temple.twig", ^State)
 util_template := temple.compiled("../templates/bindgen_util.temple.twig", ^State)
+variant_builtin_template := temple.compiled("../templates/bindgen_variant.temple.twig", ^State)
 builtin_class_template := temple.compiled("../templates/bindgen_builtin_class.temple.twig", BuiltinClassStatePair)
 class_template := temple.compiled("../templates/bindgen_class.temple.twig", ClassStatePair)
 
@@ -337,6 +338,19 @@ generate_builtin_classes :: proc(state: ^State) {
         pair := BuiltinClassStatePair{state = state, class = &class}
         builtin_class_template.with(fstream, pair)
     }
+
+    // Variant and Object are special cases which arent provided by the API
+    // N.B. Object is actually a core API class and should be declared in core/, but for now isnt
+    file_name := "variant/Variant.gen.odin"
+    fhandle, ferr := os.open(file_name, os.O_CREATE | os.O_TRUNC)
+    if ferr != 0 {
+        fmt.eprintf("Error opening %v\n", file_name)
+        return
+    }
+    defer os.close(fhandle)
+
+    fstream := os.stream_from_handle(fhandle)
+    variant_builtin_template.with(fstream, state)
 }
 
 generate_classes :: proc(state: ^State) {
