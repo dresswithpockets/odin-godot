@@ -1,0 +1,18 @@
+package variant
+
+import "../gdextension"
+
+Variant :: struct {
+    _opaque: __VariantOpaqueType,
+}
+
+Object :: struct {
+    _opaque: __ObjectOpaqueType,
+}
+
+{% for config, i in this.size_configurations_ordered %}
+{% if i == 0 %}when {% else %} else when {% end %}gdextension.BUILD_CONFIG == "{{ config.name }}" {
+    __VariantOpaqueType :: [{{ int(config.sizes["Variant"]) }}]u8
+    __ObjectOpaqueType :: [{{ int(config.sizes["Object"]) }}]u8
+}
+{% end %}
