@@ -6,17 +6,36 @@
 
 This currently targets Godot v4.1.1.
 
-## C API Bindings
+## Base GDExtension Bindings
 
-The C bindings are in `./gdextension/lib.odin`. They're based on `godot-cpp/gdextension/gdextension_interface.h`.
+The bindings to the C Interface are in `./gdextension/lib.odin`. They're based on `godot-cpp/gdextension/gdextension_interface.h`.
 
 ## Generating Complete Bindings
 
 Clone & generate bindings
 ```sh
-git clone --recursive-submodules -j8 https://github.com/dresswithpockets/odin-godot 
+git clone --recursive-submodules -j8 https://github.com/dresswithpockets/odin-godot
 cd odin-godot
-./bindgen.sh
+make bindings
+```
+
+Bindings for all enums, classes, utility functions, singletons, and native structs will be generated in `core`, `editor`, and `variant`. 
+
+> [!NOTE]
+> `make bindings` expects odin on path, all submodules updated, and odin-godot (this repo) is the working directory.
+
+Alternatively, you may build and run `bindgen` yourself:
+```sh
+# temple is the templating engine used by bindgen, temple_cli is temple's preprocessor.
+odin build temple/cli/ -o:speed -out:bin/temple_cli.exe
+# temple_cli will recursively search all odin files in the specified directory for usages of `compiled` and `compiled_inline`,
+# then it will generate Odin code with the built templates in templates.odin, in the specified directory.
+# in this case, its looking in the bindgen directory, and outputs to temple/templates.odin.
+./bin/temple_cli.exe bindgen temple
+# bindgen is the tool which uses the temple templates to generate the entire GDExtension binding
+odin build bindgen/ -o:speed -out:bin/bindgen.exe
+# bindgen requires a path to a json file which describes the GDExtension API. There is already one in godot-cpp.
+./bin/bindgen.exe godot-cpp/gdextension/extension_api.json
 ```
 
 > **N.B.** `bindgen.sh` expects odin on path, submodules updated, and odin-godot is the working directory.
