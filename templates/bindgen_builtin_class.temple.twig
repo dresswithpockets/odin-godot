@@ -24,14 +24,14 @@ import "../{{ package_name }}"
 {% end %}
 
 
-{% embed "bindgen_class_constructors.temple.twig" with this.class %}
+{% embed "bindgen_builtin_class_constructors.temple.twig" with this.class %}
 
-{% embed "bindgen_class_destructor.temple.twig" with this.class %}
+{% embed "bindgen_builtin_class_destructor.temple.twig" with this.class %}
 
-{% embed "bindgen_class_operators.temple.twig" with this.class %}
+{% embed "bindgen_builtin_class_operators.temple.twig" with this.class %}
 
-{% embed "bindgen_class_methods.temple.twig" with this.class %}
+{% embed "bindgen_builtin_class_methods.temple.twig" with this.class %}
 
-{% embed "bindgen_class_initializer.temple.twig" with this.class %}
+{% embed "bindgen_builtin_class_initializer.temple.twig" with this.class %}
 
-{% embed "bindgen_class_backend.temple.twig" with this.class %}
+{% embed "bindgen_builtin_class_backend.temple.twig" with this.class %}
