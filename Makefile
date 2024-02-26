@@ -29,9 +29,9 @@ temple: $(temple_cli_deps)
 
 ### templates
 temple/templates.odin: $(temple_cli_out) $(temple_deps)
-	$(temple_cli_out) . $(temple_dir)
+	$(temple_cli_out) $(bindgen_dir) $(temple_dir)
 templates: $(temple_cli_out) $(temple_deps)
-	$(temple_cli_out) . $(temple_dir)
+	$(temple_cli_out) $(bindgen_dir) $(temple_dir)
 ###
 
 ### bindgen
