@@ -290,9 +290,9 @@ _builtin_class_method_default_arg_backing_field_name :: proc(method: StateBuilti
 }
 
 generate_global_enums :: proc(state: ^State) {
-    fhandle, ferr := os.open("core/enums.odin", os.O_CREATE | os.O_TRUNC)
+    fhandle, ferr := os.open("core/enums.gen.odin", os.O_CREATE | os.O_TRUNC)
     if ferr != 0 {
-        fmt.eprintf("Error opening core/enums.odin\n")
+        fmt.eprintf("Error opening core/enums.gen.odin\n")
         return
     }
     defer os.close(fhandle)
@@ -303,9 +303,9 @@ generate_global_enums :: proc(state: ^State) {
 }
 
 generate_utility_functions :: proc(state: ^State) {
-    fhandle, ferr := os.open("core/util.odin", os.O_CREATE | os.O_TRUNC)
+    fhandle, ferr := os.open("core/util.gen.odin", os.O_CREATE | os.O_TRUNC)
     if ferr != 0 {
-        fmt.eprintf("Error opening core/util.odin\n")
+        fmt.eprintf("Error opening core/util.gen.odin\n")
         return
     }
     defer os.close(fhandle)
@@ -322,7 +322,7 @@ generate_builtin_classes :: proc(state: ^State) {
             continue
         }
 
-        file_name_parts := [?]string{"variant/", class.godot_name, ".odin"}
+        file_name_parts := [?]string{"variant/", class.godot_name, ".gen.odin"}
         file_name := strings.concatenate(file_name_parts[:])
         defer delete(file_name)
 
@@ -342,7 +342,7 @@ generate_builtin_classes :: proc(state: ^State) {
 generate_classes :: proc(state: ^State) {
     for name, &class in &state.classes {
 
-        file_name_parts := [?]string{class.package_name, "/", class.godot_name, ".odin"}
+        file_name_parts := [?]string{class.package_name, "/", class.godot_name, ".gen.odin"}
         file_name := strings.concatenate(file_name_parts[:])
         defer delete(file_name)
 
