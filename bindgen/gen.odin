@@ -72,14 +72,14 @@ native_odin_types :: []string {
 
 types_with_odin_string_constructors :: []string{"String", "StringName"}
 
-ClassStatePair :: struct {
+BuiltinClassStatePair :: struct {
     state: ^State,
     class: ^StateBuiltinClass,
 }
 
 enums_template := temple.compiled("../templates/bindgen_enums.temple.twig", ^State)
 util_template := temple.compiled("../templates/bindgen_util.temple.twig", ^State)
-class_template := temple.compiled("../templates/bindgen_class.temple.twig", ClassStatePair)
+builtin_class_template := temple.compiled("../templates/bindgen_class.temple.twig", BuiltinClassStatePair)
 
 preprocess_state_enums :: proc(state: ^State) {
     for name, &global_enum in &state.enums {
@@ -327,8 +327,8 @@ generate_builtin_classes :: proc(state: ^State) {
         defer os.close(fhandle)
 
         fstream := os.stream_from_handle(fhandle)
-        pair := ClassStatePair{state = state, class = &class}
-        class_template.with(fstream, pair)
+        pair := BuiltinClassStatePair{state = state, class = &class}
+        builtin_class_template.with(fstream, pair)
     }
 }
 
