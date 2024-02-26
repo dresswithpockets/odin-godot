@@ -25,6 +25,7 @@ State :: struct {
     utility_functions:   []StateUtilityFunction,
     // maps a builtin godot type name to builtin class details
     builtin_classes:     map[string]StateBuiltinClass,
+    classes:             map[string]StateClass,
 }
 
 @(private)
@@ -83,6 +84,14 @@ StateBuiltinClass :: struct {
 
     odin_needs_strings: bool,
     is_special_string_type: bool,
+}
+
+@(private)
+StateClass :: struct {
+    odin_name:    string,
+    snake_name:   string,
+    godot_name:   string,
+    package_name: string,
 }
 
 @(private)
@@ -231,7 +240,7 @@ create_state :: proc(options: Options, api: ^Api) -> (state: ^State) {
     _state_size_configurations(state)
     _state_global_enums(state)
     _state_builtin_classes(state)
-    // TODO: classes
+    _state_classes(state)
 
     _state_utility_functions(state)
     _state_builtin_class_members(state)
@@ -349,6 +358,23 @@ _state_builtin_classes :: proc(state: ^State) {
         state.type_package_map[class.name] = "variant"
         state.type_odin_names[class.name] = odin_name
         state.type_snake_names[class.name] = snake_name
+    }
+}
+
+_state_classes :: proc(state: ^State) {
+    state.classes = make(map[string]StateClass)
+
+    for class in &state.api.classes {
+        odin_name := godot_to_odin_case(class.name)
+        snake_name := godot_to_snake_case(class.name)
+        state.builtin_classes[class.name] = StateClass {
+            odin_name             = odin_name,
+            snake_name            = snake_name,
+            godot_name            = class.name,
+            package_name          = class.api_type,
+        }
+        state.type_package_map[class.name] = class.api_type
+        state.type_odin_names[class.name] = 
     }
 }
 
