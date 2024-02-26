@@ -4,6 +4,10 @@ package bindgen
 import "core:fmt"
 import "core:strings"
 
+/*
+State is all of the information transformed from the Api input
+*/
+
 @(private)
 State :: struct {
     options:             Options,
