@@ -43,7 +43,6 @@ bindgen: $(bindgen_deps)
 
 .PHONY: clean
 
-# cleans out bin/, editor/, core/, and variant/, except for variant/Variant.odin
 clean:
 	rm -f $(OUT_DIR)/*
 	rm -f editor/*.gen.odin
