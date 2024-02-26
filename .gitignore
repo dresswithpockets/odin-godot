@@ -1,12 +1,6 @@
 .vscode/
 
-core/*.odin
-editor/*.odin
-
 *.gen.odin
-
-variant/*.odin
-!variant/Variant.odin
 
 tools/
 
