@@ -5,7 +5,7 @@
 >
 > If you are using parts of it, beware of sudden major changes to the API, structure, and features.
 
-This currently targets Godot v4.1.1.
+This currently targets Godot v4.2.1. You may be able to use this in versions 4.0 and 4.1 of the GDExtension API, but there are no guarantees.
 
 ## Base GDExtension Bindings
 
