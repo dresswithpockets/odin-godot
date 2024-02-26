@@ -4,4 +4,4 @@
 	branch = 4.0
 [submodule "temple"]
 	path = temple
-	url = https://github.com/laytan/temple
+	url = https://github.com/dresswithpockets/temple
