@@ -374,7 +374,8 @@ _state_classes :: proc(state: ^State) {
             package_name          = class.api_type,
         }
         state.type_package_map[class.name] = class.api_type
-        state.type_odin_names[class.name] = 
+        state.type_odin_names[class.name] = odin_name
+        state.type_snake_names[class.name] = snake_name
     }
 }
 
