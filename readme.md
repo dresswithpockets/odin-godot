@@ -1,8 +1,7 @@
 # Godot Toolkit for Odin
 
-| :warning: This toolkit is not in a usable state!                                                  |
-|:--------------------------------------------------------------------------------------------------|
-| If you are using parts of it, beware of sudden major changes to the API, structure, and features. |
+> [!WARNING] This toolkit is not in a usable state!
+> If you are using parts of it, beware of sudden major changes to the API, structure, and features.
 
 This currently targets Godot v4.1.1.
 
