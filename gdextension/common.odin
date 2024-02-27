@@ -33,6 +33,16 @@ call_builtin_method_ptr_no_ret :: proc(method: PtrBuiltInMethod, base: TypePtr, 
     method(base, raw_data(args), cast(TypePtr)nil, len(args))
 }
 
+call_method_ptr_no_ret :: proc(method: MethodBindPtr, base: ObjectPtr, args: ..VariantPtr) {
+    interface.object_method_bind_ptrcall(method, base, raw_data(args), cast(VariantPtr)nil)
+}
+
+call_method_ptr_ret :: proc(method: MethodBindPtr, base: ObjectPtr, $T: typeid, args: ..VariantPtr) -> T {
+    ret: T
+    interface.object_method_bind_ptrcall(method, base, raw_data(args), cast(VariantPtr)&ret)
+    return ret
+}
+
 call_utility_function_ptr_ret :: proc(func: PtrUtilityFunction, $T: typeid, args: ..TypePtr) -> (ret: T) {
     func(cast(TypePtr)&ret, raw_data(args), len(args))
     return
