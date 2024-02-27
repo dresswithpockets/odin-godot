@@ -4,11 +4,32 @@ import "core:c"
 
 BUILD_CONFIG :: #config(BUILD_CONFIG, "float_64")
 
+// In this API there are multiple functions which expect the caller to pass a pointer
+// on return value as parameter.
+// In order to make it clear if the caller should initialize the return value or not
+// we have two flavor of types:
+// - `GDExtensionXXXPtr` for pointer on an initialized value
+// - `GDExtensionUninitializedXXXPtr` for pointer on uninitialized value
+//
+// Notes:
+// - Not respecting those requirements can seems harmless, but will lead to unexpected
+//   segfault or memory leak (for instance with a specific compiler/OS, or when two
+//   native extensions start doing ptrcall on each other).
+// - Initialization must be done with the function pointer returned by `variant_get_ptr_constructor`,
+//   zero-initializing the variable should not be considered a valid initialization method here !
+// - Some types have no destructor (see `extension_api.json`'s `has_destructor` field), for
+//   them it is always safe to skip the constructor for the return value if you are in a hurry ;-)
+
 VariantPtr :: distinct rawptr
+UninitializedVariantPtr :: distinct rawptr
 StringNamePtr :: distinct rawptr
+UninitializedStringNamePtr :: distinct rawptr
 StringPtr :: distinct rawptr
+UninitializedStringPtr :: distinct rawptr
 ObjectPtr :: distinct rawptr
+UninitializedObjectPtr :: distinct rawptr
 TypePtr :: distinct rawptr
+UninitializedTypePtr :: distinct rawptr
 
 MethodBindPtr :: distinct rawptr
 RefPtr :: distinct rawptr
@@ -119,11 +140,11 @@ CallError :: struct {
     expected: i32,
 }
 
-VariantFromTypeConstructorProc :: #type proc "c" (variant: VariantPtr, type: TypePtr)
+VariantFromTypeConstructorProc :: #type proc "c" (variant: UninitializedVariantPtr, type: TypePtr)
 TypeFromVariantConstructorProc :: #type proc "c" (type: TypePtr, variant: VariantPtr)
 PtrOperatorEvaluator :: #type proc "c" (left: TypePtr, right: TypePtr, result: TypePtr)
 PtrBuiltInMethod :: #type proc "c" (base: TypePtr, args: ^TypePtr, returns: TypePtr, arg_count: int)
-PtrConstructor :: #type proc "c" (base: TypePtr, args: ^TypePtr)
+PtrConstructor :: #type proc "c" (base: UninitializedTypePtr, args: ^TypePtr)
 PtrDestructor :: #type proc "c" (base: TypePtr)
 PtrSetter :: #type proc "c" (base: TypePtr, value: TypePtr)
 PtrGetter :: #type proc "c" (base: TypePtr, value: TypePtr)
@@ -297,6 +318,12 @@ ExtensionClassMethodCall :: #type proc "c" (
     argument_count: i64,
     ret: VariantPtr,
     error: CallError,
+)
+ExtensionClassMethodValidateCall :: #type proc "c" (
+    method_user_data: rawptr,
+    instance: ExtensionClassInstancePtr,
+    args: [^]VariantPtr,
+    ret: VariantPtr,
 )
 ExtensionClassMethodPtrCall :: #type proc "c" (
     method_user_data: rawptr,
@@ -573,6 +600,14 @@ ExtensionInterfaceGetProcAddress :: #type proc "c" (function_name: cstring) -> r
  * and the function pointer typedef that shows its signature.
  */
 InitializationFunction :: #type proc "c" (get_proc_address: ExtensionInterfaceGetProcAddress, library: ExtensionClassLibraryPtr, initialization: ^Initialization) -> bool
+
+GodotVersion :: struct {
+    version_major:                                      u32,
+    version_minor:                                      u32,
+    version_patch:                                      u32,
+    version_string:                                     cstring,
+}
+
 Interface :: struct {
     version_major:                                      u32,
     version_minor:                                      u32,
