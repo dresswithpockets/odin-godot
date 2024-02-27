@@ -189,15 +189,22 @@ ExtensionClassPropertyGetRevert :: #type proc "c" (
     name: StringNamePtr,
     ret: VariantPtr,
 ) -> bool
+ExtensionClassValidateProperty :: #type proc "c" (instance: ExtensionClassInstancePtr, property: ^PropertyInfo) -> bool
+// ExtensionClassNotification is deprecated, use ExtensionClassNotification2 instead
 ExtensionClassNotification :: #type proc "c" (instance: ExtensionClassInstancePtr, what: i32)
+ExtensionClassNotification2 :: #type proc "c" (instance: ExtensionClassInstancePtr, what: i32, reversed: bool)
 ExtensionClassToString :: #type proc "c" (instance: ExtensionClassInstancePtr, is_valid: ^bool, out: StringPtr)
 ExtensionClassReference :: #type proc "c" (instance: ExtensionClassInstancePtr)
 ExtensionClassUnreference :: #type proc "c" (instance: ExtensionClassInstancePtr)
 ExtensionClassCallVirtual :: #type proc "c" (instance: ExtensionClassInstancePtr, args: [^]TypePtr, ret: TypePtr)
-ExtensionClassCreateInstance :: #type proc "c" (user_data: rawptr) -> ObjectPtr
-ExtensionClassFreeInstance :: #type proc "c" (user_data: rawptr, instance: ExtensionClassInstancePtr)
-ExtensionClassGetVirtual :: #type proc "c" (user_data: rawptr, name: StringNamePtr) -> ExtensionClassCallVirtual
+ExtensionClassCreateInstance :: #type proc "c" (class_user_data: rawptr) -> ObjectPtr
+ExtensionClassFreeInstance :: #type proc "c" (class_user_data: rawptr, instance: ExtensionClassInstancePtr)
+ExtensionClassRecreateInstance :: #type proc "c" (class_user_data: rawptr, object: ObjectPtr) -> ExtensionClassInstancePtr
+ExtensionClassGetVirtual :: #type proc "c" (class_user_data: rawptr, name: StringNamePtr) -> ExtensionClassCallVirtual
+ExtensionClassGetVirtualCallData :: #type proc "c" (class_user_data: rawptr, name: StringNamePtr) -> rawptr
+ExtensionClassCallVirtualWithData :: #type proc "c" (instance: ExtensionClassInstancePtr, name: StringNamePtr, virtual_call_userdata: rawptr, args: [^]TypePtr, ret: TypePtr)
 
+// Deprecated. Use ExtensionClassCreationInfo2 instead.
 ExtensionClassCreationInfo :: struct {
     is_virtual:               bool,
     is_abstract:              bool,
@@ -220,6 +227,39 @@ ExtensionClassCreationInfo :: struct {
     get_rid_func:             ExtensionClassGetRid,
     // Per-class user data, later accessible in instance bindings.
     class_user_data:          rawptr,
+}
+
+ExtensionClassCreationInfo2 :: struct {
+	is_virtual: bool,
+	is_abstract: bool,
+	is_exposed: bool,
+	set_func: ExtensionClassSet,
+	get_func: ExtensionClassGet,
+	get_property_list_func: ExtensionClassGetPropertyList,
+	free_property_list_func: ExtensionClassFreePropertyList,
+	property_can_revert_func: ExtensionClassPropertyCanRevert,
+	property_get_revert_func: ExtensionClassPropertyGetRevert,
+	validate_property_func: ExtensionClassValidateProperty,
+	notification_func: ExtensionClassNotification2,
+	to_string_func: ExtensionClassToString,
+	reference_func: ExtensionClassReference,
+	unreference_func: ExtensionClassUnreference,
+	create_instance_func: ExtensionClassCreateInstance, // (Default) constructor; mandatory. If the class is not instantiable, consider making it virtual or abstract.
+	free_instance_func: ExtensionClassFreeInstance, // Destructor; mandatory.
+	recreate_instance_func: ExtensionClassRecreateInstance,
+	// Queries a virtual function by name and returns a callback to invoke the requested virtual function.
+	get_virtual_func: ExtensionClassGetVirtual,
+	// Paired with `call_virtual_with_data_func`, this is an alternative to `get_virtual_func` for extensions that
+	// need or benefit from extra data when calling virtual functions.
+	// Returns user data that will be passed to `call_virtual_with_data_func`.
+	// Returning `NULL` from this function signals to Godot that the virtual function is not overridden.
+	// Data returned from this function should be managed by the extension and must be valid until the extension is deinitialized.
+	// You should supply either `get_virtual_func`, or `get_virtual_call_data_func` with `call_virtual_with_data_func`.
+	get_virtual_call_data_func: ExtensionClassGetVirtualCallData,
+	// Used to call virtual functions when `get_virtual_call_data_func` is not null.
+	call_virtual_with_data_func: ExtensionClassCallVirtualWithData,
+	get_rid_func: ExtensionClassGetRid,
+	class_userdata: rawptr, // Per-class user data, later accessible in instance bindings.
 }
 
 ExtensionClassLibraryPtr :: distinct rawptr
@@ -290,6 +330,47 @@ ExtensionClassMethodInfo :: struct {
     default_arguments:      [^]VariantPtr,
 }
 
+ExtensionCallableCustomCall :: #type proc "c" (callable_userdata: rawptr, args: [^]VariantPtr, arg_count: i64)
+ExtensionCallableCustomIsValid :: #type proc "c" (callable_userdata: rawptr) -> bool
+ExtensionCallableCustomFree :: #type proc "c" (callable_userdata: rawptr)
+
+ExtensionCallableCustomHash :: #type proc "c" (callable_userdata: rawptr) -> c.uint32_t
+ExtensionCallableCustomEqual :: #type proc "c" (callable_userdata_a, callable_userdata_b: rawptr) -> bool
+ExtensionCallableCustomLessThan :: #type proc "c" (callable_userdata_a, callable_userdata_b: rawptr) -> bool
+
+ExtensionCallableCustomToString :: #type proc "c" (callable_userdata: rawptr, is_valid: ^bool, out: StringPtr)
+
+ExtensionCallableCustomInfo :: struct {
+	/* Only `call_func` and `token` are strictly required, however, `object_id` should be passed if its not a static method.
+	 *
+	 * `token` should point to an address that uniquely identifies the GDExtension (for example, the
+	 * `ExtensionClassLibraryPtr` passed to the entry symbol function.
+	 *
+	 * `hash_func`, `equal_func`, and `less_than_func` are optional. If not provided both `call_func` and
+	 * `callable_userdata` together are used as the identity of the callable for hashing and comparison purposes.
+	 *
+	 * The hash returned by `hash_func` is cached, `hash_func` will not be called more than once per callable.
+	 *
+	 * `is_valid_func` is necessary if the validity of the callable can change before destruction.
+	 *
+	 * `free_func` is necessary if `callable_userdata` needs to be cleaned up when the callable is freed.
+	 */
+	callable_userdata: rawptr,
+	token: rawptr,
+
+	object_id: c.uint64_t,
+
+	call_func: ExtensionCallableCustomCall,
+	is_valid_func: ExtensionCallableCustomIsValid,
+	free_func: ExtensionCallableCustomFree,
+
+	hash_func: ExtensionCallableCustomHash,
+	equal_func: ExtensionCallableCustomEqual,
+	less_than_func: ExtensionCallableCustomLessThan,
+
+	to_string_func: ExtensionCallableCustomToString,
+}
+
 /* SCRIPT INSTANCE EXTENSION */
 
 // Pointer to custom ScriptInstance native implementation.
@@ -313,11 +394,19 @@ ExtensionScriptInstanceFreePropertyList :: #type proc "c" (
     instance: ExtensionScriptInstanceDataPtr,
     list: ^PropertyInfo,
 )
+ExtensionScriptInstanceGetClassCategory :: #type proc "c" (
+    instance: ExtensionScriptInstanceDataPtr,
+    class_category: ^PropertyInfo,
+) -> bool
 ExtensionScriptInstanceGetPropertyType :: #type proc "c" (
     instance: ExtensionScriptInstanceDataPtr,
     name: StringNamePtr,
     is_valid: ^bool,
 ) -> VariantType
+ExtensionScriptInstanceValidateProperty :: #type proc "c" (
+    instance: ExtensionScriptInstanceDataPtr,
+    property: ^PropertyInfo,
+) -> bool
 ExtensionScriptInstancePropertyCanRevert :: #type proc "c" (
     instance: ExtensionScriptInstanceDataPtr,
     name: StringNamePtr,
@@ -354,7 +443,9 @@ ExtensionScriptInstanceCall :: #type proc "c" (
     ret: VariantPtr,
     error: ^CallError,
 )
+// Deprecated. Use ExtensionScriptInstanceNotification2 instead
 ExtensionScriptInstanceNotification :: #type proc "c" (instance: ExtensionScriptInstanceDataPtr, what: i32)
+ExtensionScriptInstanceNotification2 :: #type proc "c" (instance: ExtensionScriptInstanceDataPtr, what: i32, reversed: bool)
 ExtensionScriptInstanceToString :: #type proc "c" (
     instance: ExtensionScriptInstanceDataPtr,
     is_valid: ^bool,
@@ -378,6 +469,7 @@ ExtensionScriptInstanceFree :: #type proc "c" (instance: ExtensionScriptInstance
 // Pointer to ScriptInstance.
 ScriptInstancePtr :: distinct rawptr
 
+// Deprecated. Use ExtensionScriptInstanceInfo2 instead.
 ExtensionScriptInstanceInfo :: struct {
     set_func:                  ExtensionScriptInstanceSet,
     get_func:                  ExtensionScriptInstanceGet,
@@ -404,6 +496,83 @@ ExtensionScriptInstanceInfo :: struct {
     free_func:                 ExtensionScriptInstanceFree,
 }
 
+ExtensionScriptInstanceInfo :: struct {
+    set_func: ExtensionScriptInstanceSet,
+	get_func: ExtensionScriptInstanceGet,
+	get_property_list_func: ExtensionScriptInstanceGetPropertyList,
+	free_property_list_func: ExtensionScriptInstanceFreePropertyList,
+	get_class_category_func: ExtensionScriptInstanceGetClassCategory, // Optional. Set to NULL for the default behavior.
+
+	property_can_revert_func: ExtensionScriptInstancePropertyCanRevert,
+	property_get_revert_func: ExtensionScriptInstancePropertyGetRevert,
+
+	get_owner_func: ExtensionScriptInstanceGetOwner,
+	get_property_state_func: ExtensionScriptInstanceGetPropertyState,
+
+	get_method_list_func: ExtensionScriptInstanceGetMethodList,
+	free_method_list_func: ExtensionScriptInstanceFreeMethodList,
+	get_property_type_func: ExtensionScriptInstanceGetPropertyType,
+	validate_property_func: ExtensionScriptInstanceValidateProperty,
+
+	has_method_func: ExtensionScriptInstanceHasMethod,
+
+	call_func: ExtensionScriptInstanceCall,
+	notification_func: ExtensionScriptInstanceNotification2,
+
+	to_string_func: ExtensionScriptInstanceToString,
+
+	refcount_incremented_func: ExtensionScriptInstanceRefCountIncremented,
+	refcount_decremented_func: ExtensionScriptInstanceRefCountDecremented,
+
+	get_script_func: ExtensionScriptInstanceGetScript,
+
+	is_placeholder_func: ExtensionScriptInstanceIsPlaceholder,
+
+	set_fallback_func: ExtensionScriptInstanceSet,
+	get_fallback_func: ExtensionScriptInstanceGet,
+
+	get_language_func: ExtensionScriptInstanceGetLanguage,
+
+	free_func: ExtensionScriptInstanceFree,
+}
+
+ExtensionInterfaceGetProcAddress :: #type proc "c" (function_name: cstring) -> rawptr
+
+/*
+ * Each GDExtension should define a C function that matches the signature of GDExtensionInitializationFunction,
+ * and export it so that it can be loaded via dlopen() or equivalent for the given platform.
+ *
+ * For example:
+ *
+ *   GDExtensionBool my_extension_init(GDExtensionInterfaceGetProcAddress p_get_proc_address, GDExtensionClassLibraryPtr p_library, GDExtensionInitialization *r_initialization);
+ *
+ * This function's name must be specified as the 'entry_symbol' in the .gdextension file.
+ *
+ * This makes it the entry point of the GDExtension and will be called on initialization.
+ *
+ * The GDExtension can then modify the r_initialization structure, setting the minimum initialization level,
+ * and providing pointers to functions that will be called at various stages of initialization/shutdown.
+ *
+ * The rest of the GDExtension's interface to Godot consists of function pointers that can be loaded
+ * by calling p_get_proc_address("...") with the name of the function.
+ *
+ * For example:
+ *
+ *   GDExtensionInterfaceGetGodotVersion get_godot_version = (GDExtensionInterfaceGetGodotVersion)p_get_proc_address("get_godot_version");
+ *
+ * (Note that snippet may cause "cast between incompatible function types" on some compilers, you can
+ * silence this by adding an intermediary `void*` cast.)
+ *
+ * You can then call it like a normal function:
+ *
+ *   GDExtensionGodotVersion godot_version;
+ *   get_godot_version(&godot_version);
+ *   printf("Godot v%d.%d.%d\n", godot_version.major, godot_version.minor, godot_version.patch);
+ *
+ * All of these interface functions are described below, together with the name that's used to load it,
+ * and the function pointer typedef that shows its signature.
+ */
+InitializationFunction :: #type proc "c" (get_proc_address: ExtensionInterfaceGetProcAddress, library: ExtensionClassLibraryPtr, initialization: ^Initialization) -> bool
 Interface :: struct {
     version_major:                                      u32,
     version_minor:                                      u32,
