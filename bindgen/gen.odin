@@ -281,6 +281,22 @@ preprocess_state_builtin_classes :: proc(state: ^State) {
                     }
                 }
             }
+
+            // TODO: parse out the default value and map it to something like:
+            //
+            // declared as a private variable in the package
+            // __color_clamp__default_min: Color 
+            // 
+            // initialized in the initializer proc
+            // __color_clamp__default_min = new_color(0, 0, 0, 0)
+            //
+            // parsed from the default value Color(0, 0, 0, 0)
+            //
+            // 
+            // for "null" default values, i need to figure out what the null equivalent of an opaque pointer is - 0?
+            // e.g. a null Dictionary might just be Dictionary{} - which defualts to all 0 in _opaque
+            //
+            // string default values probably just need to be new'd from a cstring, similar to Color or Vector
         }
     }
 }
