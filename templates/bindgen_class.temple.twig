@@ -2,6 +2,7 @@
 package {{ this.class.package_name }}
 
 import "../gdextension"
+import "../variant"
 
 {{ this.class.odin_name }} :: struct {
     _opaque: __{{ this.class.odin_name }}OpaqueType
@@ -13,3 +14,7 @@ import "../gdextension"
     __{{ this.class.odin_name }}OpaqueType :: [{{ int(config.sizes[this.class.godot_name]) }}]u8
 }
 {% end %}
+
+{% embed "bindgen_class_initializer.temple.twig" with this.class %}
+
+{% embed "bindgen_class_backend.temple.twig" with this.class %}

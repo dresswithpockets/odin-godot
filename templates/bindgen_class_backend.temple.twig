@@ -1,0 +1,4 @@
+{% for _, method in this.methods %}
+@private
+{{ method.backing_func_name }}: gdextension.MethodBindPtr
+{% end %}

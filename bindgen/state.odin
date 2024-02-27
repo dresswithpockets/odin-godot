@@ -92,6 +92,23 @@ StateClass :: struct {
     snake_name:   string,
     godot_name:   string,
     package_name: string,
+    methods:      map[string]StateClassMethod,
+}
+
+@(private)
+StateClassMethod :: struct {
+    backing_func_name:  string,
+    godot_name:         string,
+    proc_name:          string,
+    // return types are nil for void-returning functions
+    return_type:        Maybe(StateType),
+    return_type_str:    Maybe(string),
+    is_virtual:         bool,
+    is_vararg:          bool,
+    is_const:           bool,
+    is_static:          bool,
+    hash:               i64,
+    arguments:          []StateFunctionArgument,
 }
 
 @(private)
@@ -244,7 +261,7 @@ create_state :: proc(options: Options, api: ^Api) -> (state: ^State) {
 
     _state_utility_functions(state)
     _state_builtin_class_members(state)
-    // TODO: class members
+    _state_class_members(state)
 
     // TODO: singletons
     // TODO: native structures
@@ -388,6 +405,13 @@ _state_builtin_class_members :: proc(state: ^State) {
     }
 }
 
+_state_class_members :: proc(state: ^State) {
+    for &class in &state.api.classes {
+        state_class := &state.classes[class.name]
+        state_class.methods = _state_class_methods(state, &class)
+    }
+}
+
 // formats the name for a builtin class method's backing func ptr
 // format is like __ClassName__METHODHASH
 
@@ -408,10 +432,44 @@ _builtin_class_method_backing_func_name :: proc(
     return
 }
 
+_class_method_backing_func_name :: proc(
+    state: ^State,
+    class: ^ApiClass,
+    method: ^ApiClassMethod,
+) -> (
+    name: string,
+) {
+    sb := strings.builder_make()
+    defer strings.builder_destroy(&sb)
+
+    class_name := _get_correct_class_odin_name(state, class.name)
+    fmt.sbprintf(&sb, "__%v__%v__%v", class_name, method.name, method.hash)
+
+    name = strings.clone(strings.to_string(sb))
+    return
+}
+
 _builtin_class_method_proc_name :: proc(
     state: ^State,
     class: ^ApiBuiltinClass,
     method: ^ApiBuiltinClassMethod,
+) -> (
+    name: string,
+) {
+    sb := strings.builder_make()
+    defer strings.builder_destroy(&sb)
+
+    class_snake_name := _get_correct_class_snake_name(state, class.name)
+    fmt.sbprintf(&sb, "%v_%v", class_snake_name, method.name)
+
+    name = strings.clone(strings.to_string(sb))
+    return
+}
+
+_class_method_proc_name :: proc(
+    state: ^State,
+    class: ^ApiClass,
+    method: ^ApiClassMethod,
 ) -> (
     name: string,
 ) {
@@ -498,6 +556,41 @@ _class_operator_backing_func_name :: proc(
     }
 
     name = strings.clone(strings.to_string(sb))
+    return
+}
+
+_state_class_methods :: proc(
+    state: ^State,
+    api_class: ^ApiClass,
+) -> (
+    cons: map[string]StateClassMethod,
+) {
+    cons = make(map[string]StateClassMethod)
+    for &method in &api_class.methods {
+        state_method := StateClassMethod {
+            godot_name        = method.name,
+            backing_func_name = _class_method_backing_func_name(state, api_class, &method),
+            proc_name         = _class_method_proc_name(state, api_class, &method),
+            is_virtual        = method.is_virtual,
+            is_const          = method.is_const,
+            is_static         = method.is_static,
+            is_vararg         = method.is_vararg,
+            hash              = method.hash,
+            arguments         = make([]StateFunctionArgument, len(method.arguments)),
+        }
+        for arg, i in method.arguments {
+            state_method.arguments[i] = StateFunctionArgument {
+                name          = arg.name,
+                arg_type      = _get_correct_state_type(state, arg.type),
+                default_value = arg.default_value,
+            }
+        }
+        state_method.return_type = _get_correct_state_type(state, method.return_value.meta.(string) or_else method.return_value.type)
+        // if return_type, has_return_type := method.return_type.(string); has_return_type {
+        //     state_method.return_type = _get_correct_state_type(state, return_type)
+        // }
+        cons[method.name] = state_method
+    }
     return
 }
 
