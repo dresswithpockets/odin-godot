@@ -2,6 +2,8 @@
 
 *.gen.odin
 
+bin/
+!bin/.gitkeep
 tools/
 
 *.exp
