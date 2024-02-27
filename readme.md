@@ -39,14 +39,6 @@ odin build bindgen/ -o:speed -out:bin/bindgen.exe
 ./bin/bindgen.exe godot-cpp/gdextension/extension_api.json
 ```
 
-> **N.B.** `bindgen.sh` expects odin on path, submodules updated, and odin-godot is the working directory.
->
-> If you'd like, you may build and run `bindgen` yourself, for example:
-> ```sh
-> odin build ./bindgen -o:speed -out:./bindgen/bindgen.exe
-> ./bindgen/bindgen.exe godot-cpp/gdextension/extension_api.json
-> ```
-
 ## Creating a GDExtension
 
 See [the example godot project](example_project/) for a working usage of these bindings.
