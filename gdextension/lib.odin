@@ -4,12 +4,34 @@ import "core:c"
 
 BUILD_CONFIG :: #config(BUILD_CONFIG, "float_64")
 
-VariantPtr :: distinct rawptr
-StringNamePtr :: distinct rawptr
-StringPtr :: distinct rawptr
-ObjectPtr :: distinct rawptr
-TypePtr :: distinct rawptr
+// In this API there are multiple functions which expect the caller to pass a pointer
+// on return value as parameter.
+// In order to make it clear if the caller should initialize the return value or not
+// we have two flavor of types:
+// - `GDExtensionXXXPtr` for pointer on an initialized value
+// - `GDExtensionUninitializedXXXPtr` for pointer on uninitialized value
+//
+// Notes:
+// - Not respecting those requirements can seems harmless, but will lead to unexpected
+//   segfault or memory leak (for instance with a specific compiler/OS, or when two
+//   native extensions start doing ptrcall on each other).
+// - Initialization must be done with the function pointer returned by `variant_get_ptr_constructor`,
+//   zero-initializing the variable should not be considered a valid initialization method here !
+// - Some types have no destructor (see `extension_api.json`'s `has_destructor` field), for
+//   them it is always safe to skip the constructor for the return value if you are in a hurry ;-)
 
+VariantPtr :: distinct rawptr
+UninitializedVariantPtr :: distinct rawptr
+StringNamePtr :: distinct rawptr
+UninitializedStringNamePtr :: distinct rawptr
+StringPtr :: distinct rawptr
+UninitializedStringPtr :: distinct rawptr
+ObjectPtr :: distinct rawptr
+UninitializedObjectPtr :: distinct rawptr
+TypePtr :: distinct rawptr
+UninitializedTypePtr :: distinct rawptr
+
+ObjectInstanceId :: u64
 MethodBindPtr :: distinct rawptr
 RefPtr :: distinct rawptr
 
@@ -119,11 +141,11 @@ CallError :: struct {
     expected: i32,
 }
 
-VariantFromTypeConstructorProc :: #type proc "c" (variant: VariantPtr, type: TypePtr)
+VariantFromTypeConstructorProc :: #type proc "c" (variant: UninitializedVariantPtr, type: TypePtr)
 TypeFromVariantConstructorProc :: #type proc "c" (type: TypePtr, variant: VariantPtr)
 PtrOperatorEvaluator :: #type proc "c" (left: TypePtr, right: TypePtr, result: TypePtr)
 PtrBuiltInMethod :: #type proc "c" (base: TypePtr, args: ^TypePtr, returns: TypePtr, arg_count: int)
-PtrConstructor :: #type proc "c" (base: TypePtr, args: ^TypePtr)
+PtrConstructor :: #type proc "c" (base: UninitializedTypePtr, args: ^TypePtr)
 PtrDestructor :: #type proc "c" (base: TypePtr)
 PtrSetter :: #type proc "c" (base: TypePtr, value: TypePtr)
 PtrGetter :: #type proc "c" (base: TypePtr, value: TypePtr)
@@ -189,15 +211,22 @@ ExtensionClassPropertyGetRevert :: #type proc "c" (
     name: StringNamePtr,
     ret: VariantPtr,
 ) -> bool
+ExtensionClassValidateProperty :: #type proc "c" (instance: ExtensionClassInstancePtr, property: ^PropertyInfo) -> bool
+// ExtensionClassNotification is deprecated, use ExtensionClassNotification2 instead
 ExtensionClassNotification :: #type proc "c" (instance: ExtensionClassInstancePtr, what: i32)
+ExtensionClassNotification2 :: #type proc "c" (instance: ExtensionClassInstancePtr, what: i32, reversed: bool)
 ExtensionClassToString :: #type proc "c" (instance: ExtensionClassInstancePtr, is_valid: ^bool, out: StringPtr)
 ExtensionClassReference :: #type proc "c" (instance: ExtensionClassInstancePtr)
 ExtensionClassUnreference :: #type proc "c" (instance: ExtensionClassInstancePtr)
 ExtensionClassCallVirtual :: #type proc "c" (instance: ExtensionClassInstancePtr, args: [^]TypePtr, ret: TypePtr)
-ExtensionClassCreateInstance :: #type proc "c" (user_data: rawptr) -> ObjectPtr
-ExtensionClassFreeInstance :: #type proc "c" (user_data: rawptr, instance: ExtensionClassInstancePtr)
-ExtensionClassGetVirtual :: #type proc "c" (user_data: rawptr, name: StringNamePtr) -> ExtensionClassCallVirtual
+ExtensionClassCreateInstance :: #type proc "c" (class_user_data: rawptr) -> ObjectPtr
+ExtensionClassFreeInstance :: #type proc "c" (class_user_data: rawptr, instance: ExtensionClassInstancePtr)
+ExtensionClassRecreateInstance :: #type proc "c" (class_user_data: rawptr, object: ObjectPtr) -> ExtensionClassInstancePtr
+ExtensionClassGetVirtual :: #type proc "c" (class_user_data: rawptr, name: StringNamePtr) -> ExtensionClassCallVirtual
+ExtensionClassGetVirtualCallData :: #type proc "c" (class_user_data: rawptr, name: StringNamePtr) -> rawptr
+ExtensionClassCallVirtualWithData :: #type proc "c" (instance: ExtensionClassInstancePtr, name: StringNamePtr, virtual_call_userdata: rawptr, args: [^]TypePtr, ret: TypePtr)
 
+// Deprecated. Use ExtensionClassCreationInfo2 instead.
 ExtensionClassCreationInfo :: struct {
     is_virtual:               bool,
     is_abstract:              bool,
@@ -220,6 +249,39 @@ ExtensionClassCreationInfo :: struct {
     get_rid_func:             ExtensionClassGetRid,
     // Per-class user data, later accessible in instance bindings.
     class_user_data:          rawptr,
+}
+
+ExtensionClassCreationInfo2 :: struct {
+    is_virtual: bool,
+    is_abstract: bool,
+    is_exposed: bool,
+    set_func: ExtensionClassSet,
+    get_func: ExtensionClassGet,
+    get_property_list_func: ExtensionClassGetPropertyList,
+    free_property_list_func: ExtensionClassFreePropertyList,
+    property_can_revert_func: ExtensionClassPropertyCanRevert,
+    property_get_revert_func: ExtensionClassPropertyGetRevert,
+    validate_property_func: ExtensionClassValidateProperty,
+    notification_func: ExtensionClassNotification2,
+    to_string_func: ExtensionClassToString,
+    reference_func: ExtensionClassReference,
+    unreference_func: ExtensionClassUnreference,
+    create_instance_func: ExtensionClassCreateInstance, // (Default) constructor; mandatory. If the class is not instantiable, consider making it virtual or abstract.
+    free_instance_func: ExtensionClassFreeInstance, // Destructor; mandatory.
+    recreate_instance_func: ExtensionClassRecreateInstance,
+    // Queries a virtual function by name and returns a callback to invoke the requested virtual function.
+    get_virtual_func: ExtensionClassGetVirtual,
+    // Paired with `call_virtual_with_data_func`, this is an alternative to `get_virtual_func` for extensions that
+    // need or benefit from extra data when calling virtual functions.
+    // Returns user data that will be passed to `call_virtual_with_data_func`.
+    // Returning `NULL` from this function signals to Godot that the virtual function is not overridden.
+    // Data returned from this function should be managed by the extension and must be valid until the extension is deinitialized.
+    // You should supply either `get_virtual_func`, or `get_virtual_call_data_func` with `call_virtual_with_data_func`.
+    get_virtual_call_data_func: ExtensionClassGetVirtualCallData,
+    // Used to call virtual functions when `get_virtual_call_data_func` is not null.
+    call_virtual_with_data_func: ExtensionClassCallVirtualWithData,
+    get_rid_func: ExtensionClassGetRid,
+    class_userdata: rawptr, // Per-class user data, later accessible in instance bindings.
 }
 
 ExtensionClassLibraryPtr :: distinct rawptr
@@ -258,6 +320,12 @@ ExtensionClassMethodCall :: #type proc "c" (
     ret: VariantPtr,
     error: CallError,
 )
+ExtensionClassMethodValidateCall :: #type proc "c" (
+    method_user_data: rawptr,
+    instance: ExtensionClassInstancePtr,
+    args: [^]VariantPtr,
+    ret: VariantPtr,
+)
 ExtensionClassMethodPtrCall :: #type proc "c" (
     method_user_data: rawptr,
     instance: ExtensionClassInstancePtr,
@@ -290,6 +358,47 @@ ExtensionClassMethodInfo :: struct {
     default_arguments:      [^]VariantPtr,
 }
 
+ExtensionCallableCustomCall :: #type proc "c" (callable_userdata: rawptr, args: [^]VariantPtr, arg_count: i64)
+ExtensionCallableCustomIsValid :: #type proc "c" (callable_userdata: rawptr) -> bool
+ExtensionCallableCustomFree :: #type proc "c" (callable_userdata: rawptr)
+
+ExtensionCallableCustomHash :: #type proc "c" (callable_userdata: rawptr) -> c.uint32_t
+ExtensionCallableCustomEqual :: #type proc "c" (callable_userdata_a, callable_userdata_b: rawptr) -> bool
+ExtensionCallableCustomLessThan :: #type proc "c" (callable_userdata_a, callable_userdata_b: rawptr) -> bool
+
+ExtensionCallableCustomToString :: #type proc "c" (callable_userdata: rawptr, is_valid: ^bool, out: StringPtr)
+
+ExtensionCallableCustomInfo :: struct {
+    /* Only `call_func` and `token` are strictly required, however, `object_id` should be passed if its not a static method.
+     *
+     * `token` should point to an address that uniquely identifies the GDExtension (for example, the
+     * `ExtensionClassLibraryPtr` passed to the entry symbol function.
+     *
+     * `hash_func`, `equal_func`, and `less_than_func` are optional. If not provided both `call_func` and
+     * `callable_userdata` together are used as the identity of the callable for hashing and comparison purposes.
+     *
+     * The hash returned by `hash_func` is cached, `hash_func` will not be called more than once per callable.
+     *
+     * `is_valid_func` is necessary if the validity of the callable can change before destruction.
+     *
+     * `free_func` is necessary if `callable_userdata` needs to be cleaned up when the callable is freed.
+     */
+    callable_userdata: rawptr,
+    token: rawptr,
+
+    object_id: c.uint64_t,
+
+    call_func: ExtensionCallableCustomCall,
+    is_valid_func: ExtensionCallableCustomIsValid,
+    free_func: ExtensionCallableCustomFree,
+
+    hash_func: ExtensionCallableCustomHash,
+    equal_func: ExtensionCallableCustomEqual,
+    less_than_func: ExtensionCallableCustomLessThan,
+
+    to_string_func: ExtensionCallableCustomToString,
+}
+
 /* SCRIPT INSTANCE EXTENSION */
 
 // Pointer to custom ScriptInstance native implementation.
@@ -313,11 +422,19 @@ ExtensionScriptInstanceFreePropertyList :: #type proc "c" (
     instance: ExtensionScriptInstanceDataPtr,
     list: ^PropertyInfo,
 )
+ExtensionScriptInstanceGetClassCategory :: #type proc "c" (
+    instance: ExtensionScriptInstanceDataPtr,
+    class_category: ^PropertyInfo,
+) -> bool
 ExtensionScriptInstanceGetPropertyType :: #type proc "c" (
     instance: ExtensionScriptInstanceDataPtr,
     name: StringNamePtr,
     is_valid: ^bool,
 ) -> VariantType
+ExtensionScriptInstanceValidateProperty :: #type proc "c" (
+    instance: ExtensionScriptInstanceDataPtr,
+    property: ^PropertyInfo,
+) -> bool
 ExtensionScriptInstancePropertyCanRevert :: #type proc "c" (
     instance: ExtensionScriptInstanceDataPtr,
     name: StringNamePtr,
@@ -354,7 +471,9 @@ ExtensionScriptInstanceCall :: #type proc "c" (
     ret: VariantPtr,
     error: ^CallError,
 )
+// Deprecated. Use ExtensionScriptInstanceNotification2 instead
 ExtensionScriptInstanceNotification :: #type proc "c" (instance: ExtensionScriptInstanceDataPtr, what: i32)
+ExtensionScriptInstanceNotification2 :: #type proc "c" (instance: ExtensionScriptInstanceDataPtr, what: i32, reversed: bool)
 ExtensionScriptInstanceToString :: #type proc "c" (
     instance: ExtensionScriptInstanceDataPtr,
     is_valid: ^bool,
@@ -378,6 +497,7 @@ ExtensionScriptInstanceFree :: #type proc "c" (instance: ExtensionScriptInstance
 // Pointer to ScriptInstance.
 ScriptInstancePtr :: distinct rawptr
 
+// Deprecated. Use ExtensionScriptInstanceInfo2 instead.
 ExtensionScriptInstanceInfo :: struct {
     set_func:                  ExtensionScriptInstanceSet,
     get_func:                  ExtensionScriptInstanceGet,
@@ -404,484 +524,90 @@ ExtensionScriptInstanceInfo :: struct {
     free_func:                 ExtensionScriptInstanceFree,
 }
 
-Interface :: struct {
+ExtensionScriptInstanceInfo2 :: struct {
+    set_func: ExtensionScriptInstanceSet,
+    get_func: ExtensionScriptInstanceGet,
+    get_property_list_func: ExtensionScriptInstanceGetPropertyList,
+    free_property_list_func: ExtensionScriptInstanceFreePropertyList,
+    // Optional. Set to NULL for the default behavior.
+    get_class_category_func: ExtensionScriptInstanceGetClassCategory,
+
+    property_can_revert_func: ExtensionScriptInstancePropertyCanRevert,
+    property_get_revert_func: ExtensionScriptInstancePropertyGetRevert,
+
+    get_owner_func: ExtensionScriptInstanceGetOwner,
+    get_property_state_func: ExtensionScriptInstanceGetPropertyState,
+
+    get_method_list_func: ExtensionScriptInstanceGetMethodList,
+    free_method_list_func: ExtensionScriptInstanceFreeMethodList,
+    get_property_type_func: ExtensionScriptInstanceGetPropertyType,
+    validate_property_func: ExtensionScriptInstanceValidateProperty,
+
+    has_method_func: ExtensionScriptInstanceHasMethod,
+
+    call_func: ExtensionScriptInstanceCall,
+    notification_func: ExtensionScriptInstanceNotification2,
+
+    to_string_func: ExtensionScriptInstanceToString,
+
+    refcount_incremented_func: ExtensionScriptInstanceRefCountIncremented,
+    refcount_decremented_func: ExtensionScriptInstanceRefCountDecremented,
+
+    get_script_func: ExtensionScriptInstanceGetScript,
+
+    is_placeholder_func: ExtensionScriptInstanceIsPlaceholder,
+
+    set_fallback_func: ExtensionScriptInstanceSet,
+    get_fallback_func: ExtensionScriptInstanceGet,
+
+    get_language_func: ExtensionScriptInstanceGetLanguage,
+
+    free_func: ExtensionScriptInstanceFree,
+}
+
+ExtensionInterfaceGetProcAddress :: #type proc "c" (function_name: cstring) -> rawptr
+
+/*
+ * Each GDExtension should define a C function that matches the signature of GDExtensionInitializationFunction,
+ * and export it so that it can be loaded via dlopen() or equivalent for the given platform.
+ *
+ * For example:
+ *
+ *   GDExtensionBool my_extension_init(GDExtensionInterfaceGetProcAddress p_get_proc_address, GDExtensionClassLibraryPtr p_library, GDExtensionInitialization *r_initialization);
+ *
+ * This function's name must be specified as the 'entry_symbol' in the .gdextension file.
+ *
+ * This makes it the entry point of the GDExtension and will be called on initialization.
+ *
+ * The GDExtension can then modify the r_initialization structure, setting the minimum initialization level,
+ * and providing pointers to functions that will be called at various stages of initialization/shutdown.
+ *
+ * The rest of the GDExtension's interface to Godot consists of function pointers that can be loaded
+ * by calling p_get_proc_address("...") with the name of the function.
+ *
+ * For example:
+ *
+ *   GDExtensionInterfaceGetGodotVersion get_godot_version = (GDExtensionInterfaceGetGodotVersion)p_get_proc_address("get_godot_version");
+ *
+ * (Note that snippet may cause "cast between incompatible function types" on some compilers, you can
+ * silence this by adding an intermediary `void*` cast.)
+ *
+ * You can then call it like a normal function:
+ *
+ *   GDExtensionGodotVersion godot_version;
+ *   get_godot_version(&godot_version);
+ *   printf("Godot v%d.%d.%d\n", godot_version.major, godot_version.minor, godot_version.patch);
+ *
+ * All of these interface functions are described below, together with the name that's used to load it,
+ * and the function pointer typedef that shows its signature.
+ */
+InitializationFunction :: #type proc "c" (get_proc_address: ExtensionInterfaceGetProcAddress, library: ExtensionClassLibraryPtr, initialization: ^Initialization) -> bool
+
+GodotVersion :: struct {
     version_major:                                      u32,
     version_minor:                                      u32,
     version_patch:                                      u32,
     version_string:                                     cstring,
-
-    // GODOT CORE
-    mem_alloc:                                          proc "c" (bytes: c.size_t) -> rawptr,
-    mem_realloc:                                        proc "c" (ptr: rawptr, bytes: c.size_t) -> rawptr,
-    mem_free:                                           proc "c" (ptr: rawptr),
-    print_error:                                        proc "c" (
-        description: cstring,
-        function: cstring,
-        file: cstring,
-        line: i32,
-        editor_notify: bool,
-    ),
-    print_error_with_message:                           proc "c" (
-        description: cstring,
-        message: cstring,
-        function: cstring,
-        file: cstring,
-        line: i32,
-        editor_notify: bool,
-    ),
-    print_warning:                                      proc "c" (
-        description: cstring,
-        function: cstring,
-        file: cstring,
-        line: i32,
-        editor_notify: bool,
-    ),
-    print_warning_with_message:                         proc "c" (
-        description: cstring,
-        message: cstring,
-        function: cstring,
-        file: cstring,
-        line: i32,
-        editor_notify: bool,
-    ),
-    print_script_error:                                 proc "c" (
-        description: cstring,
-        function: cstring,
-        file: cstring,
-        line: i32,
-        editor_notify: bool,
-    ),
-    print_script_error_with_message:                    proc "c" (
-        description: cstring,
-        message: cstring,
-        function: cstring,
-        file: cstring,
-        line: i32,
-        editor_notify: bool,
-    ),
-    get_native_struct_size:                             proc "c" (name: StringNamePtr) -> u64,
-
-    // GODOT VARIANT
-
-    // variant general
-    variant_new_copy:                                   proc "c" (dest: VariantPtr, src: VariantPtr),
-    variant_new_nil:                                    proc "c" (dest: VariantPtr),
-    variant_destroy:                                    proc "c" (self: VariantPtr),
-
-    // variant type
-    variant_call:                                       proc "c" (
-        self: VariantPtr,
-        method: StringNamePtr,
-        args: [^]VariantPtr,
-        argument_count: i64,
-        ret: VariantPtr,
-        error: ^CallError,
-    ),
-    variant_call_static:                                proc "c" (
-        type: VariantType,
-        method: StringNamePtr,
-        args: [^]VariantPtr,
-        argument_count: i64,
-        ret: VariantPtr,
-        error: ^CallError,
-    ),
-    variant_evaluate:                                   proc "c" (
-        op: VariantOperator,
-        a: VariantPtr,
-        b: VariantPtr,
-        ret: VariantPtr,
-        valid: ^bool,
-    ),
-    variant_set:                                        proc "c" (
-        self: VariantPtr,
-        key: VariantPtr,
-        value: VariantPtr,
-        valid: ^bool,
-    ),
-    variant_set_named:                                  proc "c" (
-        self: VariantPtr,
-        key: StringNamePtr,
-        value: VariantPtr,
-        valid: ^bool,
-    ),
-    variant_set_keyed:                                  proc "c" (
-        self: VariantPtr,
-        key: VariantPtr,
-        value: VariantPtr,
-        valid: ^bool,
-    ),
-    variant_set_indexed:                                proc "c" (
-        self: VariantPtr,
-        key: VariantPtr,
-        value: VariantPtr,
-        valid: ^bool,
-    ),
-    variant_get:                                        proc "c" (
-        self: VariantPtr,
-        key: VariantPtr,
-        ret: VariantPtr,
-        valid: ^bool,
-    ),
-    variant_get_named:                                  proc "c" (
-        self: VariantPtr,
-        key: StringNamePtr,
-        ret: VariantPtr,
-        valid: ^bool,
-    ),
-    variant_get_keyed:                                  proc "c" (
-        self: VariantPtr,
-        key: VariantPtr,
-        ret: VariantPtr,
-        valid: ^bool,
-    ),
-    variant_get_indexed:                                proc "c" (
-        self: VariantPtr,
-        index: i64,
-        ret: VariantPtr,
-        valid: ^bool,
-        oob: ^bool,
-    ),
-    variant_iter_init:                                  proc "c" (
-        self: VariantPtr,
-        iter: VariantPtr,
-        valid: ^bool,
-    ) -> bool,
-    variant_iter_next:                                  proc "c" (
-        self: VariantPtr,
-        iter: VariantPtr,
-        valid: ^bool,
-    ) -> bool,
-    variant_iter_get:                                   proc "c" (
-        self: VariantPtr,
-        iter: VariantPtr,
-        ret: VariantPtr,
-        valid: ^bool,
-    ),
-    variant_hash:                                       proc "c" (self: VariantPtr) -> i64,
-    variant_recursive_hash:                             proc "c" (self: VariantPtr, recursion_count: i64) -> i64,
-    variant_hash_compare:                               proc "c" (self: VariantPtr, other: VariantPtr) -> bool,
-    variant_booleanize:                                 proc "c" (self: VariantPtr) -> bool,
-    variant_duplicate:                                  proc "c" (self: VariantPtr, ret: VariantPtr, deep: bool),
-    variant_stringify:                                  proc "c" (self: VariantPtr, ret: StringPtr),
-    variant_get_type:                                   proc "c" (self: VariantPtr) -> VariantType,
-    variant_has_method:                                 proc "c" (self: VariantPtr, method: StringNamePtr) -> bool,
-    variant_has_member:                                 proc "c" (type: VariantType, method: StringNamePtr) -> bool,
-    variant_has_key:                                    proc "c" (
-        self: VariantPtr,
-        key: VariantPtr,
-        valid: ^bool,
-    ) -> bool,
-    variant_get_type_name:                              proc "c" (type: VariantType, name: StringPtr),
-    variant_can_convert:                                proc "c" (from: VariantType, to: VariantType) -> bool,
-    variant_can_convert_strict:                         proc "c" (from: VariantType, to: VariantType) -> bool,
-
-    // ptrcalls
-    get_variant_from_type_constructor:                  proc "c" (type: VariantType) -> VariantFromTypeConstructorProc,
-    get_variant_to_type_constructor:                    proc "c" (type: VariantType) -> TypeFromVariantConstructorProc,
-    variant_get_ptr_operator_evaluator:                 proc "c" (
-        operator: VariantOperator,
-        type_a: VariantType,
-        type_b: VariantType,
-    ) -> PtrOperatorEvaluator,
-    variant_get_ptr_builtin_method:                     proc "c" (
-        type: VariantType,
-        method: StringNamePtr,
-        hash: i64,
-    ) -> PtrBuiltInMethod,
-    variant_get_ptr_constructor:                        proc "c" (
-        type: VariantType,
-        constructor: i32,
-    ) -> PtrConstructor,
-    variant_get_ptr_destructor:                         proc "c" (type: VariantType) -> PtrDestructor,
-    variant_construct:                                  proc "c" (
-        type: VariantType,
-        base: VariantPtr,
-        args: [^]VariantPtr,
-        argument_count: i32,
-        error: ^CallError,
-    ),
-    variant_get_ptr_setter:                             proc "c" (
-        type: VariantType,
-        member: StringNamePtr,
-    ) -> PtrSetter,
-    variant_get_ptr_getter:                             proc "c" (
-        type: VariantType,
-        member: StringNamePtr,
-    ) -> PtrGetter,
-    variant_get_ptr_indexed_setter:                     proc "c" (type: VariantType) -> PtrIndexedSetter,
-    variant_get_ptr_indexed_getter:                     proc "c" (type: VariantType) -> PtrIndexedGetter,
-    variant_get_ptr_keyed_setter:                       proc "c" (type: VariantType) -> PtrKeyedSetter,
-    variant_get_ptr_keyed_getter:                       proc "c" (type: VariantType) -> PtrKeyedGetter,
-    variant_get_ptr_keyed_checker:                      proc "c" (type: VariantType) -> PtrKeyedChecker,
-    variant_get_constant_value:                         proc "c" (
-        type: VariantType,
-        constant: StringNamePtr,
-        ret: VariantPtr,
-    ),
-    variant_get_ptr_utility_function:                   proc "c" (
-        function: StringNamePtr,
-        hash: i64,
-    ) -> PtrUtilityFunction,
-
-    // extra utilities
-    string_new_with_latin1_chars:                       proc "c" (dest: StringPtr, contents: cstring),
-    string_new_with_utf8_chars:                         proc "c" (dest: StringPtr, contents: cstring),
-    string_new_with_utf16_chars:                        proc "c" (dest: StringPtr, contents: ^u16),
-    string_new_with_utf32_chars:                        proc "c" (dest: StringPtr, contents: ^u32),
-    string_new_with_wide_chars:                         proc "c" (dest: StringPtr, contents: ^c.wchar_t),
-    string_new_with_latin1_chars_and_len:               proc "c" (dest: StringPtr, contents: cstring, size: i64),
-    string_new_with_utf8_chars_and_len:                 proc "c" (dest: StringPtr, contents: cstring, size: i64),
-    string_new_with_utf16_chars_and_len:                proc "c" (dest: StringPtr, contents: ^u16, size: i64),
-    string_new_with_utf32_chars_and_len:                proc "c" (dest: StringPtr, contents: ^u32, size: i64),
-    string_new_with_wide_chars_and_len:                 proc "c" (dest: StringPtr, contents: ^c.wchar_t, size: i64),
-    /* Information about the following functions:
-     * - The return value is the resulting encoded string length.
-     * - The length returned is in characters, not in bytes. It also does not include a trailing zero.
-     * - These functions also do not write trailing zero, If you need it, write it yourself at the position indicated by the length (and make sure to allocate it).
-     * - Passing NULL in r_text means only the length is computed (again, without including trailing zero).
-     * - p_max_write_length argument is in characters, not bytes. It will be ignored if r_text is NULL.
-     * - p_max_write_length argument does not affect the return value, it's only to cap write length.
-     */
-    string_to_latin1_chars:                             proc "c" (
-        self: StringPtr,
-        text: cstring,
-        max_write_len: i64,
-    ) -> i64,
-    string_to_utf8_chars:                               proc "c" (
-        self: StringPtr,
-        text: cstring,
-        max_write_len: i64,
-    ) -> i64,
-    string_to_utf16_chars:                              proc "c" (
-        self: StringPtr,
-        text: ^u16,
-        max_write_len: i64,
-    ) -> i64,
-    string_to_utf32_chars:                              proc "c" (
-        self: StringPtr,
-        text: ^u32,
-        max_write_len: i64,
-    ) -> i64,
-    string_to_wide_chars:                               proc "c" (
-        self: StringPtr,
-        text: ^c.wchar_t,
-        max_write_len: i64,
-    ) -> i64,
-    string_operator_index:                              proc "c" (self: StringPtr, index: i64) -> ^u32,
-    string_operator_index_const:                        proc "c" (self: StringPtr, index: i64) -> ^u32,
-    string_operator_plus_eq_string:                     proc "c" (self: StringPtr, b: StringPtr),
-    string_operator_plus_eq_char:                       proc "c" (self: StringPtr, b: u32),
-    string_operator_plus_eq_cstr:                       proc "c" (self: StringPtr, b: cstring),
-    string_operator_plus_eq_wcstr:                      proc "c" (self: StringPtr, b: [^]c.wchar_t),
-    string_operator_plus_eq_c32str:                     proc "c" (self: StringPtr, b: [^]u32),
-
-    // XMLParser extra utilities
-    xml_parser_open_buffer:                             proc "c" (instance: ObjectPtr, buffer: [^]u8, size: c.size_t),
-
-    // FileAccess extra utilities
-    file_access_store_buffer:                           proc "c" (instance: ObjectPtr, src: [^]u8, length: u64),
-    file_access_get_buffer:                             proc "c" (instance: ObjectPtr, dst: [^]u8, length: u64),
-
-    // WorkerThreadPool extra utilities
-    worker_thread_pool_add_native_group_task:           proc "c" (
-        instance: ObjectPtr,
-        func: proc "c" (_: rawptr, _: u32),
-        user_data: rawptr,
-        elements: i32,
-        tasks: i32,
-        high_priority: bool,
-        description: StringPtr,
-    ) -> i64,
-    worker_thread_pool_add_native_task:                 proc "c" (
-        instance: ObjectPtr,
-        func: proc "c" (_: rawptr),
-        user_data: rawptr,
-        high_priority: bool,
-        description: StringPtr,
-    ) -> i64,
-
-    // Packed array functions
-
-    // self should be a PackedByteArray
-    packed_byte_array_operator_index:                   proc "c" (self: TypePtr, index: i64) -> ^byte,
-    // self should be a PackedByteArray
-    packed_byte_array_operator_index_const:             proc "c" (self: TypePtr, index: i64) -> ^byte,
-
-    // self should be a PackedColorArray, returns Color ptr
-    packed_color_array_operator_index:                  proc "c" (self: TypePtr, index: i64) -> TypePtr,
-    // self should be a PackedColorArray, returns Color ptr
-    packed_color_array_operator_index_const:            proc "c" (self: TypePtr, index: i64) -> TypePtr,
-
-    // self should be a PackedFloat32Array
-    packed_float32_array_operator_index:                proc "c" (self: TypePtr, index: i64) -> ^f32,
-    // self should be a PackedFloat32Array
-    packed_float32_array_operator_index_const:          proc "c" (self: TypePtr, index: i64) -> ^f32,
-
-    // self should be a PackedFloat64Array
-    packed_float64_array_operator_index:                proc "c" (self: TypePtr, index: i64) -> ^f64,
-    // self should be a PackedFloat64Array
-    packed_float64_array_operator_index_const:          proc "c" (self: TypePtr, index: i64) -> ^f64,
-
-    // self should be a PackedInt32Array
-    packed_int32_array_operator_index:                  proc "c" (self: TypePtr, index: i64) -> ^i32,
-    // self should be a PackedInt32Array
-    packed_int32_array_operator_index_const:            proc "c" (self: TypePtr, index: i64) -> ^i32,
-
-    // self should be a PackedInt64Array
-    packed_int64_array_operator_index:                  proc "c" (self: TypePtr, index: i64) -> ^i64,
-    // self should be a PackedInt64Array
-    packed_int64_array_operator_index_const:            proc "c" (self: TypePtr, index: i64) -> ^i64,
-
-    // self should be a PackedStringArray
-    packed_string_array_operator_index:                 proc "c" (self: TypePtr, index: i64) -> StringPtr,
-    // self should be a PackedStringArray
-    packed_string_array_operator_index_const:           proc "c" (self: TypePtr, index: i64) -> StringPtr,
-
-    // self should be a PackedVector2Array, returns Vector2 ptr
-    packed_vector2_array_operator_index:                proc "c" (self: TypePtr, index: i64) -> TypePtr,
-    // self should be a PackedVector2Array, returns Vector2 ptr
-    packed_vector2_array_operator_index_const:          proc "c" (self: TypePtr, index: i64) -> TypePtr,
-
-    // self should be a PackedVector3Array, returns Vector3 ptr
-    packed_vector3_array_operator_index:                proc "c" (self: TypePtr, index: i64) -> TypePtr,
-    // self should be a PackedVector3Array, returns Vector3 ptr
-    packed_vector3_array_operator_index_const:          proc "c" (self: TypePtr, index: i64) -> TypePtr,
-
-    // self should be an Array ptr
-    array_operator_index:                               proc "c" (self: TypePtr, index: i64) -> VariantPtr,
-    // self should be an Array ptr
-    array_operator_index_const:                         proc "c" (self: TypePtr, index: i64) -> VariantPtr,
-    // self should be an Array ptr
-    array_ref:                                          proc "c" (self: TypePtr, from: TypePtr),
-    // self should be an Array ptr
-    array_set_typed:                                    proc "c" (
-        self: TypePtr,
-        type: VariantType,
-        class_name: StringNamePtr,
-        script: VariantPtr,
-    ),
-
-    // dictionary functions
-
-    // self should be an Dictionary ptr
-    dictionary_operator_index:                          proc "c" (self: TypePtr, key: VariantPtr) -> VariantPtr,
-    // self should be an Dictionary ptr
-    dictionary_operator_index_const:                    proc "c" (self: TypePtr, key: VariantPtr) -> VariantPtr,
-
-    // OBJECT
-    object_method_bind_call:                            proc "c" (
-        method_bind: MethodBindPtr,
-        instance: ObjectPtr,
-        args: [^]VariantPtr,
-        arg_count: i64,
-        ret: VariantPtr,
-        error: ^CallError,
-    ),
-    object_method_bind_ptrcall:                         proc "c" (
-        method_bind: MethodBindPtr,
-        instance: ObjectPtr,
-        args: [^]VariantPtr,
-        ret: VariantPtr,
-    ),
-    object_destroy:                                     proc "c" (o: ObjectPtr),
-    global_get_singleton:                               proc "c" (name: StringNamePtr) -> ObjectPtr,
-    object_get_instance_binding:                        proc "c" (
-        o: ObjectPtr,
-        token: rawptr,
-        callbacks: [^]InstanceBindingCallbacks,
-    ) -> rawptr,
-    object_set_instance_binding:                        proc "c" (
-        o: ObjectPtr,
-        token: rawptr,
-        binding: rawptr,
-        callbacks: [^]InstanceBindingCallbacks,
-    ),
-
-    // class_name should be a registered extension class and should extend the o object's class.
-    object_set_instance:                                proc "c" (
-        o: ObjectPtr,
-        class_name: StringNamePtr,
-        instance: ExtensionClassInstancePtr,
-    ),
-    object_cast_to:                                     proc "c" (object: ObjectPtr, class_tag: rawptr) -> ObjectPtr,
-    object_get_instance_from_id:                        proc "c" (instance_id: u64) -> ObjectPtr,
-    object_get_instance_id:                             proc "c" (object: ObjectPtr) -> u64,
-
-    // REFERENCE
-    ref_get_object:                                     proc "c" (ref: RefPtr) -> ObjectPtr,
-    ref_set_object:                                     proc "c" (ref: RefPtr, object: ObjectPtr),
-
-    // SCRIPT INSTANCE
-    script_instance_create:                             proc "c" (
-        info: ^ExtensionScriptInstanceInfo,
-        instance_data: ExtensionScriptInstanceDataPtr,
-    ) -> ScriptInstancePtr,
-
-    // CLASSDB EXTENSION
-
-    // The passed class must be a built-in godot class, or an already-registered extension class. In both case, object_set_instance should be called to fully initialize the object.
-    classdb_construct_object:                           proc "c" (class_name: StringNamePtr) -> ObjectPtr,
-    classdb_get_method_bind:                            proc "c" (
-        class_name: StringNamePtr,
-        method_name: StringNamePtr,
-        hash: i64,
-    ) -> MethodBindPtr,
-    classdb_get_class_tag:                              proc "c" (class_name: StringNamePtr) -> rawptr,
-
-    // CLASSDB EXTENSION
-
-    // Provided parameters for `classdb_register_extension_*` can be safely freed once the function returns.
-    classdb_register_extension_class:                   proc "c" (
-        library: ExtensionClassLibraryPtr,
-        class_name: StringNamePtr,
-        parent_class_name: StringNamePtr,
-        extension_funcs: ^ExtensionClassCreationInfo,
-    ),
-    classdb_register_extension_class_method:            proc "c" (
-        library: ExtensionClassLibraryPtr,
-        class_name: StringNamePtr,
-        method_info: ^ExtensionClassMethodInfo,
-    ),
-    classdb_register_extension_class_integer_constant:  proc "c" (
-        library: ExtensionClassLibraryPtr,
-        class_name: StringNamePtr,
-        enum_name: StringNamePtr,
-        constant_name: StringNamePtr,
-        constant_value: i64,
-        is_bitfield: bool,
-    ),
-    classdb_register_extension_class_property:          proc "c" (
-        library: ExtensionClassLibraryPtr,
-        class_name: StringNamePtr,
-        info: ^PropertyInfo,
-        setter: StringNamePtr,
-        getter: StringNamePtr,
-    ),
-    classdb_register_extension_class_property_group:    proc "c" (
-        library: ExtensionClassLibraryPtr,
-        class_name: StringNamePtr,
-        group_name: StringPtr,
-        prefix: StringPtr,
-    ),
-    classdb_register_extension_class_property_subgroup: proc "c" (
-        library: ExtensionClassLibraryPtr,
-        class_name: StringNamePtr,
-        subgroup_name: StringPtr,
-        prefix: StringPtr,
-    ),
-    classdb_register_extension_class_signal:            proc "c" (
-        library: ExtensionClassLibraryPtr,
-        class_name: StringNamePtr,
-        signal_name: StringNamePtr,
-        argument_info: [^]PropertyInfo,
-        argument_count: i64,
-    ),
-    // Unregistering a parent class before a class that inherits it will result in failure. Inheritors must be unregistered first.
-    classdb_unregister_extension_class:                 proc "c" (
-        library: ExtensionClassLibraryPtr,
-        class_name: StringNamePtr,
-    ),
-    get_library_path:                                   proc "c" (library: ExtensionClassLibraryPtr, path: StringPtr),
 }
 
 InitializationLevel :: enum {
@@ -898,17 +624,6 @@ Initialization :: struct {
     initialize:                   proc "c" (user_data: rawptr, level: InitializationLevel),
     deinitialize:                 proc "c" (user_data: rawptr, level: InitializationLevel),
 }
-
-/* Define a function prototype that implements the function below and expose it to dlopen() (or similar).
- * This is the entry point of the GDExtension library and will be called on initialization.
- * It can be used to set up different init levels, which are called during various stages of initialization/shutdown.
- * The function name must be a unique one specified in the .gdextension config file.
- */
-InitializationFunction :: #type proc "c" (
-    interface: ^Interface,
-    library: ExtensionClassLibraryPtr,
-    initialization: ^Initialization,
-) -> bool
 
 /*
     Copyright 2023 Dresses Digital

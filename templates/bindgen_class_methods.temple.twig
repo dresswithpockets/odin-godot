@@ -1,0 +1,10 @@
+{% for _, method in this.methods %}
+{{ method.proc_name }} :: proc(self: {{ this.odin_name }}) {
+    self := self
+{% if method.is_static %}
+    gdextension.call_method_ptr_no_ret({{ method.backing_func_name }}, nil)
+{% else %}
+    gdextension.call_method_ptr_no_ret({{ method.backing_func_name }}, cast(gdextension.ObjectPtr)&self)
+{% end %}
+}
+{% end %}

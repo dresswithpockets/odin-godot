@@ -1,0 +1,40 @@
+# bindgen
+DONE rewrite codegen to use temple templating engine
+TODO add support for vararg utility functions
+DONE add support for utility functions with default arg values
+DONE add frontend generation for class methods
+TODO add generation for engine (non-builtin) classes
+TODO add generation for built-in singletons
+TODO add generation for native structures (?)
+TODO add option to generate classes and methods in a class-per-package hierarchy (each class gets its own package)
+
+# godin
+TODO rewrite godin with better Odin parsing support via core:odin/parser
+TODO rewrite templating & codegen using the temple template engine
+
+
+- write libgodin
+```c
+class_info := Class_Info{
+    
+}
+
+classdb_class := register_class(class_info)
+
+register_class_method(classdb_class, "method_name", ...details...)
+
+register_class_int_const(classdb_class, "CONST_NAME", CONST_VALUE, is_bitfield=true /*or false*/)
+
+register_class_enum_const(classdb_class, "ENUM_CONST_NAME", My_Enum.Value, is_bitfield=true /*or false*/)
+
+register_class_property(classdb_class, "property_name", VariantType.SomeType, property_getter_proc, property_setter_proc, hint = PropertyHint.None, hint_usage = "...", usage = PropertyUsageFlags.None)
+
+// todo: register_class_property_group (how does it work?!)
+// todo: register_class_property_subgroup (how does it work?!)
+
+register_class_signal(classdb_class, "signal_name", args)
+
+unregister_class(classdb_class)
+```
+
+- rewrite godin to use core:odin/parser

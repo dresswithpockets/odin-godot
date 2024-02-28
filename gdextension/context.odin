@@ -1,6 +1,5 @@
 package gdextension
 
-import "../gdextension"
 import "core:c"
 import "core:runtime"
 import "core:mem"
@@ -17,32 +16,30 @@ godot_allocator_proc :: proc(
     mem.Allocator_Error,
 ) {
 
-    interface := cast(^gdextension.Interface)allocator_data
-
     switch mode {
     case .Alloc, .Alloc_Non_Zeroed:
-        ptr := interface.mem_alloc(cast(c.size_t)size)
+        ptr := mem_alloc(cast(c.size_t)size)
         if ptr == nil {
             return nil, .Out_Of_Memory
         }
         return mem.byte_slice(ptr, size), nil
 
     case .Free:
-        interface.mem_free(old_memory)
+        mem_free(old_memory)
 
     case .Free_All:
         return nil, .Mode_Not_Implemented
 
-    case .Resize:
+    case .Resize, .Resize_Non_Zeroed:
         ptr: rawptr
         if old_memory == nil {
-            ptr = interface.mem_alloc(cast(c.size_t)size)
+            ptr = mem_alloc(cast(c.size_t)size)
             if ptr == nil {
                 return nil, .Out_Of_Memory
             }
             return mem.byte_slice(ptr, size), nil
         }
-        ptr = interface.mem_realloc(ptr, cast(c.size_t)size)
+        ptr = mem_realloc(ptr, cast(c.size_t)size)
         if ptr == nil {
             return nil, .Out_Of_Memory
         }
@@ -63,7 +60,7 @@ godot_allocator_proc :: proc(
 }
 
 godot_allocator :: #force_inline proc "contextless" () -> (a: runtime.Allocator) {
-    return mem.Allocator{procedure = godot_allocator_proc, data = interface}
+    return mem.Allocator{procedure = godot_allocator_proc}
 }
 
 @(private)
@@ -79,7 +76,6 @@ default_temp_godot_allocator := runtime.Allocator{runtime.arena_allocator_proc, 
 
 godot_context :: #force_inline proc "contextless" () -> (c: runtime.Context) {
     c.allocator = default_godot_allocator
-    c.allocator.data = interface
     c.temp_allocator = default_temp_godot_allocator
     return
 }

@@ -1,5 +1,10 @@
 {
+    "$schema": "https://raw.githubusercontent.com/DanielGavin/ols/master/misc/ols.schema.json",
     "collections": [
+        {
+            "name": "base",
+            "path": "C:\\Odin\\base"
+        },
         {
             "name": "core",
             "path": "C:\\Odin\\core"
@@ -14,8 +19,8 @@
         }
     ],
     "enable_document_symbols": true,
-    "enable_semantic_tokens": false,
+    "enable_semantic_tokens": true,
     "enable_hover": true,
     "enable_snippets": true,
-    "checker_args": ["-vet-extra", "-strict-style-init-only", "-no-entry-point"]
+    "checker_args": "-vet-extra -strict-style-init-only -no-entry-point"
 }

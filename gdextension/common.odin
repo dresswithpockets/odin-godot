@@ -1,6 +1,5 @@
 package gdextension
 
-interface: ^Interface
 library: ExtensionClassLibraryPtr
 
 when BUILD_CONFIG == "float_32" {
@@ -13,7 +12,7 @@ when BUILD_CONFIG == "float_32" {
     float :: f64
 }
 
-call_builtin_constructor :: proc(constructor: PtrConstructor, base: TypePtr, args: ..TypePtr) {
+call_builtin_constructor :: proc(constructor: PtrConstructor, base: UninitializedTypePtr, args: ..TypePtr) {
     constructor(base, raw_data(args))
 }
 
@@ -31,6 +30,16 @@ call_builtin_method_ptr_ret :: proc(method: PtrBuiltInMethod, base: TypePtr, $T:
 
 call_builtin_method_ptr_no_ret :: proc(method: PtrBuiltInMethod, base: TypePtr, args: ..TypePtr) {
     method(base, raw_data(args), cast(TypePtr)nil, len(args))
+}
+
+call_method_ptr_no_ret :: proc(method: MethodBindPtr, base: ObjectPtr, args: ..TypePtr) {
+    object_method_bind_ptrcall(method, base, raw_data(args), cast(TypePtr)nil)
+}
+
+call_method_ptr_ret :: proc(method: MethodBindPtr, base: ObjectPtr, $T: typeid, args: ..TypePtr) -> T {
+    ret: T
+    object_method_bind_ptrcall(method, base, raw_data(args), cast(TypePtr)&ret)
+    return ret
 }
 
 call_utility_function_ptr_ret :: proc(func: PtrUtilityFunction, $T: typeid, args: ..TypePtr) -> (ret: T) {

@@ -1,13 +1,9 @@
 .vscode/
 
-core/enums.odin
-core/util.odin
-
 *.gen.odin
 
-variant/*.odin
-!variant/Variant.odin
-
+bin/
+!bin/.gitkeep
 tools/
 
 *.exp

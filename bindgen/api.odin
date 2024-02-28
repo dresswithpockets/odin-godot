@@ -114,6 +114,33 @@ ApiClass :: struct {
     inherits:        string `json:"inherits"`,
     api_type:        string `json:"api_type"`,
     enums:           []ApiEnum `json:"enums"`,
+    constants:       []ApiConstant `json:"constants"`,
+    methods:         []ApiClassMethod `json:"methods"`,
+    signals:         []ApiClassSignal `json:"signals"`,
+    operators:       []ApiClassOperator `json:"operators"`,
+    properties:      []ApiClassProperty `json:"properties"`,
+}
+
+ApiConstant :: struct {
+    name:  string `json:"name"`,
+    value: int `json:"value"`,
+}
+
+ApiClassSignal :: struct {
+    name: string `json:"name"`,
+    arguments: []ApiClassSignalArgument `json:"arguments"`
+}
+
+ApiClassSignalArgument :: struct {
+    name: string `json:"name"`,
+    type: string `json:"type"`,
+}
+
+ApiClassProperty :: struct {
+    type:   string `json:"type"`,
+    name:   string `json:"name"`,
+    setter: string `json:"setter"`,
+    getter: string `json:"getter"`,
 }
 
 ApiClassMethod :: struct {
