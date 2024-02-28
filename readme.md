@@ -25,6 +25,9 @@ Bindings for all enums, classes, utility functions, singletons, and native struc
 > [!NOTE]
 > `make bindings` expects odin on path, all submodules updated, and odin-godot (this repo) is the working directory.
 
+> [!WARNING]
+> bindgen writes many files synchronously, for the time being. This should be fast on Windows, but is very slow on Linux.
+
 Alternatively, you may build and run `bindgen` yourself:
 ```sh
 # temple is the templating engine used by bindgen, temple_cli is temple's preprocessor.

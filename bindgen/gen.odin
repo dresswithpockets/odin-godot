@@ -309,7 +309,7 @@ _builtin_class_method_default_arg_backing_field_name :: proc(method: StateBuilti
 UNIX_ALLOW_READ_WRITE_ALL :: 0o666
 
 generate_global_enums :: proc(state: ^State) {
-    fhandle, ferr := os.open("core/enums.gen.odin", os.O_CREATE | os.O_TRUNC, UNIX_ALLOW_READ_WRITE_ALL)
+    fhandle, ferr := os.open("core/enums.gen.odin", os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
     if ferr != 0 {
         fmt.eprintf("Error opening core/enums.gen.odin\n")
         return
@@ -317,12 +317,11 @@ generate_global_enums :: proc(state: ^State) {
     defer os.close(fhandle)
 
     fstream := os.stream_from_handle(fhandle)
-
     enums_template.with(fstream, state)
 }
 
 generate_utility_functions :: proc(state: ^State) {
-    fhandle, ferr := os.open("core/util.gen.odin", os.O_CREATE | os.O_TRUNC, UNIX_ALLOW_READ_WRITE_ALL)
+    fhandle, ferr := os.open("core/util.gen.odin", os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
     if ferr != 0 {
         fmt.eprintf("Error opening core/util.gen.odin\n")
         return
@@ -345,7 +344,7 @@ generate_builtin_classes :: proc(state: ^State) {
         file_name := strings.concatenate(file_name_parts[:])
         defer delete(file_name)
 
-        fhandle, ferr := os.open(file_name, os.O_CREATE | os.O_TRUNC, UNIX_ALLOW_READ_WRITE_ALL)
+        fhandle, ferr := os.open(file_name, os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
         if ferr != 0 {
             fmt.eprintf("Error opening %v\n", file_name)
             return
@@ -360,7 +359,7 @@ generate_builtin_classes :: proc(state: ^State) {
     // Variant and Object are special cases which arent provided by the API
     // N.B. Object is actually a core API class and should be declared in core/, but for now isnt
     file_name := "variant/Variant.gen.odin"
-    fhandle, ferr := os.open(file_name, os.O_CREATE | os.O_TRUNC, UNIX_ALLOW_READ_WRITE_ALL)
+    fhandle, ferr := os.open(file_name, os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
     if ferr != 0 {
         fmt.eprintf("Error opening %v\n", file_name)
         return
@@ -378,7 +377,7 @@ generate_classes :: proc(state: ^State) {
         file_name := strings.concatenate(file_name_parts[:])
         defer delete(file_name)
 
-        fhandle, ferr := os.open(file_name, os.O_CREATE | os.O_TRUNC, UNIX_ALLOW_READ_WRITE_ALL)
+        fhandle, ferr := os.open(file_name, os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
         if ferr != 0 {
             fmt.eprintf("Error opening %v\n", file_name)
             return
