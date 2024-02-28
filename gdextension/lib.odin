@@ -369,34 +369,34 @@ ExtensionCallableCustomLessThan :: #type proc "c" (callable_userdata_a, callable
 ExtensionCallableCustomToString :: #type proc "c" (callable_userdata: rawptr, is_valid: ^bool, out: StringPtr)
 
 ExtensionCallableCustomInfo :: struct {
-	/* Only `call_func` and `token` are strictly required, however, `object_id` should be passed if its not a static method.
-	 *
-	 * `token` should point to an address that uniquely identifies the GDExtension (for example, the
-	 * `ExtensionClassLibraryPtr` passed to the entry symbol function.
-	 *
-	 * `hash_func`, `equal_func`, and `less_than_func` are optional. If not provided both `call_func` and
-	 * `callable_userdata` together are used as the identity of the callable for hashing and comparison purposes.
-	 *
-	 * The hash returned by `hash_func` is cached, `hash_func` will not be called more than once per callable.
-	 *
-	 * `is_valid_func` is necessary if the validity of the callable can change before destruction.
-	 *
-	 * `free_func` is necessary if `callable_userdata` needs to be cleaned up when the callable is freed.
-	 */
-	callable_userdata: rawptr,
-	token: rawptr,
+    /* Only `call_func` and `token` are strictly required, however, `object_id` should be passed if its not a static method.
+     *
+     * `token` should point to an address that uniquely identifies the GDExtension (for example, the
+     * `ExtensionClassLibraryPtr` passed to the entry symbol function.
+     *
+     * `hash_func`, `equal_func`, and `less_than_func` are optional. If not provided both `call_func` and
+     * `callable_userdata` together are used as the identity of the callable for hashing and comparison purposes.
+     *
+     * The hash returned by `hash_func` is cached, `hash_func` will not be called more than once per callable.
+     *
+     * `is_valid_func` is necessary if the validity of the callable can change before destruction.
+     *
+     * `free_func` is necessary if `callable_userdata` needs to be cleaned up when the callable is freed.
+     */
+    callable_userdata: rawptr,
+    token: rawptr,
 
-	object_id: c.uint64_t,
+    object_id: c.uint64_t,
 
-	call_func: ExtensionCallableCustomCall,
-	is_valid_func: ExtensionCallableCustomIsValid,
-	free_func: ExtensionCallableCustomFree,
+    call_func: ExtensionCallableCustomCall,
+    is_valid_func: ExtensionCallableCustomIsValid,
+    free_func: ExtensionCallableCustomFree,
 
-	hash_func: ExtensionCallableCustomHash,
-	equal_func: ExtensionCallableCustomEqual,
-	less_than_func: ExtensionCallableCustomLessThan,
+    hash_func: ExtensionCallableCustomHash,
+    equal_func: ExtensionCallableCustomEqual,
+    less_than_func: ExtensionCallableCustomLessThan,
 
-	to_string_func: ExtensionCallableCustomToString,
+    to_string_func: ExtensionCallableCustomToString,
 }
 
 /* SCRIPT INSTANCE EXTENSION */
@@ -524,44 +524,45 @@ ExtensionScriptInstanceInfo :: struct {
     free_func:                 ExtensionScriptInstanceFree,
 }
 
-ExtensionScriptInstanceInfo :: struct {
+ExtensionScriptInstanceInfo2 :: struct {
     set_func: ExtensionScriptInstanceSet,
-	get_func: ExtensionScriptInstanceGet,
-	get_property_list_func: ExtensionScriptInstanceGetPropertyList,
-	free_property_list_func: ExtensionScriptInstanceFreePropertyList,
-	get_class_category_func: ExtensionScriptInstanceGetClassCategory, // Optional. Set to NULL for the default behavior.
+    get_func: ExtensionScriptInstanceGet,
+    get_property_list_func: ExtensionScriptInstanceGetPropertyList,
+    free_property_list_func: ExtensionScriptInstanceFreePropertyList,
+    // Optional. Set to NULL for the default behavior.
+    get_class_category_func: ExtensionScriptInstanceGetClassCategory,
 
-	property_can_revert_func: ExtensionScriptInstancePropertyCanRevert,
-	property_get_revert_func: ExtensionScriptInstancePropertyGetRevert,
+    property_can_revert_func: ExtensionScriptInstancePropertyCanRevert,
+    property_get_revert_func: ExtensionScriptInstancePropertyGetRevert,
 
-	get_owner_func: ExtensionScriptInstanceGetOwner,
-	get_property_state_func: ExtensionScriptInstanceGetPropertyState,
+    get_owner_func: ExtensionScriptInstanceGetOwner,
+    get_property_state_func: ExtensionScriptInstanceGetPropertyState,
 
-	get_method_list_func: ExtensionScriptInstanceGetMethodList,
-	free_method_list_func: ExtensionScriptInstanceFreeMethodList,
-	get_property_type_func: ExtensionScriptInstanceGetPropertyType,
-	validate_property_func: ExtensionScriptInstanceValidateProperty,
+    get_method_list_func: ExtensionScriptInstanceGetMethodList,
+    free_method_list_func: ExtensionScriptInstanceFreeMethodList,
+    get_property_type_func: ExtensionScriptInstanceGetPropertyType,
+    validate_property_func: ExtensionScriptInstanceValidateProperty,
 
-	has_method_func: ExtensionScriptInstanceHasMethod,
+    has_method_func: ExtensionScriptInstanceHasMethod,
 
-	call_func: ExtensionScriptInstanceCall,
-	notification_func: ExtensionScriptInstanceNotification2,
+    call_func: ExtensionScriptInstanceCall,
+    notification_func: ExtensionScriptInstanceNotification2,
 
-	to_string_func: ExtensionScriptInstanceToString,
+    to_string_func: ExtensionScriptInstanceToString,
 
-	refcount_incremented_func: ExtensionScriptInstanceRefCountIncremented,
-	refcount_decremented_func: ExtensionScriptInstanceRefCountDecremented,
+    refcount_incremented_func: ExtensionScriptInstanceRefCountIncremented,
+    refcount_decremented_func: ExtensionScriptInstanceRefCountDecremented,
 
-	get_script_func: ExtensionScriptInstanceGetScript,
+    get_script_func: ExtensionScriptInstanceGetScript,
 
-	is_placeholder_func: ExtensionScriptInstanceIsPlaceholder,
+    is_placeholder_func: ExtensionScriptInstanceIsPlaceholder,
 
-	set_fallback_func: ExtensionScriptInstanceSet,
-	get_fallback_func: ExtensionScriptInstanceGet,
+    set_fallback_func: ExtensionScriptInstanceSet,
+    get_fallback_func: ExtensionScriptInstanceGet,
 
-	get_language_func: ExtensionScriptInstanceGetLanguage,
+    get_language_func: ExtensionScriptInstanceGetLanguage,
 
-	free_func: ExtensionScriptInstanceFree,
+    free_func: ExtensionScriptInstanceFree,
 }
 
 ExtensionInterfaceGetProcAddress :: #type proc "c" (function_name: cstring) -> rawptr
