@@ -31,6 +31,7 @@ UninitializedObjectPtr :: distinct rawptr
 TypePtr :: distinct rawptr
 UninitializedTypePtr :: distinct rawptr
 
+ObjectInstanceId :: u64
 MethodBindPtr :: distinct rawptr
 RefPtr :: distinct rawptr
 
