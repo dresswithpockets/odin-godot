@@ -252,36 +252,36 @@ ExtensionClassCreationInfo :: struct {
 }
 
 ExtensionClassCreationInfo2 :: struct {
-	is_virtual: bool,
-	is_abstract: bool,
-	is_exposed: bool,
-	set_func: ExtensionClassSet,
-	get_func: ExtensionClassGet,
-	get_property_list_func: ExtensionClassGetPropertyList,
-	free_property_list_func: ExtensionClassFreePropertyList,
-	property_can_revert_func: ExtensionClassPropertyCanRevert,
-	property_get_revert_func: ExtensionClassPropertyGetRevert,
-	validate_property_func: ExtensionClassValidateProperty,
-	notification_func: ExtensionClassNotification2,
-	to_string_func: ExtensionClassToString,
-	reference_func: ExtensionClassReference,
-	unreference_func: ExtensionClassUnreference,
-	create_instance_func: ExtensionClassCreateInstance, // (Default) constructor; mandatory. If the class is not instantiable, consider making it virtual or abstract.
-	free_instance_func: ExtensionClassFreeInstance, // Destructor; mandatory.
-	recreate_instance_func: ExtensionClassRecreateInstance,
-	// Queries a virtual function by name and returns a callback to invoke the requested virtual function.
-	get_virtual_func: ExtensionClassGetVirtual,
-	// Paired with `call_virtual_with_data_func`, this is an alternative to `get_virtual_func` for extensions that
-	// need or benefit from extra data when calling virtual functions.
-	// Returns user data that will be passed to `call_virtual_with_data_func`.
-	// Returning `NULL` from this function signals to Godot that the virtual function is not overridden.
-	// Data returned from this function should be managed by the extension and must be valid until the extension is deinitialized.
-	// You should supply either `get_virtual_func`, or `get_virtual_call_data_func` with `call_virtual_with_data_func`.
-	get_virtual_call_data_func: ExtensionClassGetVirtualCallData,
-	// Used to call virtual functions when `get_virtual_call_data_func` is not null.
-	call_virtual_with_data_func: ExtensionClassCallVirtualWithData,
-	get_rid_func: ExtensionClassGetRid,
-	class_userdata: rawptr, // Per-class user data, later accessible in instance bindings.
+    is_virtual: bool,
+    is_abstract: bool,
+    is_exposed: bool,
+    set_func: ExtensionClassSet,
+    get_func: ExtensionClassGet,
+    get_property_list_func: ExtensionClassGetPropertyList,
+    free_property_list_func: ExtensionClassFreePropertyList,
+    property_can_revert_func: ExtensionClassPropertyCanRevert,
+    property_get_revert_func: ExtensionClassPropertyGetRevert,
+    validate_property_func: ExtensionClassValidateProperty,
+    notification_func: ExtensionClassNotification2,
+    to_string_func: ExtensionClassToString,
+    reference_func: ExtensionClassReference,
+    unreference_func: ExtensionClassUnreference,
+    create_instance_func: ExtensionClassCreateInstance, // (Default) constructor; mandatory. If the class is not instantiable, consider making it virtual or abstract.
+    free_instance_func: ExtensionClassFreeInstance, // Destructor; mandatory.
+    recreate_instance_func: ExtensionClassRecreateInstance,
+    // Queries a virtual function by name and returns a callback to invoke the requested virtual function.
+    get_virtual_func: ExtensionClassGetVirtual,
+    // Paired with `call_virtual_with_data_func`, this is an alternative to `get_virtual_func` for extensions that
+    // need or benefit from extra data when calling virtual functions.
+    // Returns user data that will be passed to `call_virtual_with_data_func`.
+    // Returning `NULL` from this function signals to Godot that the virtual function is not overridden.
+    // Data returned from this function should be managed by the extension and must be valid until the extension is deinitialized.
+    // You should supply either `get_virtual_func`, or `get_virtual_call_data_func` with `call_virtual_with_data_func`.
+    get_virtual_call_data_func: ExtensionClassGetVirtualCallData,
+    // Used to call virtual functions when `get_virtual_call_data_func` is not null.
+    call_virtual_with_data_func: ExtensionClassCallVirtualWithData,
+    get_rid_func: ExtensionClassGetRid,
+    class_userdata: rawptr, // Per-class user data, later accessible in instance bindings.
 }
 
 ExtensionClassLibraryPtr :: distinct rawptr
