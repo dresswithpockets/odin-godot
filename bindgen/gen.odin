@@ -409,7 +409,7 @@ generate_bindings :: proc(state: ^State) {
     thread.pool_init(&task_pool, pool_allocator, state.options.job_count)
 
     user_index += 1
-    thread.pool_add_task(&task_pool, pool_allocator, generate_global_enum_task, state, user_index^)
+    thread.pool_add_task(&task_pool, pool_allocator, generate_global_enum_task, state, user_index)
 
     user_index += 1
     thread.pool_add_task(&task_pool, pool_allocator, generate_utility_functions_task, state, user_index)
