@@ -317,11 +317,6 @@ generate_global_enum_task :: proc(task: thread.Task) {
     enums_template.with(fstream, state)
 }
 
-generate_global_enums :: proc(state: ^State, pool: ^thread.Pool, user_index: ^int) {
-    user_index^ += 1
-    thread.pool_add_task(pool, pool.allocator, generate_global_enum_task, state, user_index^)
-}
-
 @private
 generate_utility_functions_task :: proc(task: thread.Task) {
     state := cast(^State)task.data
@@ -336,11 +331,6 @@ generate_utility_functions_task :: proc(task: thread.Task) {
     fstream := os.stream_from_handle(fhandle)
 
     util_template.with(fstream, state)
-}
-
-generate_utility_functions :: proc(state: ^State, pool: ^thread.Pool, user_index: ^int) {
-    user_index^ += 1
-    thread.pool_add_task(pool, pool.allocator, generate_utility_functions_task, state, user_index^)
 }
 
 @private
@@ -383,18 +373,6 @@ generate_variant_builtin_task :: proc(task: thread.Task) {
     variant_builtin_template.with(fstream, state)
 }
 
-generate_builtin_classes :: proc(state: ^State, pool: ^thread.Pool, user_index: ^int) {
-    for _, &class in &state.builtin_classes {
-        user_index^ += 1
-        thread.pool_add_task(pool, pool.allocator, generate_builtin_class_task, &class, user_index^)
-    }
-
-    // Variant and Object are special cases which arent provided by the API
-    // N.B. Object is actually a core API class and should be declared in core/, but for now isnt
-    user_index^ += 1
-    thread.pool_add_task(pool, pool.allocator, generate_variant_builtin_task, state, user_index^)
-}
-
 @private
 generate_class_task :: proc(task: thread.Task) {
     class := cast(^StateClass)task.data
@@ -415,13 +393,6 @@ generate_class_task :: proc(task: thread.Task) {
     class_template.with(fstream, pair)
 }
 
-generate_classes :: proc(state: ^State, pool: ^thread.Pool, user_index: ^int) {
-    for name, &class in &state.classes {
-        user_index^ += 1
-        thread.pool_add_task(pool, pool.allocator, generate_class_task, &class, user_index^)
-    }
-}
-
 generate_bindings :: proc(state: ^State) {
     preprocess_state_enums(state)
     preprocess_state_utility_functions(state)
@@ -432,10 +403,29 @@ generate_bindings :: proc(state: ^State) {
     task_pool: thread.Pool
     thread.pool_init(&task_pool, pool_allocator, state.options.job_count)
 
-    generate_global_enums(state, &task_pool, &user_index)
-    generate_utility_functions(state, &task_pool, &user_index)
-    generate_builtin_classes(state, &task_pool, &user_index)
-    generate_classes(state, &task_pool, &user_index)
+    user_index += 1
+    thread.pool_add_task(pool, pool.allocator, generate_global_enum_task, state, user_index^)
+
+    user_index += 1
+    thread.pool_add_task(pool, pool.allocator, generate_utility_functions_task, state, user_index)
+
+    // builtin classes
+    for _, &class in &state.builtin_classes {
+        user_index += 1
+        thread.pool_add_task(pool, pool.allocator, generate_builtin_class_task, &class, user_index)
+    }
+
+    // and builtin Variant & Object class
+    // Variant and Object are special cases which arent provided by the API
+    // N.B. Object is actually a core API class and should be declared in core/, but for now isnt
+    user_index += 1
+    thread.pool_add_task(pool, pool.allocator, generate_variant_builtin_task, state, user_index)
+
+    // core & editor classes
+    for _, &class in &state.classes {
+        user_index += 1
+        thread.pool_add_task(pool, pool.allocator, generate_class_task, &class, user_index)
+    }
 
     thread.pool_start(&task_pool)
     thread.pool_finish(&task_pool)
