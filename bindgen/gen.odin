@@ -409,27 +409,27 @@ generate_bindings :: proc(state: ^State) {
     thread.pool_init(&task_pool, pool_allocator, state.options.job_count)
 
     user_index += 1
-    thread.pool_add_task(pool, pool.allocator, generate_global_enum_task, state, user_index^)
+    thread.pool_add_task(&task_pool, pool_allocator, generate_global_enum_task, state, user_index^)
 
     user_index += 1
-    thread.pool_add_task(pool, pool.allocator, generate_utility_functions_task, state, user_index)
+    thread.pool_add_task(&task_pool, pool_allocator, generate_utility_functions_task, state, user_index)
 
     // builtin classes
     for _, &class in &state.builtin_classes {
         user_index += 1
-        thread.pool_add_task(pool, pool.allocator, generate_builtin_class_task, &class, user_index)
+        thread.pool_add_task(&task_pool, pool_allocator, generate_builtin_class_task, &class, user_index)
     }
 
     // and builtin Variant & Object class
     // Variant and Object are special cases which arent provided by the API
     // N.B. Object is actually a core API class and should be declared in core/, but for now isnt
     user_index += 1
-    thread.pool_add_task(pool, pool.allocator, generate_variant_builtin_task, state, user_index)
+    thread.pool_add_task(&task_pool, pool_allocator, generate_variant_builtin_task, state, user_index)
 
     // core & editor classes
     for _, &class in &state.classes {
         user_index += 1
-        thread.pool_add_task(pool, pool.allocator, generate_class_task, &class, user_index)
+        thread.pool_add_task(&task_pool, pool_allocator, generate_class_task, &class, user_index)
     }
 
     thread.pool_start(&task_pool)
