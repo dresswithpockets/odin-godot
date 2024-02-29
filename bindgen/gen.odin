@@ -83,6 +83,7 @@ ClassStatePair :: struct {
     class: ^StateClass,
 }
 
+@private
 preprocess_state_enums :: proc(state: ^State) {
     for name, &global_enum in &state.enums {
         // we ignore some enums by name, such as those pre-implemented
@@ -159,6 +160,7 @@ preprocess_state_enums :: proc(state: ^State) {
     return
 }
 
+@private
 preprocess_state_utility_functions :: proc(state: ^State) {
     // generate frontend
     for &function in &state.utility_functions {
@@ -184,6 +186,7 @@ preprocess_state_utility_functions :: proc(state: ^State) {
     }
 }
 
+@private
 preprocess_state_builtin_classes :: proc(state: ^State) {
     for name, &class in &state.builtin_classes {
         class.is_special_string_type = slice.contains(types_with_odin_string_constructors, class.godot_name)
@@ -253,23 +256,23 @@ preprocess_state_builtin_classes :: proc(state: ^State) {
                         argument.default_value = "{}"
                     } else if strings.has_prefix(default_value, "Vector3(") {
                         concat := []string{"new_vector3(", default_value[len("Vector3("):]}
-                        argument.default_value = _builtin_class_method_default_arg_backing_field_name(method, argument)
+                        argument.default_value = builtin_class_method_default_arg_backing_field_name(method, argument)
                         argument.default_value_is_backing_field = true
                         argument.default_value_backing_field_assign = strings.concatenate(concat[:])
                     } else if strings.has_prefix(default_value, "Vector2(") {
                         concat := []string{"new_vector2(", default_value[len("Vector2("):]}
-                        argument.default_value = _builtin_class_method_default_arg_backing_field_name(method, argument)
+                        argument.default_value = builtin_class_method_default_arg_backing_field_name(method, argument)
                         argument.default_value_is_backing_field = true
                         argument.default_value_backing_field_assign = strings.concatenate(concat[:])
                     } else if strings.has_prefix(default_value, "Color(") {
                         concat := []string{"new_color(", default_value[len("Color("):]}
-                        argument.default_value = _builtin_class_method_default_arg_backing_field_name(method, argument)
+                        argument.default_value = builtin_class_method_default_arg_backing_field_name(method, argument)
                         argument.default_value_is_backing_field = true
                         argument.default_value_backing_field_assign = strings.concatenate(concat[:])
                     } else if strings.has_prefix(default_value, "\"") && strings.has_suffix(default_value, "\"") {
                         new_string_proc_name := "new_string_name_cstring(" if argument.arg_type_str == "StringName" else "new_string_cstring("
                         concat := []string{new_string_proc_name, default_value, ")"}
-                        argument.default_value = _builtin_class_method_default_arg_backing_field_name(method, argument)
+                        argument.default_value = builtin_class_method_default_arg_backing_field_name(method, argument)
                         argument.default_value_is_backing_field = true
                         argument.default_value_backing_field_assign = strings.concatenate(concat[:])
                     }
@@ -295,7 +298,8 @@ preprocess_state_builtin_classes :: proc(state: ^State) {
     }
 }
 
-_builtin_class_method_default_arg_backing_field_name :: proc(method: StateBuiltinClassMethod, argument: StateFunctionArgument) -> string{
+@private
+builtin_class_method_default_arg_backing_field_name :: proc(method: StateBuiltinClassMethod, argument: StateFunctionArgument) -> string{
     default_concat := []string{"__", method.backing_func_name, "__default__", argument.name, "__", argument.arg_type_str}
     return strings.concatenate(default_concat[:])
 }
@@ -358,6 +362,7 @@ generate_builtin_class_task :: proc(task: thread.Task) {
     builtin_class_template.with(fstream, pair)
 }
 
+@private
 generate_variant_builtin_task :: proc(task: thread.Task) {
     state := cast(^State)task.data
 
