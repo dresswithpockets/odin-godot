@@ -13,7 +13,7 @@ bindgen_deps := $(wildcard $(bindgen_dir)/*.odin) $(wildcard temple/*.odin)
 bindgen_out := $(OUT_DIR)/bindgen$(exe_suffix)
 
 temple_dir := temple
-temple_deps := $(wildcard templates/*.temple.twig) $(bindgen_dir)/gen.odin
+temple_deps := $(wildcard templates/*.temple.twig) $(bindgen_dir)/templates.odin
 
 gdextension_api := ./godot-cpp/gdextension/extension_api.json
 

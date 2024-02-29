@@ -3,6 +3,7 @@ package bindgen
 
 import "core:fmt"
 import "core:strings"
+import "core:thread"
 
 /*
 State is all of the information transformed from the Api input
@@ -71,6 +72,8 @@ StateUtilityFunction :: struct {
 
 @(private)
 StateBuiltinClass :: struct {
+    parent_state: ^State,
+
     odin_name:             string,
     snake_name:            string,
     godot_name:            string,
@@ -88,6 +91,8 @@ StateBuiltinClass :: struct {
 
 @(private)
 StateClass :: struct {
+    parent_state: ^State,
+
     odin_name:    string,
     snake_name:   string,
     godot_name:   string,
@@ -365,6 +370,7 @@ _state_builtin_classes :: proc(state: ^State) {
         odin_name := godot_to_odin_case(class.name)
         snake_name := godot_to_snake_case(class.name)
         state.builtin_classes[class.name] = StateBuiltinClass {
+            parent_state          = state,
             odin_name             = odin_name,
             snake_name            = snake_name,
             godot_name            = class.name,
@@ -385,6 +391,7 @@ _state_classes :: proc(state: ^State) {
         odin_name := godot_to_odin_case(class.name)
         snake_name := godot_to_snake_case(class.name)
         state.classes[class.name] = StateClass {
+            parent_state          = state,
             odin_name             = odin_name,
             snake_name            = snake_name,
             godot_name            = class.name,

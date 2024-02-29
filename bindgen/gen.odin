@@ -6,8 +6,9 @@ import "core:os"
 import "core:slice"
 import "core:strings"
 import "core:io"
-
-import "../temple"
+import "core:sync"
+import "core:thread"
+import "base:runtime"
 
 constructor_type :: "gdextension.PtrConstructor"
 destructor_type :: "gdextension.PtrDestructor"
@@ -81,13 +82,6 @@ ClassStatePair :: struct {
     state: ^State,
     class: ^StateClass,
 }
-
-
-enums_template := temple.compiled("../templates/bindgen_enums.temple.twig", ^State)
-util_template := temple.compiled("../templates/bindgen_util.temple.twig", ^State)
-variant_builtin_template := temple.compiled("../templates/bindgen_variant.temple.twig", ^State)
-builtin_class_template := temple.compiled("../templates/bindgen_builtin_class.temple.twig", BuiltinClassStatePair)
-class_template := temple.compiled("../templates/bindgen_class.temple.twig", ClassStatePair)
 
 preprocess_state_enums :: proc(state: ^State) {
     for name, &global_enum in &state.enums {
@@ -308,7 +302,10 @@ _builtin_class_method_default_arg_backing_field_name :: proc(method: StateBuilti
 
 UNIX_ALLOW_READ_WRITE_ALL :: 0o666
 
-generate_global_enums :: proc(state: ^State) {
+@private
+generate_global_enum_task :: proc(task: thread.Task) {
+    state := cast(^State)task.data
+
     fhandle, ferr := os.open("core/enums.gen.odin", os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
     if ferr != 0 {
         fmt.eprintf("Error opening core/enums.gen.odin\n")
@@ -320,7 +317,15 @@ generate_global_enums :: proc(state: ^State) {
     enums_template.with(fstream, state)
 }
 
-generate_utility_functions :: proc(state: ^State) {
+generate_global_enums :: proc(state: ^State, pool: ^thread.Pool, user_index: ^int) {
+    user_index^ += 1
+    thread.pool_add_task(pool, pool.allocator, generate_global_enum_task, state, user_index^)
+}
+
+@private
+generate_utility_functions_task :: proc(task: thread.Task) {
+    state := cast(^State)task.data
+
     fhandle, ferr := os.open("core/util.gen.odin", os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
     if ferr != 0 {
         fmt.eprintf("Error opening core/util.gen.odin\n")
@@ -333,31 +338,39 @@ generate_utility_functions :: proc(state: ^State) {
     util_template.with(fstream, state)
 }
 
-generate_builtin_classes :: proc(state: ^State) {
-    for name, &class in &state.builtin_classes {
-        // POD data types are covered by native odin types
-        if slice.contains(pod_types, name) {
-            continue
-        }
+generate_utility_functions :: proc(state: ^State, pool: ^thread.Pool, user_index: ^int) {
+    user_index^ += 1
+    thread.pool_add_task(pool, pool.allocator, generate_utility_functions_task, state, user_index^)
+}
 
-        file_name_parts := [?]string{"variant/", class.godot_name, ".gen.odin"}
-        file_name := strings.concatenate(file_name_parts[:])
-        defer delete(file_name)
+@private
+generate_builtin_class_task :: proc(task: thread.Task) {
+    class := cast(^StateBuiltinClass)task.data
 
-        fhandle, ferr := os.open(file_name, os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
-        if ferr != 0 {
-            fmt.eprintf("Error opening %v\n", file_name)
-            return
-        }
-        defer os.close(fhandle)
-
-        fstream := os.stream_from_handle(fhandle)
-        pair := BuiltinClassStatePair{state = state, class = &class}
-        builtin_class_template.with(fstream, pair)
+    // POD data types are covered by native odin types
+    if slice.contains(pod_types, class.godot_name) {
+        return
     }
 
-    // Variant and Object are special cases which arent provided by the API
-    // N.B. Object is actually a core API class and should be declared in core/, but for now isnt
+    file_name_parts := [?]string{"variant/", class.godot_name, ".gen.odin"}
+    file_name := strings.concatenate(file_name_parts[:])
+    defer delete(file_name)
+
+    fhandle, ferr := os.open(file_name, os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
+    if ferr != 0 {
+        fmt.eprintf("Error opening %v\n", file_name)
+        return
+    }
+    defer os.close(fhandle)
+
+    fstream := os.stream_from_handle(fhandle)
+    pair := BuiltinClassStatePair{state = class.parent_state, class = class}
+    builtin_class_template.with(fstream, pair)
+}
+
+generate_variant_builtin_task :: proc(task: thread.Task) {
+    state := cast(^State)task.data
+
     file_name := "variant/Variant.gen.odin"
     fhandle, ferr := os.open(file_name, os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
     if ferr != 0 {
@@ -370,23 +383,42 @@ generate_builtin_classes :: proc(state: ^State) {
     variant_builtin_template.with(fstream, state)
 }
 
-generate_classes :: proc(state: ^State) {
+generate_builtin_classes :: proc(state: ^State, pool: ^thread.Pool, user_index: ^int) {
+    for _, &class in &state.builtin_classes {
+        user_index^ += 1
+        thread.pool_add_task(pool, pool.allocator, generate_builtin_class_task, &class, user_index^)
+    }
+
+    // Variant and Object are special cases which arent provided by the API
+    // N.B. Object is actually a core API class and should be declared in core/, but for now isnt
+    user_index^ += 1
+    thread.pool_add_task(pool, pool.allocator, generate_variant_builtin_task, state, user_index^)
+}
+
+@private
+generate_class_task :: proc(task: thread.Task) {
+    class := cast(^StateClass)task.data
+
+    file_name_parts := [?]string{class.package_name, "/", class.godot_name, ".gen.odin"}
+    file_name := strings.concatenate(file_name_parts[:])
+    defer delete(file_name)
+
+    fhandle, ferr := os.open(file_name, os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
+    if ferr != 0 {
+        fmt.eprintf("Error opening %v\n", file_name)
+        return
+    }
+    defer os.close(fhandle)
+
+    fstream := os.stream_from_handle(fhandle)
+    pair := ClassStatePair{state = class.parent_state, class = class}
+    class_template.with(fstream, pair)
+}
+
+generate_classes :: proc(state: ^State, pool: ^thread.Pool, user_index: ^int) {
     for name, &class in &state.classes {
-
-        file_name_parts := [?]string{class.package_name, "/", class.godot_name, ".gen.odin"}
-        file_name := strings.concatenate(file_name_parts[:])
-        defer delete(file_name)
-
-        fhandle, ferr := os.open(file_name, os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
-        if ferr != 0 {
-            fmt.eprintf("Error opening %v\n", file_name)
-            return
-        }
-        defer os.close(fhandle)
-
-        fstream := os.stream_from_handle(fhandle)
-        pair := ClassStatePair{state = state, class = &class}
-        class_template.with(fstream, pair)
+        user_index^ += 1
+        thread.pool_add_task(pool, pool.allocator, generate_class_task, &class, user_index^)
     }
 }
 
@@ -395,10 +427,23 @@ generate_bindings :: proc(state: ^State) {
     preprocess_state_utility_functions(state)
     preprocess_state_builtin_classes(state)
 
-    generate_global_enums(state)
-    generate_utility_functions(state)
-    generate_builtin_classes(state)
-    generate_classes(state)
+    user_index := 0
+    pool_allocator := runtime.heap_allocator()
+    task_pool: thread.Pool
+    thread.pool_init(&task_pool, pool_allocator, state.options.job_count)
+
+    generate_global_enums(state, &task_pool, &user_index)
+    generate_utility_functions(state, &task_pool, &user_index)
+    generate_builtin_classes(state, &task_pool, &user_index)
+    generate_classes(state, &task_pool, &user_index)
+
+    thread.pool_start(&task_pool)
+    thread.pool_finish(&task_pool)
+    thread.pool_destroy(&task_pool)
+}
+
+test_task :: proc(task: thread.Task) {
+    fmt.printf("%v: test task\n", task.user_index)
 }
 
 /*
