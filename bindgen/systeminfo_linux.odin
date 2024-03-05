@@ -40,7 +40,7 @@ countbits :: proc(v: CPU_BITTYPE) -> int {
 @private
 sched_cpucount :: proc(setsize: c.size_t, set: ^Cpu_Set) -> int {
     s := 0
-    for i in 0..=(setsize / CPU_BITS)-1 {
+    for i in 0..<(setsize / CPU_BITS) {
         s += countbits(set.bits[i])
     }
     return s
