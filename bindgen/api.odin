@@ -150,7 +150,7 @@ ApiClassMethod :: struct {
     is_static:    bool `json:"is_static"`,
     is_virtual:   bool `json:"is_virtual"`,
     hash:         i64 `json:"hash"`,
-    return_value: ApiClassMethodReturnValue `json:"return_value"`,
+    return_value: Maybe(ApiClassMethodReturnValue) `json:"return_value"`,
     arguments:    []ApiClassMethodArguments `json:"arguments"`,
 }
 
