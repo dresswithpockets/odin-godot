@@ -108,7 +108,7 @@ new_state_godot_type_in_map :: proc(state: ^NewState, godot_name: string) -> boo
     return godot_name in state.all_types
 }
 
-_state_enum :: proc(state: ^NewState, api_enum: ApiEnum, class_name: Maybe(string) = nil) {
+_state_enum :: proc(state: ^NewState, api_enum: ApiEnum, class_name: Maybe(string) = nil) -> ^NewStateType {
     godot_name := api_enum.name
 
     // enums in classes must follow the format of "ClassName.EnumName"
@@ -134,6 +134,7 @@ _state_enum :: proc(state: ^NewState, api_enum: ApiEnum, class_name: Maybe(strin
     }
 
     state.all_types[godot_name] = state_enum
+    return &state.all_types[godot_name]
 }
 
 create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
