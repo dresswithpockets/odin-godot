@@ -5,6 +5,7 @@ import "core:fmt"
 import "core:os"
 import "core:slice"
 import "core:strings"
+import "core:strconv"
 import "core:io"
 import "core:sync"
 import "core:thread"
@@ -54,6 +55,17 @@ pod_type_map := map[string]string{
     "uint16_t" = "u16",
     "uint32_t" = "u32",
     "uint64_t" = "u64",
+    "int8"     = "i8",
+    "int16"    = "i16",
+    "int32"    = "i32",
+    "int64"    = "i64",
+    "uint8"    = "u8",
+    "uint16"   = "u16",
+    "uint32"   = "u32",
+    "uint64"   = "u64",
+
+    "const void*" = "rawptr",
+    "void*"       = "rawptr",
 }
 
 native_odin_types :: []string {
@@ -86,78 +98,8 @@ ClassStatePair :: struct {
 @private
 preprocess_state_enums :: proc(state: ^State) {
     for name, &global_enum in &state.enums {
-        // we ignore some enums by name, such as those pre-implemented
-        // in gdextension
-        if slice.contains(ignore_enums_by_name, name) {
-            global_enum.odin_skip = true
-            continue
-        }
-
-        // we use AcronymPascalCase in our generated code, but godot
-        // uses ACRONYMPascalCase - harder to read IMO
-        odin_case_name := state.type_odin_names[name]
-
-        // godot's enums use CONST_CASE for their values, and usually
-        // have a prefix. e.e `GDExtensionVariantType` uses the prefix
-        // `GDEXTENSION_VARIANT_TYPE_`. The prefix gets stripped before
-        // the value is generated in odin.
-        const_case_prefix := odin_to_const_case(odin_case_name)
-        defer delete(const_case_prefix)
-
-        // gotta do all of that for the prefix alias if there is one
-        prefix_alias, has_alias := enum_prefix_alias[name]
-        const_case_prefix_alias: string
-        if has_alias {
-            const_case_prefix_alias = odin_to_const_case(prefix_alias)
-        }
-        defer if has_alias {
-            delete(const_case_prefix_alias)
-        }
-
-        // godot has a convention for "Flags" enums, where the prefix used
-        // by values isn't always plural. e.g `MethodFlags` has 
-        // `METHOD_FLAG_NORMAL`, as well as `METHOD_FLAGS_DEFAULT`.
-        // The latter will get caught by const_case_prefix, but we also
-        // need to have a prefix for the singular variation of the prefix
-        is_flags := strings.has_suffix(name, "Flags")
-        flag_prefix: string
-        without_flags_prefix: string
-        if is_flags {
-            // chops off the s at the end
-            flag_prefix = const_case_prefix[:len(const_case_prefix) - 1]
-            // also a variation for enums where the "FLAGS_" portion of the
-            // value prefix is completely dropped. e.g `PropertyUsageFlags`
-            // uses the prefix `PROPERTY_USAGE_` instead of `PROPERTY_USAGE_FLAG`
-            without_flags_prefix = const_case_prefix[:len(const_case_prefix) - 5]
-        }
-
-        global_enum.odin_case_name = odin_case_name
-        for value_name, value in global_enum.values {
-            value_name := value_name
-            if len(value_name) != len(const_case_prefix) {
-                value_name = strings.trim_prefix(value_name, const_case_prefix)
-            }
-            if has_alias && len(value_name) != len(const_case_prefix_alias) {
-                value_name = strings.trim_prefix(value_name, const_case_prefix_alias)
-            }
-            if is_flags {
-                if len(value_name) != len(flag_prefix) {
-                    value_name = strings.trim_prefix(value_name, flag_prefix)
-                }
-                if len(value_name) != len(without_flags_prefix) {
-                    value_name = strings.trim_prefix(value_name, without_flags_prefix)
-                }
-            }
-
-            // we might have a lingering _ after we removed the prefix
-            if value_name[0] == '_' && len(value_name) > 1 {
-                value_name = value_name[1:]
-            }
-            value_name = const_to_odin_case(value_name)
-            global_enum.odin_values[value_name] = value
-        }
+        preprocess_enum(state, name, &global_enum)
     }
-    return
 }
 
 @private
@@ -226,6 +168,10 @@ preprocess_state_builtin_classes :: proc(state: ^State) {
             }
         }
 
+        for name, &class_enum in &class.enums {
+            preprocess_enum(state, name, &class_enum)
+        }
+
         // used in the special constructor for some string types
         if slice.contains(types_with_odin_string_constructors, name) {
             class.odin_needs_strings = true
@@ -254,27 +200,57 @@ preprocess_state_builtin_classes :: proc(state: ^State) {
                     // work for variant types
                     if default_value == "null" {
                         argument.default_value = "{}"
+                    } else if default_value == "[]" || default_value == "{}" {
+                        // TODO: support per-call default [] and {} args (this would entail changing the argument type to a Maybe type and allocating a new array/dict every call)
+                        // HACK: for now, to avoid compiler errors, im just completely ignoring the default value in this case
+                        argument.default_value = nil
+                    } else if strings.has_prefix(default_value, "Array[") && strings.has_suffix(default_value, "[])") {
+                        // HACK: this is the same as the above case for "[]" and "{}", but with the typed syntax like "Array[Thing]([])"
+                        argument.default_value = nil
                     } else if strings.has_prefix(default_value, "Vector3(") {
-                        concat := []string{"new_vector3(", default_value[len("Vector3("):]}
+                        concat := []string{"variant.new_vector3(", default_value[len("Vector3("):]}
                         argument.default_value = builtin_class_method_default_arg_backing_field_name(method, argument)
                         argument.default_value_is_backing_field = true
                         argument.default_value_backing_field_assign = strings.concatenate(concat[:])
                     } else if strings.has_prefix(default_value, "Vector2(") {
-                        concat := []string{"new_vector2(", default_value[len("Vector2("):]}
+                        concat := []string{"variant.new_vector2(", default_value[len("Vector2("):]}
                         argument.default_value = builtin_class_method_default_arg_backing_field_name(method, argument)
                         argument.default_value_is_backing_field = true
                         argument.default_value_backing_field_assign = strings.concatenate(concat[:])
                     } else if strings.has_prefix(default_value, "Color(") {
-                        concat := []string{"new_color(", default_value[len("Color("):]}
+                        concat := []string{"variant.new_color(", default_value[len("Color("):]}
                         argument.default_value = builtin_class_method_default_arg_backing_field_name(method, argument)
                         argument.default_value_is_backing_field = true
                         argument.default_value_backing_field_assign = strings.concatenate(concat[:])
                     } else if strings.has_prefix(default_value, "\"") && strings.has_suffix(default_value, "\"") {
-                        new_string_proc_name := "new_string_name_cstring(" if argument.arg_type_str == "StringName" else "new_string_cstring("
+                        new_string_proc_name := "variant.new_string_name_cstring(" if argument.arg_type_str == "StringName" else "new_string_cstring("
                         concat := []string{new_string_proc_name, default_value, ")"}
                         argument.default_value = builtin_class_method_default_arg_backing_field_name(method, argument)
                         argument.default_value_is_backing_field = true
                         argument.default_value_backing_field_assign = strings.concatenate(concat[:])
+                    } else if state_enum, is_enum := state.all_enums[argument.arg_type.godot_type]; is_enum {
+                        if int_value, ok := strconv.parse_int(default_value); ok {
+                            if state_enum.is_bitfield {
+                                // TODO: support per-call default bitfield enum args
+                                // HACK: for now, to avoid compiler errors, im just completely ignoring the default value in this case
+                                argument.default_value = nil
+                            } else {
+                                if key, ok := get_key_for_value_in_state_enum(state_enum, int_value); ok {
+                                    argument.default_value = fmt.tprintf("%v.%v", argument.arg_type_str, key)
+                                } else {
+                                    fmt.printf("Couldn't match enum type '%v' default value '%v'\n", argument.arg_type_str, int_value)
+                                    for key, value in state_enum.values {
+                                        fmt.printf("%v = '%v'\n", key, value)
+                                    }
+                                }
+                            }
+                        } else {
+                            // TODO: couldn't handle this enum default value...
+                        }
+                    } else if default_value == "Callable()" {
+                        // TODO: support per-call default Callable() args
+                        // HACK: for now, to avoid compiler errors, im just completely ignoring the default value in this case
+                        argument.default_value = nil
                     }
                 }
             }
@@ -298,8 +274,283 @@ preprocess_state_builtin_classes :: proc(state: ^State) {
     }
 }
 
+_state_class_fix_types :: proc(state: ^State, class: ^StateClass) {
+    for _, &method in &class.methods {
+        for &argument in &method.arguments {
+            // HACK: idk why "Variant" isnt getting picked up in the package type map...
+            // if argument.arg_type_str == "Variant" {
+            //     argument.arg_type_str = fmt.tprintf("variant.%v", argument.arg_type_str)
+            //     continue
+            // }
+            if package_name, ok := state.type_package_map[argument.arg_type.godot_type]; ok && package_name != class.package_name {
+                if package_name != "gdextension" && package_name != "variant" {
+                    // gdextension and variant are already imported explicitly in the template, so we dont
+                    // need to add it to the dependency list
+                    class.depends_on_packages[package_name] = true
+                }
+
+                argument.arg_type_str = fmt.tprintf("%v.%v", package_name, argument.arg_type_str)
+            }
+        }
+
+        if return_type, has_return_type := method.return_type.(StateType); has_return_type {
+            // HACK: idk why "Variant" isnt getting picked up in the package type map...
+            // if return_type == "Variant" {
+            //     method.return_type_str = fmt.tprintf("variant.%v", return_type)
+            //     return
+            // }
+            if package_name, ok := state.type_package_map[return_type.godot_type]; ok && package_name != class.package_name {
+                if package_name != "gdextension" && package_name != "variant" {
+                    // gdextension and variant are already imported explicitly in the template, so we dont
+                    // need to add it to the dependency list
+                    class.depends_on_packages[package_name] = true
+                }
+
+                method.return_type_str = fmt.tprintf("%v.%v", package_name, method.return_type_str.(string))
+            }
+        }
+    }
+}
+
+@private
+get_key_for_value_in_state_enum :: proc(state_enum: ^StateEnum, from: int) -> (name: string, ok: bool) {
+    assert(len(state_enum.odin_values) > 0)
+    for key, value in state_enum.odin_values {
+        if value == from {
+            return key, true
+        }
+    }
+    return "", false
+}
+
+@private
+preprocess_state_classes :: proc(state: ^State) {
+    for name, &class in &state.classes {
+        // operators
+        // for _, &operator in &class.operators {
+        //     for &overload in &operator.overloads {
+        //         overload.right_variant_type_name = "Nil"
+        //         right_state_type, has_right_type := overload.right_type.(StateType)
+        //         if has_right_type {
+        //             // we dont use the prio type since this needs to be a VariantType - prio_type will use
+        //             // pod_type if its not nil, which will never be a VariantType.
+        //             overload.right_variant_type_name = right_state_type.odin_type
+        //         }
+        //         // Variant just gets passed to this lookup as Nil for some reason, despite
+        //         // Nil also being used for unary operators. Godot is silly sometimes
+        //         if overload.right_variant_type_name == "Variant" {
+        //             overload.right_variant_type_name = "Nil"
+        //         }
+
+        //         if has_right_type {
+        //             overload.right_type_str = right_state_type.prio_type
+        //             overload.right_type_is_native = slice.contains(native_odin_types, right_state_type.prio_type)
+        //         } else {
+        //             overload.right_type_str = ""
+        //         }
+
+        //         if has_right_type && overload.right_type_is_native {
+        //             overload.right_type_is_ref = true
+        //             overload.right_type_ptr_str = "other"
+        //         } else if has_right_type {
+        //             overload.right_type_is_ref = true
+        //             overload.right_type_ptr_str = "other._opaque"
+        //         } else {
+        //             overload.right_type_ptr_str = "nil"
+        //         }
+        //     }
+        // }
+
+        for name, &class_enum in &class.enums {
+            preprocess_enum(state, name, &class_enum)
+        }
+
+        for _, &method in &class.methods {
+            return_type, has_return_type := method.return_type.(StateType)
+            if has_return_type {
+                // POD-mapped types use native odin types instead of classes
+                if pod_type, is_pod_type := return_type.pod_type.(string); is_pod_type {
+                    method.return_type_str = pod_type
+                } else {
+                    method.return_type_str = return_type.odin_type
+                }
+            }
+
+            for &argument in method.arguments {
+                if pod_type, is_pod_type := argument.arg_type.pod_type.(string); is_pod_type {
+                    argument.arg_type_str = pod_type
+                } else {
+                    argument.arg_type_str = argument.arg_type.odin_type
+                }
+
+                if default_value, has_default_value := argument.default_value.(string); has_default_value {
+                    // N.B. I'm pretty sure that "null" in Godot is just a 0'd out opaque pointer, so a default of {} should
+                    // work for variant types
+                    if default_value == "null" {
+                        argument.default_value = "{}"
+                    } else if default_value == "[]" || default_value == "{}" {
+                        // TODO: support per-call default [] and {} args (this would entail changing the argument type to a Maybe type and allocating a new array/dict every call)
+                        // HACK: for now, to avoid compiler errors, im just completely ignoring the default value in this case
+                        argument.default_value = nil
+                    } else if strings.has_prefix(default_value, "Array[") && strings.has_suffix(default_value, "[])") {
+                        // HACK: this is the same as the above case for "[]" and "{}", but with the typed syntax like "Array[Thing]([])"
+                        argument.default_value = nil
+                    } else if strings.has_prefix(default_value, "Vector3(") {
+                        concat := []string{"new_vector3(", default_value[len("Vector3("):]}
+                        argument.default_value = class_method_default_arg_backing_field_name(method, argument)
+                        argument.default_value_is_backing_field = true
+                        argument.default_value_backing_field_assign = strings.concatenate(concat[:])
+                    } else if strings.has_prefix(default_value, "Vector2(") {
+                        concat := []string{"new_vector2(", default_value[len("Vector2("):]}
+                        argument.default_value = class_method_default_arg_backing_field_name(method, argument)
+                        argument.default_value_is_backing_field = true
+                        argument.default_value_backing_field_assign = strings.concatenate(concat[:])
+                    } else if strings.has_prefix(default_value, "Color(") {
+                        concat := []string{"new_color(", default_value[len("Color("):]}
+                        argument.default_value = class_method_default_arg_backing_field_name(method, argument)
+                        argument.default_value_is_backing_field = true
+                        argument.default_value_backing_field_assign = strings.concatenate(concat[:])
+                    } else if strings.has_prefix(default_value, "\"") && strings.has_suffix(default_value, "\"") {
+                        new_string_proc_name := "new_string_name_cstring(" if argument.arg_type_str == "StringName" else "new_string_cstring("
+                        concat := []string{new_string_proc_name, default_value, ")"}
+                        argument.default_value = class_method_default_arg_backing_field_name(method, argument)
+                        argument.default_value_is_backing_field = true
+                        argument.default_value_backing_field_assign = strings.concatenate(concat[:])
+                    } else if strings.has_prefix(default_value, "&\"") && strings.has_suffix(default_value, "\"") {
+                        concat := []string{"new_string_name_cstring(", default_value[1:], ")"}
+                        argument.default_value = class_method_default_arg_backing_field_name(method, argument)
+                        argument.default_value_is_backing_field = true
+                        argument.default_value_backing_field_assign = strings.concatenate(concat[:])
+                    } else if state_enum, is_enum := state.all_enums[argument.arg_type.godot_type]; is_enum {
+                        if int_value, ok := strconv.parse_int(default_value); ok {
+                            if state_enum.is_bitfield {
+                                // TODO: support per-call default bitfield enum args
+                                // HACK: for now, to avoid compiler errors, im just completely ignoring the default value in this case
+                                argument.default_value = nil
+                            } else {
+                                if key, ok := get_key_for_value_in_state_enum(state_enum, int_value); ok {
+                                    argument.default_value = fmt.tprintf("%v.%v", argument.arg_type_str, key)
+                                } else {
+                                    fmt.printf("Couldn't match enum type '%v' default value '%v'\n", argument.arg_type_str, int_value)
+                                    for key, value in state_enum.values {
+                                        fmt.printf("%v = '%v'\n", key, value)
+                                    }
+                                }
+                            }
+                        } else {
+                            // TODO: couldn't handle this enum default value...
+                        }
+                    } else if default_value == "Callable()" {
+                        // TODO: support per-call default Callable() args
+                        // HACK: for now, to avoid compiler errors, im just completely ignoring the default value in this case
+                        argument.default_value = nil
+                    }
+                }
+            }
+
+            // TODO: parse out the default value and map it to something like:
+            //
+            // declared as a private variable in the package
+            // __color_clamp__default_min: Color 
+            // 
+            // initialized in the initializer proc
+            // __color_clamp__default_min = new_color(0, 0, 0, 0)
+            //
+            // parsed from the default value Color(0, 0, 0, 0)
+            //
+            // 
+            // for "null" default values, i need to figure out what the null equivalent of an opaque pointer is - 0?
+            // e.g. a null Dictionary might just be Dictionary{} - which defualts to all 0 in _opaque
+            //
+            // string default values probably just need to be new'd from a cstring, similar to Color or Vector
+        }
+
+        _state_class_fix_types(state, &class)
+    }
+}
+
+@private
+preprocess_enum :: proc(state: ^State, name: string, state_enum: ^StateEnum) {
+    // we ignore some enums by name, such as those pre-implemented
+    // in gdextension
+    if slice.contains(ignore_enums_by_name, name) {
+        state_enum.odin_skip = true
+        return
+    }
+
+    // we use AcronymPascalCase in our generated code, but godot
+    // uses ACRONYMPascalCase - harder to read IMO
+    odin_case_name := state.type_odin_names[name]
+
+    // godot's enums use CONST_CASE for their values, and usually
+    // have a prefix. e.e `GDExtensionVariantType` uses the prefix
+    // `GDEXTENSION_VARIANT_TYPE_`. The prefix gets stripped before
+    // the value is generated in odin.
+    const_case_prefix := odin_to_const_case(odin_case_name)
+    defer delete(const_case_prefix)
+
+    // gotta do all of that for the prefix alias if there is one
+    prefix_alias, has_alias := enum_prefix_alias[name]
+    const_case_prefix_alias: string
+    if has_alias {
+        const_case_prefix_alias = odin_to_const_case(prefix_alias)
+    }
+    defer if has_alias {
+        delete(const_case_prefix_alias)
+    }
+
+    // godot has a convention for "Flags" enums, where the prefix used
+    // by values isn't always plural. e.g `MethodFlags` has 
+    // `METHOD_FLAG_NORMAL`, as well as `METHOD_FLAGS_DEFAULT`.
+    // The latter will get caught by const_case_prefix, but we also
+    // need to have a prefix for the singular variation of the prefix
+    is_flags := strings.has_suffix(name, "Flags")
+    flag_prefix: string
+    without_flags_prefix: string
+    if is_flags {
+        // chops off the s at the end
+        flag_prefix = const_case_prefix[:len(const_case_prefix) - 1]
+        // also a variation for enums where the "FLAGS_" portion of the
+        // value prefix is completely dropped. e.g `PropertyUsageFlags`
+        // uses the prefix `PROPERTY_USAGE_` instead of `PROPERTY_USAGE_FLAG`
+        without_flags_prefix = const_case_prefix[:len(const_case_prefix) - 5]
+    }
+
+    state_enum.odin_case_name = odin_case_name
+    for value_name, value in state_enum.values {
+        value_name := value_name
+        if len(value_name) != len(const_case_prefix) {
+            value_name = strings.trim_prefix(value_name, const_case_prefix)
+        }
+        if has_alias && len(value_name) != len(const_case_prefix_alias) {
+            value_name = strings.trim_prefix(value_name, const_case_prefix_alias)
+        }
+        if is_flags {
+            if len(value_name) != len(flag_prefix) {
+                value_name = strings.trim_prefix(value_name, flag_prefix)
+            }
+            if len(value_name) != len(without_flags_prefix) {
+                value_name = strings.trim_prefix(value_name, without_flags_prefix)
+            }
+        }
+
+        // we might have a lingering _ after we removed the prefix
+        if value_name[0] == '_' && len(value_name) > 1 {
+            value_name = value_name[1:]
+        }
+        value_name = const_to_odin_case(value_name)
+        state_enum.odin_values[value_name] = value
+    }
+}
+
 @private
 builtin_class_method_default_arg_backing_field_name :: proc(method: StateBuiltinClassMethod, argument: StateFunctionArgument) -> string{
+    default_concat := []string{"__", method.backing_func_name, "__default__", argument.name, "__", argument.arg_type_str}
+    return strings.concatenate(default_concat[:])
+}
+
+@private
+class_method_default_arg_backing_field_name :: proc(method: StateFunction, argument: StateFunctionArgument) -> string{
     default_concat := []string{"__", method.backing_func_name, "__default__", argument.name, "__", argument.arg_type_str}
     return strings.concatenate(default_concat[:])
 }
@@ -402,6 +653,7 @@ generate_bindings :: proc(state: ^State) {
     preprocess_state_enums(state)
     preprocess_state_utility_functions(state)
     preprocess_state_builtin_classes(state)
+    preprocess_state_classes(state)
 
     user_index := 0
     pool_allocator := runtime.heap_allocator()
