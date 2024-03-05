@@ -129,7 +129,7 @@ ApiClass :: struct {
 ApiConstant :: struct {
     name:  string `json:"name"`,
     type:  string `json:"type"`,
-    value: int `json:"value"`,
+    value: union { int, string } `json:"value"`,
 }
 
 ApiClassSignal :: struct {
