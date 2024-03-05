@@ -47,6 +47,16 @@ NewStateNativeStructure :: struct {
 NewStateClass :: struct {
     // the name of the struct in generated odin code
     odin_name: string,
+
+    is_builtin: bool,
+    builtin_info: Maybe(NewStateClassBuiltin),
+}
+
+NewStateClassBuiltin :: struct {
+    float_32_size: uint,
+    float_64_size: uint,
+    double_32_size: uint,
+    double_64_size: uint,
 }
 
 NewStateEnum :: struct {
@@ -132,6 +142,16 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
     state.api = api
 
     state.all_types = make(map[string]NewStateType)
+
+    builtin_sizes := make(map[string]map[string]uint, allocator = context.temp_allocator)
+    for size_config in api.builtin_sizes {
+        config_map := make(map[string]uint, allocator = context.temp_allocator)
+        for pair in size_config.sizes {
+            config_map[pair.name] = pair.size
+        }
+        builtin_sizes[size_config.configuration] = config_map
+    }
+    defer free_all(context.temp_allocator)
 
     for c_type, odin_type in new_pod_type_map {
         state.all_types[c_type] = NewStateType {
@@ -257,6 +277,14 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         state_class := NewStateType {
             type = NewStateClass {
                 odin_name = odin_name,
+
+                is_builtin = true,
+                builtin_info = NewStateClassBuiltin {
+                    float_32_size = builtin_sizes["float_32"][api_builtin_class.name],
+                    float_64_size = builtin_sizes["float_64"][api_builtin_class.name],
+                    double_32_size = builtin_sizes["double_32"][api_builtin_class.name],
+                    double_64_size = builtin_sizes["double_64"][api_builtin_class.name],
+                },
             },
 
             odin_type = odin_name,
