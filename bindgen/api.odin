@@ -82,6 +82,7 @@ ApiBuiltinClass :: struct {
     is_keyed:       bool `json:"is_keyed"`,
     has_destructor: bool `json:"has_destructor"`,
     operators:      []ApiClassOperator `json:"operators"`,
+    enums:          []ApiEnum `json:"enums"`,
     methods:        []ApiBuiltinClassMethod `json:"methods"`,
     constructors:   []ApiClassConstructor `json:"constructors"`,
 }
