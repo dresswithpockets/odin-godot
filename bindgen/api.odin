@@ -78,10 +78,10 @@ ApiBuiltinClass :: struct {
     has_destructor:       bool `json:"has_destructor"`,
     indexing_return_type: Maybe(string) `json:"indexing_return_type"`,
     is_keyed:             bool `json:"is_keyed"`,
-    constants:            []ApiConstant `json:"constants"`
+    constants:            []ApiConstant `json:"constants"`,
     constructors:         []ApiClassConstructor `json:"constructors"`,
     enums:                []ApiEnum `json:"enums"`,
-    members:              []ApiClassMember `json:"members"`
+    members:              []ApiClassMember `json:"members"`,
     methods:              []ApiBuiltinClassMethod `json:"methods"`,
     operators:            []ApiClassOperator `json:"operators"`,
 }
@@ -128,7 +128,7 @@ ApiClass :: struct {
 
 ApiConstant :: struct {
     name:  string `json:"name"`,
-    type:  string `json:"type"`
+    type:  string `json:"type"`,
     value: int `json:"value"`,
 }
 
@@ -156,7 +156,7 @@ ApiClassMethod :: struct {
     is_static:          bool `json:"is_static"`,
     is_virtual:         bool `json:"is_virtual"`,
     hash:               i64 `json:"hash"`,
-    hash_compatibility: []i64 `json:"hash_compatibility"`
+    hash_compatibility: []i64 `json:"hash_compatibility"`,
     return_value:       Maybe(ApiClassMethodReturnValue) `json:"return_value"`,
     arguments:          []ApiClassMethodArguments `json:"arguments"`,
 }
