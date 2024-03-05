@@ -26,15 +26,16 @@ NewStateType :: struct {
     type: union {
         NewStateClass,
         NewStateEnum,
-        NewStateNativeType,
+        NewStatePodType,
+        NewStateNativeStructure,
     },
 
     // the name to use when specifying the type in the generated odin code
     odin_type: string,
 }
 
-NewStateNativeType :: struct {
-    odin_type: union {string, NewStateNativeStructure},
+NewStatePodType :: struct {
+    odin_type: string,
 }
 
 NewStateNativeStructure :: struct {
@@ -78,6 +79,53 @@ new_pod_type_map := map[string]string{
     "uint64"   = "u64",
 }
 
+// new_state_godot_type_to_odin :: proc(state: ^NewState, godot_name: string) -> (type: ^NewStateType, ok: bool) {
+//     godot_name := godot_name
+//     if strings.has_prefix(godot_name, "typedarray::") {
+//         godot_name = "Array"
+//     }
+
+//     type, ok = state.all_types[godot_name]
+//     return
+// }
+
+new_state_godot_type_in_map :: proc(state: ^NewState, godot_name: string) -> bool {
+    godot_name := godot_name
+    if strings.has_prefix(godot_name, "typedarray::") {
+        godot_name = "Array"
+    }
+
+    return godot_name in state.all_types
+}
+
+_state_enum :: proc(state: ^NewState, api_enum: ApiEnum, class_name: Maybe(string) = nil) {
+    godot_name := api_enum.name
+
+    // enums in classes must follow the format of "ClassName.EnumName"
+    if cname, has_class_name := class_name.(string); has_class_name {
+        godot_name = fmt.aprintf("%v.%v", cname, godot_name)
+    }
+
+    odin_name := godot_to_odin_case(api_enum.name)
+    state_enum := NewStateType {
+        type = NewStateEnum {
+            odin_name = odin_name,
+        },
+
+        odin_type = odin_name,
+    }
+
+    state.all_types[godot_name] = state_enum
+
+    if api_enum.is_bitfield {
+        godot_name = fmt.aprintf("bitfield::%v", godot_name)
+    } else {
+        godot_name = fmt.aprintf("enum::%v", godot_name)
+    }
+
+    state.all_types[godot_name] = state_enum
+}
+
 create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
     state = new(NewState)
     state.options = options
@@ -87,7 +135,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
 
     for c_type, odin_type in new_pod_type_map {
         state.all_types[c_type] = NewStateType {
-            type = NewStateNativeType {
+            type = NewStatePodType {
                 odin_type = odin_type,
             },
 
@@ -98,7 +146,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         godot_name := fmt.aprintf("%v*", c_type)
         real_odin_type := fmt.aprintf("^%v", odin_type)
         state.all_types[godot_name] = NewStateType {
-            type = NewStateNativeType {
+            type = NewStatePodType {
                 odin_type = real_odin_type,
             },
 
@@ -109,7 +157,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         godot_name = fmt.aprintf("%v **", c_type)
         real_odin_type = fmt.aprintf("^^%v", odin_type)
         state.all_types[godot_name] = NewStateType {
-            type = NewStateNativeType {
+            type = NewStatePodType {
                 odin_type = real_odin_type,
             },
 
@@ -117,10 +165,10 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         }
 
         // const pointer
-        godot_name := fmt.aprintf("const %v*", c_type)
-        real_odin_type := fmt.aprintf("^%v", odin_type)
+        godot_name = fmt.aprintf("const %v*", c_type)
+        real_odin_type = fmt.aprintf("^%v", odin_type)
         state.all_types[godot_name] = NewStateType {
-            type = NewStateNativeType {
+            type = NewStatePodType {
                 odin_type = real_odin_type,
             },
 
@@ -131,7 +179,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         godot_name = fmt.aprintf("const %v **", c_type)
         real_odin_type = fmt.aprintf("^^%v", odin_type)
         state.all_types[godot_name] = NewStateType {
-            type = NewStateNativeType {
+            type = NewStatePodType {
                 odin_type = real_odin_type,
             },
 
@@ -141,8 +189,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
 
     // void pointers
     state.all_types["void*"] = NewStateType {
-        type = NewStateNativeType {
-            pointer_depth = 0,
+        type = NewStatePodType {
             odin_type = "rawptr",
         },
 
@@ -151,8 +198,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
 
     // N.B. in all cases in Godot, double-pointers are buffers
     state.all_types["void**"] = NewStateType {
-        type = NewStateNativeType {
-            pointer_depth = 0,
+        type = NewStatePodType {
             odin_type = "[^]rawptr",
         },
 
@@ -160,8 +206,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
     }
 
     state.all_types["const void*"] = NewStateType {
-        type = NewStateNativeType {
-            pointer_depth = 0,
+        type = NewStatePodType {
             odin_type = "rawptr",
         },
 
@@ -170,8 +215,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
 
     // N.B. in all cases in Godot, double-pointers are buffers
     state.all_types["const void**"] = NewStateType {
-        type = NewStateNativeType {
-            pointer_depth = 0,
+        type = NewStatePodType {
             odin_type = "[^]rawptr",
         },
 
@@ -179,16 +223,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
     }
 
     for api_enum in api.enums {
-        odin_name := godot_to_odin_case(api_enum.name)
-        state_enum := NewStateType {
-            type = NewStateEnum {
-                odin_name = odin_name,
-            },
-
-            odin_name = odin_name,
-        }
-
-        state.all_types[api_enum.name] = state_enum
+        _state_enum(state, api_enum)
     }
 
     for api_builtin_class in api.builtin_classes {
@@ -198,10 +233,23 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
                 odin_name = odin_name,
             },
 
-            odin_name = odin_name,
+            odin_type = odin_name,
         }
 
         state.all_types[api_builtin_class.name] = state_class
+
+        for api_enum in api_builtin_class.enums {
+            _state_enum(state, api_enum, api_builtin_class.name)
+        }
+    }
+
+    // special builtin class Variant
+    state.all_types["Variant"] = NewStateType {
+        type = NewStateClass {
+            odin_name = "Variant",
+        },
+
+        odin_type = "Variant",
     }
 
     for api_class in api.classes {
@@ -211,10 +259,47 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
                 odin_name = odin_name,
             },
 
-            odin_name = odin_name,
+            odin_type = odin_name,
         }
 
         state.all_types[api_class.name] = state_class
+
+        for api_enum in api_class.enums {
+            _state_enum(state, api_enum, api_class.name)
+        }
+    }
+
+    for native_struct in api.native_structs {
+        odin_name := godot_to_odin_case(native_struct.name)
+        state_struct := NewStateType {
+            type = NewStateNativeStructure {
+                odin_name = odin_name,
+            },
+
+            odin_type = odin_name,
+        }
+
+        // pointer
+        godot_name := fmt.aprintf("%v*", native_struct.name)
+        real_odin_type := fmt.aprintf("^%v", odin_name)
+        state.all_types[godot_name] = NewStateType {
+            type = NewStateNativeStructure {
+                odin_name = real_odin_type,
+            },
+
+            odin_type = real_odin_type,
+        }
+
+        // const pointer
+        godot_name = fmt.aprintf("const %v*", native_struct.name)
+        real_odin_type = fmt.aprintf("^%v", odin_name)
+        state.all_types[godot_name] = NewStateType {
+            type = NewStateNativeStructure {
+                odin_name = real_odin_type,
+            },
+
+            odin_type = real_odin_type,
+        }
     }
 
     return
