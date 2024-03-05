@@ -5,7 +5,7 @@ Api :: struct {
     version:         ApiVersion `json:"header"`,
     builtin_sizes:   []ApiBuiltinClassSizes `json:"builtin_class_sizes"`,
     builtin_offsets: []ApiBuiltinClassMemberOffsets `json:"builtin_class_member_offsets"`,
-    constants:       []ApiGlobalConstant `json:"global_constants"`,
+    // global_constants is empty, so it is not parsed in this model
     enums:           []ApiEnum `json:"global_enums"`,
     util_functions:  []ApiUtilityFunction `json:"utility_functions"`,
     builtin_classes: []ApiBuiltinClass `json:"builtin_classes"`,
@@ -25,7 +25,7 @@ ApiVersion :: struct {
 
 ApiBuiltinClassSizes :: struct {
     configuration: string `json:"build_configuration"`,
-    sizes:         []ApiTypeSize,
+    sizes:         []ApiTypeSize `json:"sizes"`,
 }
 
 ApiTypeSize :: struct {
@@ -49,17 +49,13 @@ ApiMemberOffset :: struct {
     meta:   string `json:"meta"`,
 }
 
-ApiGlobalConstant :: struct {}
-
 ApiEnum :: struct {
     name:        string `json:"name"`,
     is_bitfield: bool `json:"is_bitfield"`,
-    values:      []ApiEnumValue `json:"values"`,
-}
-
-ApiEnumValue :: struct {
-    name:  string `json:"name"`,
-    value: int `json:"value"`,
+    values:      []struct {
+        name:  string `json:"name"`,
+        value: int `json:"value"`,
+    } `json:"values"`,
 }
 
 ApiUtilityFunction :: struct {
@@ -78,13 +74,16 @@ ApiFunctionArgument :: struct {
 }
 
 ApiBuiltinClass :: struct {
-    name:           string `json:"name"`,
-    is_keyed:       bool `json:"is_keyed"`,
-    has_destructor: bool `json:"has_destructor"`,
-    operators:      []ApiClassOperator `json:"operators"`,
-    enums:          []ApiEnum `json:"enums"`,
-    methods:        []ApiBuiltinClassMethod `json:"methods"`,
-    constructors:   []ApiClassConstructor `json:"constructors"`,
+    name:                 string `json:"name"`,
+    has_destructor:       bool `json:"has_destructor"`,
+    indexing_return_type: Maybe(string) `json:"indexing_return_type"`,
+    is_keyed:             bool `json:"is_keyed"`,
+    constants:            []ApiConstant `json:"constants"`
+    constructors:         []ApiClassConstructor `json:"constructors"`,
+    enums:                []ApiEnum `json:"enums"`,
+    members:              []ApiClassMember `json:"members"`
+    methods:              []ApiBuiltinClassMethod `json:"methods"`,
+    operators:            []ApiClassOperator `json:"operators"`,
 }
 
 ApiClassOperator :: struct {
@@ -108,11 +107,16 @@ ApiClassConstructor :: struct {
     arguments: []ApiFunctionArgument `json:"arguments"`,
 }
 
+ApiClassMember :: struct {
+    name: string `json:"name"`,
+    type: string `json:"name"`,
+}
+
 ApiClass :: struct {
     name:            string `json:"name"`,
     is_refcounted:   bool `json:"is_refcounted"`,
     is_instantiable: bool `json:"is_instantiable"`,
-    inherits:        string `json:"inherits"`,
+    inherits:        Maybe(string) `json:"inherits"`,
     api_type:        string `json:"api_type"`,
     enums:           []ApiEnum `json:"enums"`,
     constants:       []ApiConstant `json:"constants"`,
@@ -124,6 +128,7 @@ ApiClass :: struct {
 
 ApiConstant :: struct {
     name:  string `json:"name"`,
+    type:  string `json:"type"`
     value: int `json:"value"`,
 }
 
@@ -145,14 +150,15 @@ ApiClassProperty :: struct {
 }
 
 ApiClassMethod :: struct {
-    name:         string `json:"string"`,
-    is_vararg:    bool `json:"is_vararg"`,
-    is_const:     bool `json:"is_const"`,
-    is_static:    bool `json:"is_static"`,
-    is_virtual:   bool `json:"is_virtual"`,
-    hash:         i64 `json:"hash"`,
-    return_value: Maybe(ApiClassMethodReturnValue) `json:"return_value"`,
-    arguments:    []ApiClassMethodArguments `json:"arguments"`,
+    name:               string `json:"string"`,
+    is_vararg:          bool `json:"is_vararg"`,
+    is_const:           bool `json:"is_const"`,
+    is_static:          bool `json:"is_static"`,
+    is_virtual:         bool `json:"is_virtual"`,
+    hash:               i64 `json:"hash"`,
+    hash_compatibility: []i64 `json:"hash_compatibility"`
+    return_value:       Maybe(ApiClassMethodReturnValue) `json:"return_value"`,
+    arguments:          []ApiClassMethodArguments `json:"arguments"`,
 }
 
 ApiClassMethodReturnValue :: struct {
