@@ -36,7 +36,7 @@ call_method_ptr_no_ret :: proc(method: MethodBindPtr, base: ObjectPtr, args: ..T
     object_method_bind_ptrcall(method, base, raw_data(args), cast(TypePtr)nil)
 }
 
-call_method_ptr_ret :: proc(method: MethodBindPtr, base: ObjectPtr, $T: typeid, args: ..TypePtr) -> T {
+call_method_ptr_ret :: proc(method: MethodBindPtr, $T: typeid, base: ObjectPtr, args: ..TypePtr) -> T {
     ret: T
     object_method_bind_ptrcall(method, base, raw_data(args), cast(TypePtr)&ret)
     return ret
