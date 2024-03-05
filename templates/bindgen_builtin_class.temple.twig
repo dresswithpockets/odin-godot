@@ -23,6 +23,7 @@ import "../{{ package_name }}"
 }
 {% end %}
 
+{% embed "bindgen_builtin_class_enums.temple.twig" with this.class %}
 
 {% embed "bindgen_builtin_class_constructors.temple.twig" with this.class %}
 
