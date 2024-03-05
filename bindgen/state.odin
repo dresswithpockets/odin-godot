@@ -4,9 +4,14 @@ package bindgen
 import "core:fmt"
 import "core:strings"
 import "core:thread"
+import "core:slice"
 
 /*
 State is all of the information transformed from the Api input
+
+State calculates the following:
+- odin-case struct, enum, and function names
+- backing-field names for function pointers, default values
 */
 
 @(private)
@@ -14,8 +19,13 @@ State :: struct {
     options:             Options,
     api:                 ^Api,
 
+    // maps the godot type name to the State type
+    all_types:           map[string]StateTypeNew,
+
     // maps a godot type name to the package its in
     type_package_map:    map[string]string,
+    // maps an odin type name to the package its in
+    odin_package_map:    map[string]string,
     // maps a godot type name to an odin type name
     type_odin_names:     map[string]string,
     // maps a godot type name to an odin type's snake case name
@@ -27,6 +37,25 @@ State :: struct {
     // maps a builtin godot type name to builtin class details
     builtin_classes:     map[string]StateBuiltinClass,
     classes:             map[string]StateClass,
+    // maps the full godot name of all enums (including class enums) to StateEnum
+    all_enums:           map[string]^StateEnum,
+}
+
+StateTypeNew :: struct {
+    type: union {
+        ^StateClass,
+        ^StateEnum,
+        ^StateBuiltinClass,
+        ^StateNativeType,
+    }
+}
+
+StateNativeType :: struct {
+    godot_type: string,
+    odin_type: string,
+    pointer_depth: int,
+
+    // TODO: odin_type: union {string, ^StateNativeStructure}
 }
 
 @(private)
@@ -51,6 +80,9 @@ StateEnum :: struct {
     is_bitfield: bool,
     values:      map[string]int,
 
+    // if in a class, the FQGN is ClassName.EnumName, otherwise its just EnumName
+    fully_qualified_godot_name: string,
+
     // processed data used in the temple template
     odin_skip:      bool,
     odin_case_name: string,
@@ -59,15 +91,19 @@ StateEnum :: struct {
 
 @(private)
 StateUtilityFunction :: struct {
-    backing_proc_name: string,
     godot_name:        string,
-    proc_name:         string,
+    // return types are nil for void-returning functions
+    return_type_new:   Maybe(StateTypeNew),
     return_type:       Maybe(StateType),
-    return_type_str:   Maybe(string),
-    category:          string,
     is_vararg:         bool,
     hash:              i64,
     arguments:         []StateFunctionArgument,
+
+    backing_proc_name: string,
+    proc_name:         string,
+    return_type_str:   Maybe(string),
+
+    category:          string,
 }
 
 @(private)
@@ -79,8 +115,9 @@ StateBuiltinClass :: struct {
     godot_name:            string,
     is_keyed:              bool,
     has_destructor:        bool,
+    enums:                 map[string]StateEnum,
     operators:             map[string]StateClassOperator,
-    methods:               map[string]StateBuiltinClassMethod,
+    methods:               map[string]StateFunction,
     base_constructor_name: string,
     constructors:          []StateClassConstructor,
     depends_on_packages:   map[string]bool,
@@ -93,27 +130,43 @@ StateBuiltinClass :: struct {
 StateClass :: struct {
     parent_state: ^State,
 
-    odin_name:    string,
-    snake_name:   string,
-    godot_name:   string,
-    package_name: string,
-    methods:      map[string]StateClassMethod,
+    odin_name:             string,
+    snake_name:            string,
+    godot_name:            string,
+    package_name:          string,
+    enums:                 map[string]StateEnum,
+    methods:               map[string]StateFunction,
+    depends_on_packages:   map[string]bool,
 }
 
-@(private)
-StateClassMethod :: struct {
-    backing_func_name:  string,
+@private
+StateFunction :: struct {
     godot_name:         string,
-    proc_name:          string,
     // return types are nil for void-returning functions
     return_type:        Maybe(StateType),
-    return_type_str:    Maybe(string),
-    is_virtual:         bool,
     is_vararg:          bool,
-    is_const:           bool,
-    is_static:          bool,
     hash:               i64,
     arguments:          []StateFunctionArgument,
+
+    backing_func_name: string,
+    proc_name:         string,
+    return_type_str:   Maybe(string),
+
+    extension: StateFunctionExt
+}
+
+StateFunctionExt :: union { StateFunctionExtClassMethod, StateFunctionExtUtility }
+
+@private
+StateFunctionExtClassMethod :: struct {
+    is_virtual:         bool,
+    is_const:           bool,
+    is_static:          bool,
+}
+
+@private
+StateFunctionExtUtility :: struct {
+    category:          string,
 }
 
 @(private)
@@ -171,6 +224,7 @@ StateClassConstructor :: struct {
 @(private)
 StateFunctionArgument :: struct {
     name:          string,
+    arg_type_new:  StateTypeNew,
     arg_type:      StateType,
     arg_type_str:  string,
     default_value: Maybe(string),
@@ -259,10 +313,14 @@ create_state :: proc(options: Options, api: ^Api) -> (state: ^State) {
     state.options = options
     state.api = api
 
+    state.all_types = make(map[string]StateTypeNew)
+
     _state_size_configurations(state)
     _state_global_enums(state)
     _state_builtin_classes(state)
     _state_classes(state)
+
+    state.type_package_map["Variant"] = "variant"
 
     _state_utility_functions(state)
     _state_builtin_class_members(state)
@@ -296,6 +354,7 @@ _state_global_enums :: proc(state: ^State) {
 
     for api_enum in state.api.enums {
         state_enum := StateEnum {
+            fully_qualified_godot_name = api_enum.name,
             godot_name  = api_enum.name,
             is_bitfield = api_enum.is_bitfield,
             values      = make(map[string]int),
@@ -308,8 +367,17 @@ _state_global_enums :: proc(state: ^State) {
 
         state.enums[api_enum.name] = state_enum
         state.type_package_map[api_enum.name] = "core"
-        state.type_odin_names[api_enum.name] = godot_to_odin_case(api_enum.name)
+        odin_name := godot_to_odin_case(api_enum.name)
+        state.type_package_map[odin_name] = "core"
+        state.type_odin_names[api_enum.name] = odin_name
         state.type_snake_names[api_enum.name] = godot_to_snake_case(api_enum.name)
+    }
+
+    for name, &state_enum in &state.enums {
+        state.all_types[state_enum.fully_qualified_godot_name] = StateTypeNew {
+            type = &state_enum,
+        }
+        state.all_enums[state_enum.fully_qualified_godot_name] = &state_enum
     }
 }
 
@@ -328,6 +396,7 @@ _state_utility_functions :: proc(state: ^State) {
         }
 
         if return_type, ok := function.return_type.(string); ok {
+            state_function.return_type_new = _get_correct_state_type_new(state, return_type)
             state_function.return_type = _get_correct_state_type(state, return_type)
         }
 
@@ -339,6 +408,7 @@ _state_utility_functions :: proc(state: ^State) {
             }
             state_function.arguments[i] = StateFunctionArgument {
                 name          = arg.name,
+                arg_type_new  = _get_correct_state_type_new(state, arg.type),
                 arg_type      = _get_correct_state_type(state, arg.type),
                 default_value = arg.default_value,
             }
@@ -367,6 +437,10 @@ _state_builtin_classes :: proc(state: ^State) {
 
     // cache info about classes first for lookup later
     for class in &state.api.builtin_classes {
+        // we don't want to create classes for natively represented types - it will taint the package map
+        if slice.contains(pod_types, class.name) {
+            continue
+        }
         odin_name := godot_to_odin_case(class.name)
         snake_name := godot_to_snake_case(class.name)
         state.builtin_classes[class.name] = StateBuiltinClass {
@@ -379,8 +453,15 @@ _state_builtin_classes :: proc(state: ^State) {
             base_constructor_name = _builtin_class_constructor_base_proc_name(state, snake_name),
         }
         state.type_package_map[class.name] = "variant"
+        state.odin_package_map[odin_name] = "variant"
         state.type_odin_names[class.name] = odin_name
         state.type_snake_names[class.name] = snake_name
+    }
+
+    for name, &class in &state.builtin_classes {
+        state.all_types[name] = StateTypeNew {
+            type = &class,
+        }
     }
 }
 
@@ -398,21 +479,55 @@ _state_classes :: proc(state: ^State) {
             package_name          = class.api_type,
         }
         state.type_package_map[class.name] = class.api_type
+        state.odin_package_map[odin_name] = class.api_type
         state.type_odin_names[class.name] = odin_name
         state.type_snake_names[class.name] = snake_name
+    }
+
+    for name, &class in &state.builtin_classes {
+        state.all_types[name] = StateTypeNew {
+            type = &class,
+        }
     }
 }
 
 _state_builtin_class_members :: proc(state: ^State) {
+
+    // enums need to be handled in their entirety before any members of each class
     for &class in &state.api.builtin_classes {
-        state_class := &state.builtin_classes[class.name]
-        _state_builtin_class_operators(state, state_class, &class)
-        _state_builtin_class_constructors(state, state_class, &class)
-        state_class.methods = _state_builtin_class_methods(state, &class)
+        if state_class, ok := &state.builtin_classes[class.name]; ok {
+            state_class.enums = _state_builtin_class_enums(state, state_class, &class)
+            for name, &class_enum in &state_class.enums {
+                state.all_types[state_enum.fully_qualified_godot_name] = StateTypeNew {
+                    type = &class_enum,
+                }
+                state.all_enums[state_enum.fully_qualified_godot_name] = &class_enum
+            }
+        }
+    }
+
+    for &class in &state.api.builtin_classes {
+        if state_class, ok := &state.builtin_classes[class.name]; ok {
+            _state_builtin_class_operators(state, state_class, &class)
+            _state_builtin_class_constructors(state, state_class, &class)
+            state_class.methods = _state_builtin_class_methods(state, &class)
+        }
     }
 }
 
 _state_class_members :: proc(state: ^State) {
+    // enums need to be handled in their entirety before any members of each class
+    for &class in &state.api.classes {
+        state_class := &state.classes[class.name]
+        state_class.enums = _state_class_enums(state, state_class, &class)
+        for name, &class_enum in &state_class.enums {
+            state.all_types[state_enum.fully_qualified_godot_name] = StateTypeNew {
+                type = &class_enum,
+            }
+            state.all_enums[state_enum.fully_qualified_godot_name] = &class_enum
+        }
+    }
+
     for &class in &state.api.classes {
         state_class := &state.classes[class.name]
         state_class.methods = _state_class_methods(state, &class)
@@ -570,33 +685,127 @@ _state_class_methods :: proc(
     state: ^State,
     api_class: ^ApiClass,
 ) -> (
-    cons: map[string]StateClassMethod,
+    cons: map[string]StateFunction,
 ) {
-    cons = make(map[string]StateClassMethod)
+    cons = make(map[string]StateFunction)
     for &method in &api_class.methods {
-        state_method := StateClassMethod {
+        state_method := StateFunction {
             godot_name        = method.name,
             backing_func_name = _class_method_backing_func_name(state, api_class, &method),
             proc_name         = _class_method_proc_name(state, api_class, &method),
-            is_virtual        = method.is_virtual,
-            is_const          = method.is_const,
-            is_static         = method.is_static,
             is_vararg         = method.is_vararg,
             hash              = method.hash,
             arguments         = make([]StateFunctionArgument, len(method.arguments)),
+
+            extension = StateFunctionExtClassMethod {
+                is_virtual        = method.is_virtual,
+                is_const          = method.is_const,
+                is_static         = method.is_static,
+            },
         }
         for arg, i in method.arguments {
-            state_method.arguments[i] = StateFunctionArgument {
-                name          = arg.name,
-                arg_type      = _get_correct_state_type(state, arg.type),
+            state_arg := StateFunctionArgument {
+                name          = _fix_arg_name(arg.name),
                 default_value = arg.default_value,
             }
+
+            if meta, has_meta := arg.meta.(string); has_meta {
+                state_arg.arg_type_new = _get_correct_state_type_new(state, meta)
+                state_arg.arg_type = _get_correct_state_type(state, meta)
+            } else {
+                state_arg.arg_type_new = _get_correct_state_type_new(state, arg.type)
+                state_arg.arg_type = _get_correct_state_type(state, arg.type)
+            }
+
+            state_method.arguments[i] = state_arg
         }
-        state_method.return_type = _get_correct_state_type(state, method.return_value.meta.(string) or_else method.return_value.type)
-        // if return_type, has_return_type := method.return_type.(string); has_return_type {
-        //     state_method.return_type = _get_correct_state_type(state, return_type)
-        // }
+        if return_type, has_return := method.return_value.(ApiClassMethodReturnValue); has_return && return_type.type != "void" {
+            if meta, has_meta := return_type.meta.(string); has_meta {
+                state_method.return_type_new = _get_correct_state_type_new(state, meta)
+                state_method.return_type = _get_correct_state_type(state, meta)
+            } else {
+                state_method.return_type_new = _get_correct_state_type_new(state, return_type.type)
+                state_method.return_type = _get_correct_state_type(state, return_type.type)
+            }
+        }
         cons[method.name] = state_method
+    }
+    return
+}
+
+get_class_enum_godot_name :: proc(class: ^StateClass, _enum: ^StateEnum) -> string {
+    return fmt.tprintf("%v.%v", class.godot_name, _enum.godot_name)
+}
+
+_state_builtin_class_enums :: proc(
+    state: ^State,
+    state_class: ^StateBuiltinClass,
+    api_class: ^ApiBuiltinClass
+) -> (
+    state_enums: map[string]StateEnum,
+)  {
+    state_enums = make(map[string]StateEnum)
+    for api_enum in api_class.enums {
+        godot_name := fmt.tprintf("%v.%v", api_class.name, api_enum.name)
+        odin_name := godot_to_odin_case(api_enum.name)
+        odin_name = fmt.tprintf("%v_%v", state_class.odin_name, odin_name)
+        snake_name := godot_to_snake_case(api_enum.name)
+        snake_name = fmt.tprintf("%v_%v", state_class.snake_name, snake_name)
+
+        state_enum := StateEnum {
+            fully_qualified_godot_name = api_enum.name,
+            godot_name  = api_enum.name,
+            is_bitfield = api_enum.is_bitfield,
+            values      = make(map[string]int),
+            odin_values = make(map[string]int),
+        }
+
+        for value in api_enum.values {
+            state_enum.values[value.name] = value.value
+        }
+
+        state_enums[godot_name] = state_enum
+        state.type_package_map[godot_name] = "variant"
+        state.type_package_map[odin_name] = "variant"
+        state.type_odin_names[godot_name] = odin_name
+        state.type_snake_names[godot_name] = snake_name
+    }
+    return
+}
+
+_state_class_enums :: proc(
+    state: ^State,
+    state_class: ^StateClass,
+    api_class: ^ApiClass
+) -> (
+    state_enums: map[string]StateEnum,
+)  {
+    state_enums = make(map[string]StateEnum)
+    for api_enum in api_class.enums {
+        godot_name := fmt.tprintf("%v.%v", api_class.name, api_enum.name)
+        odin_name := godot_to_odin_case(api_enum.name)
+        odin_name = fmt.tprintf("%v_%v", state_class.odin_name, odin_name)
+        snake_name := godot_to_snake_case(api_enum.name)
+        snake_name = fmt.tprintf("%v_%v", state_class.snake_name, snake_name)
+
+        state_enum := StateEnum {
+            godot_name  = api_enum.name,
+            is_bitfield = api_enum.is_bitfield,
+            values      = make(map[string]int),
+            odin_values = make(map[string]int),
+
+            fully_qualified_godot_name = fmt.aprintf("%v.%v", api_class.name, api_enum.name),
+        }
+
+        for value in api_enum.values {
+            state_enum.values[value.name] = value.value
+        }
+
+        state_enums[godot_name] = state_enum
+        state.type_package_map[godot_name] = api_class.api_type
+        state.type_package_map[odin_name] = api_class.api_type
+        state.type_odin_names[godot_name] = odin_name
+        state.type_snake_names[godot_name] = snake_name
     }
     return
 }
@@ -658,7 +867,7 @@ _state_builtin_class_methods :: proc(
         }
         for arg, i in method.arguments {
             state_method.arguments[i] = StateFunctionArgument {
-                name          = arg.name,
+                name          = _fix_arg_name(arg.name),
                 arg_type      = _get_correct_state_type(state, arg.type),
                 default_value = arg.default_value,
             }
@@ -744,11 +953,98 @@ _builtin_class_constructor_proc_name :: proc(
     return
 }
 
+_fix_arg_name :: proc(name: string) -> string {
+    switch name {
+        case "enum": return "_enum"
+        case "in": return "_in"
+        case "map": return "_map"
+        case "context": return "_context"
+        case "variant": return "_variant"
+    }
+
+    return name
+}
+
+_get_correct_class_arg_type_name :: proc(name: string) -> (arg_type: string) {
+    arg_type = name
+    // TODO: generate enums/bitfields as enums in each class with ClassName_EnumName type name
+    if strings.has_prefix(arg_type, "typedarray::") {
+        // TODO: add support for polymorphic Array type which explicitly declares the contained type
+        arg_type = "Array"
+    } else if strings.has_prefix(arg_type, "enum::") {
+        // arg_type should be the Godot Name of this enum (format of GodotClassName.GodotEnumName)
+        // so, it should be picked up by _get_correct_class_odin_name
+        arg_type = arg_type[len("enum::"):]
+        // dot_index := strings.index_rune(arg_type, '.')
+        // if dot_index != -1 {
+        //     arg_type, _ = strings.replace(arg_type, ".", "_", -1)
+        // }
+        // if strings.contains_rune(arg_type, '.') {
+        //     arg_type, _ = strings.replace(arg_type, ".", "_", -1)
+        // }
+    } else if strings.has_prefix(arg_type, "bitfield::") {
+        // arg_type should be the Godot Name of this enum (format of GodotClassName.GodotEnumName)
+        // so, it should be picked up by _get_correct_class_odin_name
+        arg_type = arg_type[len("bitfield::"):]
+
+        // if strings.contains_rune(arg_type, '.') {
+        //     arg_type, _ = strings.replace(arg_type, ".", "_", -1)
+        // }
+    } else if strings.has_suffix(arg_type, "*") {
+        if strings.has_prefix(arg_type, "const") {
+            arg_type = arg_type[len("const "):]
+        }
+
+        // this is a bit hacky, it assumes that all of the *'s are at the end of the type
+        // which seems to be the case in the current API spec
+        pointer_count := strings.count(arg_type, "*")
+
+        if strings.contains_rune(arg_type, ' ') {
+            space_index := strings.index_rune(arg_type, ' ')
+            arg_type = arg_type[:space_index]
+        } else {
+            ptr_index := strings.index_rune(arg_type, '*')
+            arg_type = arg_type[:ptr_index]
+        }
+
+        if pod_type, is_pod := pod_type_map[arg_type]; is_pod {
+            arg_type = pod_type
+        }
+
+        arg_type = fmt.tprintf("%v%v", strings.repeat("^", pointer_count), arg_type)
+    }
+
+    return
+}
+
+_get_correct_state_type_new :: proc(state: ^State, godot_name: string) -> (state_type: StateTypeNew) {
+    arg_type = name
+    if strings.has_prefix(arg_type, "typedarray::") {
+        // TODO: add support for polymorphic Array type which explicitly declares the contained type
+        arg_type = "Array"
+    } else if strings.has_prefix(arg_type, "enum::") {
+        // arg_type should be the Godot Name of this enum (format of GodotClassName.GodotEnumName)
+        // so, it should be picked up by _get_correct_class_odin_name
+        arg_type = arg_type[len("enum::"):]
+    } else if strings.has_prefix(arg_type, "bitfield::") {
+        // arg_type should be the Godot Name of this enum (format of GodotClassName.GodotEnumName)
+        // so, it should be picked up by _get_correct_class_odin_name
+        arg_type = arg_type[len("bitfield::"):]
+    } else if strings.has_suffix(arg_type, "*") {
+        // TODO: pointers
+    }
+
+    return state.all_types[arg_type]
+}
+
 _get_correct_state_type :: proc(state: ^State, godot_name: string) -> (state_type: StateType) {
+
+    adjusted_special_name := _get_correct_class_arg_type_name(godot_name)
+
     state_type.pod_type   = nil
-    state_type.odin_type  = _get_correct_class_odin_name(state, godot_name)
-    state_type.snake_type = _get_correct_class_snake_name(state, godot_name)
-    state_type.godot_type = godot_name
+    state_type.odin_type  = _get_correct_class_odin_name(state, adjusted_special_name)
+    state_type.snake_type = _get_correct_class_snake_name(state, adjusted_special_name)
+    state_type.godot_type = adjusted_special_name
     state_type.prio_type  = state_type.odin_type
 
     if pod_type, ok := pod_type_map[godot_name]; ok {
