@@ -62,6 +62,7 @@ NewStateClassBuiltin :: struct {
 NewStateEnum :: struct {
     // the name of the enum in generated odin code
     odin_name: string,
+    is_global: bool,
 }
 
 @private
@@ -120,6 +121,7 @@ _state_enum :: proc(state: ^NewState, api_enum: ApiEnum, class_name: Maybe(strin
     state_enum := NewStateType {
         type = NewStateEnum {
             odin_name = odin_name,
+            is_global = class_name == nil,
         },
 
         odin_type = odin_name,
