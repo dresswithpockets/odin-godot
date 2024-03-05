@@ -1,0 +1,10 @@
+{% for name, class_enum in this.enums %}
+{% if !class_enum.odin_skip %}
+{{ class_enum.odin_case_name }} :: enum {
+{% for value_name, value in class_enum.odin_values %}
+    {{ value_name }} = {{ int(value) }},
+{% end %}
+}
+{% end %}
+
+{% end %}
