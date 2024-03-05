@@ -254,6 +254,14 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         state_class := NewStateType {
             type = NewStateClass {
                 odin_name = odin_name,
+
+                is_builtin = true,
+                builtin_info = NewStateClassBuiltin {
+                    float_32_size = builtin_sizes["float_32"][api_builtin_class.name],
+                    float_64_size = builtin_sizes["float_64"][api_builtin_class.name],
+                    double_32_size = builtin_sizes["double_32"][api_builtin_class.name],
+                    double_64_size = builtin_sizes["double_64"][api_builtin_class.name],
+                },
             },
 
             odin_type = odin_name,
@@ -280,14 +288,6 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         state_class := NewStateType {
             type = NewStateClass {
                 odin_name = odin_name,
-
-                is_builtin = true,
-                builtin_info = NewStateClassBuiltin {
-                    float_32_size = builtin_sizes["float_32"][api_builtin_class.name],
-                    float_64_size = builtin_sizes["float_64"][api_builtin_class.name],
-                    double_32_size = builtin_sizes["double_32"][api_builtin_class.name],
-                    double_64_size = builtin_sizes["double_64"][api_builtin_class.name],
-                },
             },
 
             odin_type = odin_name,
