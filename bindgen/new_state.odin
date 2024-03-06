@@ -19,7 +19,7 @@ NewState :: struct {
     api:                 ^Api,
 
     // a type map to resolve types from full type names
-    all_types: map[string]NewStateType
+    all_types: map[string]^NewStateType,
 }
 
 NewStateType :: struct {
@@ -118,13 +118,14 @@ _state_enum :: proc(state: ^NewState, api_enum: ApiEnum, class_name: Maybe(strin
     }
 
     odin_name := godot_to_odin_case(api_enum.name)
-    state_enum := NewStateType {
-        type = NewStateEnum {
+    state_enum := new(NewStateType)
+    {
+        state_enum.type = NewStateEnum {
             odin_name = odin_name,
             is_global = class_name == nil,
-        },
+        }
 
-        odin_type = odin_name,
+        state_enum.odin_type = odin_name
     }
 
     state.all_types[godot_name] = state_enum
@@ -136,7 +137,7 @@ _state_enum :: proc(state: ^NewState, api_enum: ApiEnum, class_name: Maybe(strin
     }
 
     state.all_types[godot_name] = state_enum
-    return &state.all_types[godot_name]
+    return state_enum
 }
 
 create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
@@ -144,7 +145,13 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
     state.options = options
     state.api = api
 
-    state.all_types = make(map[string]NewStateType)
+    // TODO: make all_types map to ^NewStateType instead - we dont want all_types to own the memory of all of the NewStateTypes
+
+    state.all_types = make(map[string]^NewStateType)
+    state.global_enums = make([]^NewStateType, len(api.enums))
+    state.builtin_classes = make([]^NewStateType, len(api.builtin_classes))
+    state.classes = make([]^NewStateType, len(api.classes))
+    state.native_structs = make([]^NewStateType, len(api.native_structs))
 
     builtin_sizes := make(map[string]map[string]uint, allocator = context.temp_allocator)
     for size_config in api.builtin_sizes {
@@ -157,114 +164,112 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
     defer free_all(context.temp_allocator)
 
     for c_type, odin_type in new_pod_type_map {
-        state.all_types[c_type] = NewStateType {
-            type = NewStatePodType {
+        {
+            state_type := new(NewStateType)
+            state_type.odin_type = odin_type
+            state_type.type = NewStatePodType {
                 odin_type = odin_type,
-            },
+            }
 
-            odin_type = odin_type,
+            state.all_types[c_type] = state_type
         }
 
         // pointer
-        godot_name := fmt.aprintf("%v*", c_type)
-        real_odin_type := fmt.aprintf("^%v", odin_type)
-        state.all_types[godot_name] = NewStateType {
-            type = NewStatePodType {
+        {
+            // all single-pointers have no space between the base type and the star
+            godot_name := fmt.aprintf("%v*", c_type)
+            real_odin_type := fmt.aprintf("^%v", odin_type)
+            state_type := new(NewStateType)
+            state_type.odin_type = real_odin_type
+            state_type.type = NewStatePodType {
                 odin_type = real_odin_type,
-            },
+            }
 
-            odin_type = real_odin_type,
+            state.all_types[godot_name] = state_type
         }
 
         // double pointer
-        godot_name = fmt.aprintf("%v **", c_type)
-        real_odin_type = fmt.aprintf("^^%v", odin_type)
-        state.all_types[godot_name] = NewStateType {
-            type = NewStatePodType {
+        {
+            // all double-pointers have a space between the base type and the stars
+            godot_name := fmt.aprintf("%v **", c_type)
+            real_odin_type := fmt.aprintf("^^%v", odin_type)
+            state_type := new(NewStateType)
+            state_type.odin_type = real_odin_type
+            state_type.type = NewStatePodType {
                 odin_type = real_odin_type,
-            },
+            }
 
-            odin_type = real_odin_type,
+            state.all_types[godot_name] = state_type
         }
 
         // const pointer
-        godot_name = fmt.aprintf("const %v*", c_type)
-        real_odin_type = fmt.aprintf("^%v", odin_type)
-        state.all_types[godot_name] = NewStateType {
-            type = NewStatePodType {
+        {
+            // all single-pointers have no space between the base type and the star
+            godot_name := fmt.aprintf("const %v*", c_type)
+            real_odin_type := fmt.aprintf("^%v", odin_type)
+            state_type := new(NewStateType)
+            state_type.odin_type = real_odin_type
+            state_type.type = NewStatePodType {
                 odin_type = real_odin_type,
-            },
+            }
 
-            odin_type = real_odin_type,
+            state.all_types[godot_name] = state_type
         }
 
         // const double pointer
-        godot_name = fmt.aprintf("const %v **", c_type)
-        real_odin_type = fmt.aprintf("^^%v", odin_type)
-        state.all_types[godot_name] = NewStateType {
-            type = NewStatePodType {
+        {
+            // all double-pointers have a space between the base type and the stars
+            godot_name := fmt.aprintf("const %v **", c_type)
+            real_odin_type := fmt.aprintf("^^%v", odin_type)
+            state_type := new(NewStateType)
+            state_type.odin_type = real_odin_type
+            state_type.type = NewStatePodType {
                 odin_type = real_odin_type,
-            },
+            }
 
-            odin_type = real_odin_type,
+            state.all_types[godot_name] = state_type
         }
     }
 
-    // void pointers
-    state.all_types["void*"] = NewStateType {
-        type = NewStatePodType {
+    // void pointer
+    {
+        state_type := new(NewStateType)
+        state_type.odin_type = "rawptr"
+        state_type.type = NewStatePodType {
             odin_type = "rawptr",
-        },
+        }
 
-        odin_type = "rawptr",
+        state.all_types["void*"] = state_type
     }
 
-    // N.B. in all cases in Godot, double-pointers are buffers
-    state.all_types["void**"] = NewStateType {
-        type = NewStatePodType {
-            odin_type = "[^]rawptr",
-        },
-
-        odin_type = "[^]rawptr",
-    }
-
-    state.all_types["const void*"] = NewStateType {
-        type = NewStatePodType {
+    {
+        state_type := new(NewStateType)
+        state_type.odin_type = "rawptr"
+        state_type.type = NewStatePodType {
             odin_type = "rawptr",
-        },
+        }
 
-        odin_type = "rawptr",
+        state.all_types["const void*"] = state_type
     }
 
-    // N.B. in all cases in Godot, double-pointers are buffers
-    state.all_types["const void**"] = NewStateType {
-        type = NewStatePodType {
-            odin_type = "[^]rawptr",
-        },
-
-        odin_type = "[^]rawptr",
-    }
-
-    for api_enum in api.enums {
-        _state_enum(state, api_enum)
+    for api_enum, i in api.enums {
+        enum_type := _state_enum(state, api_enum)
     }
 
     for api_builtin_class in api.builtin_classes {
         odin_name := godot_to_odin_case(api_builtin_class.name)
-        state_class := NewStateType {
-            type = NewStateClass {
-                odin_name = odin_name,
+        state_class := new(NewStateType)
+        state_class.odin_type = odin_name
+        state_class.type = NewStateClass {
+            odin_name = odin_name,
 
-                is_builtin = true,
-                builtin_info = NewStateClassBuiltin {
-                    float_32_size = builtin_sizes["float_32"][api_builtin_class.name],
-                    float_64_size = builtin_sizes["float_64"][api_builtin_class.name],
-                    double_32_size = builtin_sizes["double_32"][api_builtin_class.name],
-                    double_64_size = builtin_sizes["double_64"][api_builtin_class.name],
-                },
+            is_builtin = true,
+            builtin_info = NewStateClassBuiltin {
+                float_32_size = builtin_sizes["float_32"][api_builtin_class.name],
+                float_64_size = builtin_sizes["float_64"][api_builtin_class.name],
+                double_32_size = builtin_sizes["double_32"][api_builtin_class.name],
+                double_64_size = builtin_sizes["double_64"][api_builtin_class.name],
             },
-
-            odin_type = odin_name,
         }
 
         state.all_types[api_builtin_class.name] = state_class
@@ -275,22 +280,22 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
     }
 
     // special builtin class Variant
-    state.all_types["Variant"] = NewStateType {
-        type = NewStateClass {
+    {
+        state_type := new(NewStateType)
+        state_type.odin_type = "Variant"
+        state_type.type = NewStateClass {
             odin_name = "Variant",
-        },
+        }
 
-        odin_type = "Variant",
+        state.all_types["Variant"] = state_type
     }
 
     for api_class in api.classes {
         odin_name := godot_to_odin_case(api_class.name)
-        state_class := NewStateType {
-            type = NewStateClass {
-                odin_name = odin_name,
-            },
-
-            odin_type = odin_name,
+        state_class := new(NewStateType)
+        state_class.odin_type = odin_name
+        state_class.type = NewStateClass {
+            odin_name = odin_name,
         }
 
         state.all_types[api_class.name] = state_class
@@ -302,34 +307,37 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
 
     for native_struct in api.native_structs {
         odin_name := godot_to_odin_case(native_struct.name)
-        state_struct := NewStateType {
-            type = NewStateNativeStructure {
+        {
+            state_struct := new(NewStateType)
+            state_struct.odin_type = odin_name
+            state_struct.type = NewStateNativeStructure {
                 odin_name = odin_name,
-            },
-
-            odin_type = odin_name,
+            }
+            state.all_types[native_struct.name] = state_struct
         }
 
         // pointer
-        godot_name := fmt.aprintf("%v*", native_struct.name)
-        real_odin_type := fmt.aprintf("^%v", odin_name)
-        state.all_types[godot_name] = NewStateType {
-            type = NewStateNativeStructure {
+        {
+            godot_name := fmt.aprintf("%v*", native_struct.name)
+            real_odin_type := fmt.aprintf("^%v", odin_name)
+            state_struct := new(NewStateType)
+            state_struct.odin_type = real_odin_type
+            state_struct.type = NewStateNativeStructure {
                 odin_name = real_odin_type,
-            },
-
-            odin_type = real_odin_type,
+            }
+            state.all_types[godot_name] = state_struct
         }
 
         // const pointer
-        godot_name = fmt.aprintf("const %v*", native_struct.name)
-        real_odin_type = fmt.aprintf("^%v", odin_name)
-        state.all_types[godot_name] = NewStateType {
-            type = NewStateNativeStructure {
+        {
+            godot_name := fmt.aprintf("const %v*", native_struct.name)
+            real_odin_type := fmt.aprintf("^%v", odin_name)
+            state_struct := new(NewStateType)
+            state_struct.odin_type = real_odin_type
+            state_struct.type = NewStateNativeStructure {
                 odin_name = real_odin_type,
-            },
-
-            odin_type = real_odin_type,
+            }
+            state.all_types[godot_name] = state_struct
         }
     }
 
