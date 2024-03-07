@@ -235,8 +235,6 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
     state.options = options
     state.api = api
 
-    // TODO: make all_types map to ^NewStateType instead - we dont want all_types to own the memory of all of the NewStateTypes
-
     state.all_types = make(map[string]^NewStateType)
     state.global_enums = make([]^NewStateType, len(api.enums))
     state.builtin_classes = make([]^NewStateType, len(api.builtin_classes))
