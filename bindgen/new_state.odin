@@ -20,6 +20,11 @@ NewState :: struct {
 
     // a type map to resolve types from full type names
     all_types: map[string]^NewStateType,
+
+    global_enums:    []^NewStateType,
+    builtin_classes: []^NewStateType,
+    classes:         []^NewStateType,
+    native_structs:  []^NewStateType,
 }
 
 NewStateType :: struct {
@@ -32,6 +37,8 @@ NewStateType :: struct {
 
     // the name to use when specifying the type in the generated odin code
     odin_type: string,
+
+    odin_skip: bool,
 }
 
 NewStatePodType :: struct {
@@ -62,7 +69,24 @@ NewStateClassBuiltin :: struct {
 NewStateEnum :: struct {
     // the name of the enum in generated odin code
     odin_name: string,
-    is_global: bool,
+
+    // the ordered key-value pairs of all enum values
+    odin_values: []NewStateEnumValue
+}
+
+NewStateEnumValue :: struct {
+    name: string,
+    value: int,
+}
+
+// some enums are pre-implemented in the gdextension package, and should be skipped
+// during generation
+@private
+skip_enums_by_name :: []string{"Variant.Operator", "Variant.Type"}
+
+@private
+enum_prefix_alias := map[string]string {
+    "Error" = "Err",
 }
 
 @private
@@ -118,17 +142,83 @@ _state_enum :: proc(state: ^NewState, api_enum: ApiEnum, class_name: Maybe(strin
     }
 
     odin_name := godot_to_odin_case(api_enum.name)
-    state_enum := new(NewStateType)
-    {
-        state_enum.type = NewStateEnum {
-            odin_name = odin_name,
-            is_global = class_name == nil,
-        }
+    state_type := new(NewStateType)
+    state_type.odin_type = odin_name
+    state_enum := NewStateEnum {
+        odin_name = odin_name,
+        odin_values = make([]NewStateEnumValue, len(api_enum.values)),
+    }
+    state_type.type = state_enum
 
-        state_enum.odin_type = odin_name
+    // we skip over some enums by name, such as those pre-implemented in gdextension
+    state_type.odin_skip = slice.contains(skip_enums_by_name, api_enum.name)
+
+    // godot's enums use CONST_CASE for their values, and usually
+    // have a prefix. e.e `GDExtensionVariantType` uses the prefix
+    // `GDEXTENSION_VARIANT_TYPE_`. The prefix gets stripped before
+    // the value is generated in odin.
+    const_case_prefix := odin_to_const_case(odin_name)
+    defer delete(const_case_prefix)
+
+    // gotta do all of that for the prefix alias if there is one
+    prefix_alias, has_alias := enum_prefix_alias[api_enum.name]
+    const_case_prefix_alias: string
+    if has_alias {
+        const_case_prefix_alias = odin_to_const_case(prefix_alias)
+    }
+    defer if has_alias {
+        delete(const_case_prefix_alias)
     }
 
-    state.all_types[godot_name] = state_enum
+    // godot has a convention for "Flags" enums, where the prefix used
+    // by values isn't always plural. e.g `MethodFlags` has 
+    // `METHOD_FLAG_NORMAL`, as well as `METHOD_FLAGS_DEFAULT`.
+    // The latter will get caught by const_case_prefix, but we also
+    // need to have a prefix for the singular variation of the prefix
+    is_flags := strings.has_suffix(api_enum.name, "Flags")
+    flag_prefix: string
+    without_flags_prefix: string
+    if is_flags {
+        // chops off the s at the end
+        flag_prefix = const_case_prefix[:len(const_case_prefix) - 1]
+        // also a variation for enums where the "FLAGS_" portion of the
+        // value prefix is completely dropped. e.g `PropertyUsageFlags`
+        // uses the prefix `PROPERTY_USAGE_` instead of `PROPERTY_USAGE_FLAG`
+        without_flags_prefix = const_case_prefix[:len(const_case_prefix) - 5]
+    }
+
+    for value, i in api_enum.values {
+        name := value.name
+        if len(name) != len(const_case_prefix) {
+            name = strings.trim_prefix(name, const_case_prefix)
+        }
+
+        if has_alias && len(name) != len(const_case_prefix_alias) {
+            name = strings.trim_prefix(name, const_case_prefix_alias)
+        }
+
+        if is_flags {
+            if len(name) != len(flag_prefix) {
+                name = strings.trim_prefix(name, flag_prefix)
+            }
+
+            if len(name) != len(without_flags_prefix) {
+                name = strings.trim_prefix(name, without_flags_prefix)
+            }
+        }
+
+        // we might have a lingering _ after we removed the prefix
+        if name[0] == '_' && len(name) > 1 {
+            name = name[1:]
+        }
+        name = const_to_odin_case(name)
+        state_enum.odin_values[i] = NewStateEnumValue {
+            name = name,
+            value = value.value,
+        }
+    }
+
+    state.all_types[godot_name] = state_type
 
     if api_enum.is_bitfield {
         godot_name = fmt.aprintf("bitfield::%v", godot_name)
@@ -136,8 +226,8 @@ _state_enum :: proc(state: ^NewState, api_enum: ApiEnum, class_name: Maybe(strin
         godot_name = fmt.aprintf("enum::%v", godot_name)
     }
 
-    state.all_types[godot_name] = state_enum
-    return state_enum
+    state.all_types[godot_name] = state_type
+    return state_type
 }
 
 create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
@@ -254,6 +344,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
 
     for api_enum, i in api.enums {
         enum_type := _state_enum(state, api_enum)
+        state.global_enums[i] = enum_type
     }
 
     for api_builtin_class in api.builtin_classes {

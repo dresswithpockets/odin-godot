@@ -11,17 +11,13 @@ import "core:sync"
 import "core:thread"
 import "base:runtime"
 
+@(private="file")
+UNIX_ALLOW_READ_WRITE_ALL :: 0o666
+
 constructor_type :: "gdextension.PtrConstructor"
 destructor_type :: "gdextension.PtrDestructor"
 operator_evaluator_type :: "gdextension.PtrOperatorEvaluator"
 builtin_method_type :: "gdextension.PtrBuiltInMethod"
-
-// these are already in gdextension
-ignore_enums_by_name :: []string{"Variant.Operator", "Variant.Type"}
-
-enum_prefix_alias := map[string]string {
-    "Error" = "Err",
-}
 
 pod_types :: []string{
     "Nil",
@@ -84,6 +80,23 @@ native_odin_types :: []string {
 }
 
 types_with_odin_string_constructors :: []string{"String", "StringName"}
+
+@private
+generate_global_enums :: proc(state: ^NewState) {
+    fhandle, ferr := os.open("core/enums.gen.odin", os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
+    if ferr != 0 {
+        fmt.eprintf("Error opening core/enums.gen.odin\n")
+        return
+    }
+    defer os.close(fhandle)
+
+    fstream := os.stream_from_handle(fhandle)
+    global_enums_template.with(fstream, state)
+}
+
+generate_bindings :: proc(state: ^NewState) {
+    generate_global_enums(state)
+}
 
 /*
     Copyright 2023 Dresses Digital
