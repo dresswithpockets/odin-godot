@@ -1,6 +1,6 @@
 package bindgen
 
-enums_template := temple_compiled("../templates/bindgen_global_enums.temple.twig", ^NewState)
+global_enums_template := temple_compiled("../templates/bindgen_global_enums.temple.twig", ^NewState)
 // util_template := temple.compiled("../templates/bindgen_util.temple.twig", ^State)
 // variant_builtin_template := temple.compiled("../templates/bindgen_variant.temple.twig", ^State)
 // builtin_class_template := temple.compiled("../templates/bindgen_builtin_class.temple.twig", BuiltinClassStatePair)
