@@ -11,6 +11,7 @@ temple_cli_out := $(OUT_DIR)/temple_cli$(exe_suffix)
 bindgen_dir := bindgen/
 bindgen_deps := $(wildcard $(bindgen_dir)/*.odin) $(wildcard temple/*.odin)
 bindgen_out := $(OUT_DIR)/bindgen$(exe_suffix)
+debug_bindgen_out := $(OUT_DIR)/bindgen_debug$(exe_suffix)
 
 temple_dir := temple
 temple_deps := $(wildcard templates/*.temple.twig) $(bindgen_dir)/temple.odin
@@ -19,6 +20,9 @@ gdextension_api := ./godot-cpp/gdextension/extension_api.json
 
 bindings: $(bindgen_out) $(gdextension_api)
 	$(bindgen_out) $(gdextension_api)
+
+debug_bindings: $(debug_bindgen_out) $(gdextension_api)
+	$(debug_bindgen_out) $(gdextension_api)
 
 ### temple
 $(temple_cli_out): $(temple_cli_deps)
@@ -39,6 +43,11 @@ $(bindgen_out): $(bindgen_deps)
 	odin build $(bindgen_dir) -out:$(bindgen_out) -o:speed -show-timings
 bindgen: $(bindgen_deps)
 	odin build $(bindgen_dir) -out:$(bindgen_out) -o:speed -show-timings
+
+$(debug_bindgen_out): $(bindgen_deps)
+	odin build $(bindgen_dir) -out:$(debug_bindgen_out) -show-timings -debug
+debug_bindgen: $(bindgen_deps)
+	odin build $(bindgen_dir) -out:$(debug_bindgen_out) -show-timings -debug
 ###
 
 .PHONY: clean
