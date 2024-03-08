@@ -55,6 +55,8 @@ NewStateClass :: struct {
     // the name of the struct in generated odin code
     odin_name: string,
 
+    enums: []^NewStateType,
+
     is_builtin: bool,
     builtin_info: Maybe(NewStateClassBuiltin),
 }
@@ -87,6 +89,25 @@ skip_enums_by_name :: []string{"Variant.Operator", "Variant.Type"}
 @private
 enum_prefix_alias := map[string]string {
     "Error" = "Err",
+}
+
+@private
+skip_builtin_types_by_name :: []string{
+    "Nil",
+    "void",
+    "bool",
+    "real_t",
+    "float",
+    "double",
+    "int",
+    "int8_t",
+    "uint8_t",
+    "int16_t",
+    "uint16_t",
+    "int32_t",
+    "int64_t",
+    "uint32_t",
+    "uint64_t",
 }
 
 @private
@@ -135,13 +156,17 @@ new_state_godot_type_in_map :: proc(state: ^NewState, godot_name: string) -> boo
 
 _state_enum :: proc(state: ^NewState, api_enum: ApiEnum, class_name: Maybe(string) = nil) -> ^NewStateType {
     godot_name := api_enum.name
+    odin_name := godot_name
 
     // enums in classes must follow the format of "ClassName.EnumName"
+    // and the odin name must follow the foramt of "ClassName_EnumName"
     if cname, has_class_name := class_name.(string); has_class_name {
+        odin_name = godot_to_odin_case(fmt.aprintf("%v_%v", cname, godot_name))
         godot_name = fmt.aprintf("%v.%v", cname, godot_name)
+    } else {
+        odin_name = godot_to_odin_case(godot_name)
     }
 
-    odin_name := godot_to_odin_case(api_enum.name)
     state_type := new(NewStateType)
     state_type.odin_type = odin_name
     state_enum := NewStateEnum {
@@ -345,12 +370,15 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         state.global_enums[i] = enum_type
     }
 
-    for api_builtin_class in api.builtin_classes {
+    for api_builtin_class, i in api.builtin_classes {
         odin_name := godot_to_odin_case(api_builtin_class.name)
-        state_class := new(NewStateType)
-        state_class.odin_type = odin_name
-        state_class.type = NewStateClass {
+        state_type := new(NewStateType)
+        state_type.odin_type = odin_name
+        state_type.odin_skip = slice.contains(skip_builtin_types_by_name, api_builtin_class.name)
+        state_class := NewStateClass {
             odin_name = odin_name,
+
+            enums = make([]^NewStateType, len(api_builtin_class.enums)),
 
             is_builtin = true,
             builtin_info = NewStateClassBuiltin {
@@ -360,11 +388,14 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
                 double_64_size = builtin_sizes["double_64"][api_builtin_class.name],
             },
         }
+        state_type.type = state_class
 
-        state.all_types[api_builtin_class.name] = state_class
+        state.all_types[api_builtin_class.name] = state_type
+        state.builtin_classes[i] = state_type
 
-        for api_enum in api_builtin_class.enums {
-            _state_enum(state, api_enum, api_builtin_class.name)
+        for api_enum, i in api_builtin_class.enums {
+            state_enum := _state_enum(state, api_enum, api_builtin_class.name)
+            state_class.enums[i] = state_enum
         }
     }
 

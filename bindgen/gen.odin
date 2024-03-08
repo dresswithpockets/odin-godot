@@ -5,6 +5,7 @@ import "core:fmt"
 import "core:os"
 import "core:slice"
 import "core:strings"
+import "core:path/filepath"
 import "core:strconv"
 import "core:io"
 import "core:sync"
@@ -18,51 +19,6 @@ constructor_type :: "gdextension.PtrConstructor"
 destructor_type :: "gdextension.PtrDestructor"
 operator_evaluator_type :: "gdextension.PtrOperatorEvaluator"
 builtin_method_type :: "gdextension.PtrBuiltInMethod"
-
-pod_types :: []string{
-    "Nil",
-    "void",
-    "bool",
-    "real_t",
-    "float",
-    "double",
-    "int",
-    "int8_t",
-    "uint8_t",
-    "int16_t",
-    "uint16_t",
-    "int32_t",
-    "int64_t",
-    "uint32_t",
-    "uint64_t",
-}
-
-pod_type_map := map[string]string{
-    "bool"     = "bool",
-    "real_t"   = "f64",
-    "float"    = "f64",
-    "double"   = "f64",
-    "int"      = "int",
-    "int8_t"   = "i8",
-    "int16_t"  = "i16",
-    "int32_t"  = "i32",
-    "int64_t"  = "i64",
-    "uint8_t"  = "u8",
-    "uint16_t" = "u16",
-    "uint32_t" = "u32",
-    "uint64_t" = "u64",
-    "int8"     = "i8",
-    "int16"    = "i16",
-    "int32"    = "i32",
-    "int64"    = "i64",
-    "uint8"    = "u8",
-    "uint16"   = "u16",
-    "uint32"   = "u32",
-    "uint64"   = "u64",
-
-    "const void*" = "rawptr",
-    "void*"       = "rawptr",
-}
 
 native_odin_types :: []string {
     "bool",
@@ -94,8 +50,33 @@ generate_global_enums :: proc(state: ^NewState) {
     global_enums_template.with(fstream, state)
 }
 
+@private
+generate_builtin_class :: proc(class: ^NewStateType) {
+    file_path := fmt.tprintf("variant/%v.gen.odin", class.odin_type)
+    defer delete(file_path, allocator = context.temp_allocator)
+
+    fhandle, ferr := os.open(file_path, os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
+    if ferr != 0 {
+        fmt.eprintf("Error opening %v\n", file_path)
+        return
+    }
+    defer os.close(fhandle)
+
+    fstream := os.stream_from_handle(fhandle)
+    builtin_class_template.with(fstream, class)
+}
+
 generate_bindings :: proc(state: ^NewState) {
     generate_global_enums(state)
+
+    for builtin_class in state.builtin_classes {
+        if builtin_class.odin_skip {
+            continue
+        }
+
+        class := builtin_class.type.(NewStateClass)
+        generate_builtin_class(builtin_class)
+    }
 }
 
 /*
