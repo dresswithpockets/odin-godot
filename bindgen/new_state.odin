@@ -28,7 +28,7 @@ NewState :: struct {
 }
 
 NewStateType :: struct {
-    type: union {
+    derived: union {
         NewStateClass,
         NewStateEnum,
         NewStatePodType,
@@ -188,7 +188,7 @@ _state_enum :: proc(state: ^NewState, api_enum: ApiEnum, class_name: Maybe(strin
         odin_name = odin_name,
         odin_values = make([]NewStateEnumValue, len(api_enum.values)),
     }
-    state_type.type = state_enum
+    state_type.derived = state_enum
 
     // we skip over some enums by name, such as those pre-implemented in gdextension
     state_type.odin_skip = slice.contains(skip_enums_by_name, api_enum.name)
@@ -302,7 +302,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         {
             state_type := new(NewStateType)
             state_type.odin_type = odin_type
-            state_type.type = NewStatePodType {
+            state_type.derived = NewStatePodType {
                 odin_type = odin_type,
             }
 
@@ -316,7 +316,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
             real_odin_type := fmt.aprintf("^%v", odin_type)
             state_type := new(NewStateType)
             state_type.odin_type = real_odin_type
-            state_type.type = NewStatePodType {
+            state_type.derived = NewStatePodType {
                 odin_type = real_odin_type,
             }
 
@@ -330,7 +330,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
             real_odin_type := fmt.aprintf("^^%v", odin_type)
             state_type := new(NewStateType)
             state_type.odin_type = real_odin_type
-            state_type.type = NewStatePodType {
+            state_type.derived = NewStatePodType {
                 odin_type = real_odin_type,
             }
 
@@ -344,7 +344,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
             real_odin_type := fmt.aprintf("^%v", odin_type)
             state_type := new(NewStateType)
             state_type.odin_type = real_odin_type
-            state_type.type = NewStatePodType {
+            state_type.derived = NewStatePodType {
                 odin_type = real_odin_type,
             }
 
@@ -358,7 +358,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
             real_odin_type := fmt.aprintf("^^%v", odin_type)
             state_type := new(NewStateType)
             state_type.odin_type = real_odin_type
-            state_type.type = NewStatePodType {
+            state_type.derived = NewStatePodType {
                 odin_type = real_odin_type,
             }
 
@@ -370,7 +370,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
     {
         state_type := new(NewStateType)
         state_type.odin_type = "rawptr"
-        state_type.type = NewStatePodType {
+        state_type.derived = NewStatePodType {
             odin_type = "rawptr",
         }
 
@@ -380,7 +380,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
     {
         state_type := new(NewStateType)
         state_type.odin_type = "rawptr"
-        state_type.type = NewStatePodType {
+        state_type.derived = NewStatePodType {
             odin_type = "rawptr",
         }
 
@@ -412,7 +412,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
                 double_64_size = builtin_sizes["double_64"][api_builtin_class.name],
             },
         }
-        state_type.type = state_class
+        state_type.derived = state_class
 
         // we don't wanna override the existing POD data type in all_types
         if !state_type.odin_skip {
@@ -430,7 +430,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
     {
         state_type := new(NewStateType)
         state_type.odin_type = "Variant"
-        state_type.type = NewStateClass {
+        state_type.derived = NewStateClass {
             odin_name = "Variant",
 
             is_builtin = true,
@@ -450,7 +450,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
     {
         state_type := new(NewStateType)
         state_type.odin_type = "Object"
-        state_type.type = NewStateClass {
+        state_type.derived = NewStateClass {
             odin_name = "Object",
 
             is_builtin = true,
@@ -468,13 +468,13 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
 
     for api_class in api.classes {
         odin_name := godot_to_odin_case(api_class.name)
-        state_class := new(NewStateType)
-        state_class.odin_type = odin_name
-        state_class.type = NewStateClass {
+        state_type := new(NewStateType)
+        state_type.odin_type = odin_name
+        state_type.derived = NewStateClass {
             odin_name = odin_name,
         }
 
-        state.all_types[api_class.name] = state_class
+        state.all_types[api_class.name] = state_type
 
         for api_enum in api_class.enums {
             _state_enum(state, api_enum, api_class.name)
@@ -484,45 +484,45 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
     for native_struct in api.native_structs {
         odin_name := godot_to_odin_case(native_struct.name)
         {
-            state_struct := new(NewStateType)
-            state_struct.odin_type = odin_name
-            state_struct.type = NewStateNativeStructure {
+            state_type := new(NewStateType)
+            state_type.odin_type = odin_name
+            state_type.derived = NewStateNativeStructure {
                 odin_name = odin_name,
             }
-            state.all_types[native_struct.name] = state_struct
+            state.all_types[native_struct.name] = state_type
         }
 
         // pointer
         {
             godot_name := fmt.aprintf("%v*", native_struct.name)
             real_odin_type := fmt.aprintf("^%v", odin_name)
-            state_struct := new(NewStateType)
-            state_struct.odin_type = real_odin_type
-            state_struct.type = NewStateNativeStructure {
+            state_type := new(NewStateType)
+            state_type.odin_type = real_odin_type
+            state_type.derived = NewStateNativeStructure {
                 odin_name = real_odin_type,
             }
-            state.all_types[godot_name] = state_struct
+            state.all_types[godot_name] = state_type
         }
 
         // const pointer
         {
             godot_name := fmt.aprintf("const %v*", native_struct.name)
             real_odin_type := fmt.aprintf("^%v", odin_name)
-            state_struct := new(NewStateType)
-            state_struct.odin_type = real_odin_type
-            state_struct.type = NewStateNativeStructure {
+            state_type := new(NewStateType)
+            state_type.odin_type = real_odin_type
+            state_type.derived = NewStateNativeStructure {
                 odin_name = real_odin_type,
             }
-            state.all_types[godot_name] = state_struct
+            state.all_types[godot_name] = state_type
         }
     }
 
     for api_builtin_class in api.builtin_classes {
-        state_class := state.all_types[api_builtin_class.name]
+        state_type := state.all_types[api_builtin_class.name]
 
         for api_method, i in api_builtin_class.methods {
             class_method := NewStateClassMethod {
-                odin_name = _class_method_name(state_class.odin_type, api_method.name),
+                odin_name = _class_method_name(state_type.odin_type, api_method.name),
                 godot_name = api_method.name,
                 hash = api_method.hash,
 
@@ -549,7 +549,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
                 class_method.arguments[i] = method_argument
             }
 
-            state_class.type.(NewStateClass).methods[i] = class_method
+            state_type.derived.(NewStateClass).methods[i] = class_method
         }
     }
 

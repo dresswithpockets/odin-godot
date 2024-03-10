@@ -70,7 +70,8 @@ generate_bindings :: proc(state: ^NewState) {
     generate_global_enums(state)
 
     for builtin_class in state.builtin_classes do if !builtin_class.odin_skip {
-        class := builtin_class.type.(NewStateClass)
+        _, ok := builtin_class.derived.(NewStateClass)
+        assert(ok)
         generate_builtin_class(builtin_class)
     }
 }

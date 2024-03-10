@@ -7,7 +7,7 @@ import __bindgen_gde "../gdextension"
     _opaque: __{{ this.odin_type }}OpaqueType
 }
 
-{% if builtin_type, is_builtin := this.type.(NewStateClass).builtin_info.(NewStateClassBuiltin); is_builtin %}
+{% if builtin_type, is_builtin := this.derived.(NewStateClass).builtin_info.(NewStateClassBuiltin); is_builtin %}
 when __bindgen_gde.BUILD_CONFIG == "float_32" {
     __{{ this.odin_type }}OpaqueType :: [{{int(builtin_type.float_32_size)}}]u8
 } else when __bindgen_gde.BUILD_CONFIG == "float_64" {
@@ -19,16 +19,16 @@ when __bindgen_gde.BUILD_CONFIG == "float_32" {
 }
 
 // enums
-{% for state_enum in this.type.(NewStateClass).enums %}
+{% for state_enum in this.derived.(NewStateClass).enums %}
 
 {% if !state_enum.odin_skip %}
-{% embed "bindgen_enum.temple.twig" with state_enum.type.(NewStateEnum) %}
+{% embed "bindgen_enum.temple.twig" with state_enum.derived.(NewStateEnum) %}
 {% end %}
 
 {% end %}
 
 // method frontends
-{% for method in this.type.(NewStateClass).methods %}
+{% for method in this.derived.(NewStateClass).methods %}
 {{ method.odin_name }} :: proc(self: {{ this.odin_type }}
 {% for argument in method.arguments %}, {{ argument.name }}: {{ argument.type.odin_type }}
 {% end %})
@@ -48,7 +48,7 @@ when __bindgen_gde.BUILD_CONFIG == "float_32" {
         cast(__bindgen_gde.TypePtr)&self,
 {% end %}
 {% for argument in method.arguments %}
-{% if _, is_class := argument.type.type.(NewStateClass); is_class %}
+{% if _, is_class := argument.type.derived.(NewStateClass); is_class %}
         cast(__bindgen_gde.TypePtr)&{{ argument.name }}._opaque,
 {% else %}
         cast(__bindgen_gde.TypePtr)&{{ argument.name }},
@@ -62,14 +62,14 @@ when __bindgen_gde.BUILD_CONFIG == "float_32" {
 // init function
 __{{ this.odin_type }}_init :: proc() {
     function_name: __StringNameOpaqueType
-{% for method in this.type.(NewStateClass).methods %}
+{% for method in this.derived.(NewStateClass).methods %}
     __bindgen_gde.string_name_new_with_latin1_chars(cast(__bindgen_gde.StringNamePtr)&function_name, "{{ method.godot_name }}", true)
     __{{ method.odin_name }}__backing_proc = __bindgen_gde.variant_get_ptr_builtin_method(__bindgen_gde.VariantType.{{ this.odin_type }}, cast(__bindgen_gde.StringNamePtr)&function_name, {{ i64(method.hash) }})
 {% end %}
 }
 
 // method backing ptrs
-{% for method in this.type.(NewStateClass).methods %}
+{% for method in this.derived.(NewStateClass).methods %}
 __{{ method.odin_name }}__backing_proc: __bindgen_gde.PtrBuiltInMethod
 {% end %}
 {% end %}
