@@ -25,4 +25,26 @@ when __bindgen_gde.BUILD_CONFIG == "float_32" {
 {% end %}
 
 {% end %}
+
+{% for method in this.type.(NewStateClass).methods %}
+{{ method.odin_name }} :: proc(self: {{ this.odin_type }}
+{% for argument in method.arguments %}, {{ argument.name }}: {{ argument.type.odin_type }}
+{% end %})
+{% if return_type, has_return_type := method.return_type.(^NewStateType); has_return_type %} -> {{ return_type.odin_type }}{% end %} {
+
+}
+
+{% end %}
+
+__{{ this.odin_type }}_init :: proc() {
+    function_name: __StringNameOpaqueType
+{% for method in this.type.(NewStateClass).methods %}
+    function_name = __bindgen_gde.string_name_new_with_latin1_chars(cast(__bindgen_gde.StringNamePtr)function_name, "{{ method.godot_name }}", true)
+    __{{ method.odin_name }}__backing_proc = __bindgen_gde.variant_get_ptr_builtin_method(__bindgen_gde.VariantType.{{ this.odin_type }}, cast(__bindgen_gde.StringNamePtr)function_name, {{ i64(method.hash) }})
+{% end %}
+}
+
+{% for method in this.type.(NewStateClass).methods %}
+__{{ method.odin_name }}__backing_proc: __bindgen_gde.PtrBuiltInMethod
+{% end %}
 {% end %}
