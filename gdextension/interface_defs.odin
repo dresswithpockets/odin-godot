@@ -1058,7 +1058,7 @@ ExtensionInterfaceStringResize :: #type proc "c" (p_self: StringPtr, p_resize: i
  * @param p_contents A pointer to a C string (null terminated and Latin-1 or ASCII encoded).
  * @param p_is_static Whether the StringName reuses the buffer directly (see above).
  */
-ExtensionInterfaceStringNameNewWithLatin1Chars :: #type proc "c" (r_dest: StringNamePtr, p_contents: ^c.char, p_is_static: bool)
+ExtensionInterfaceStringNameNewWithLatin1Chars :: #type proc "c" (r_dest: StringNamePtr, p_contents: cstring, p_is_static: bool)
 
 /**
  * @name string_name_new_with_utf8_chars
