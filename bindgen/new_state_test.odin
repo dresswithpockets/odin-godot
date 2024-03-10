@@ -7,6 +7,33 @@ import "core:encoding/json"
 TEST_JSON_SPEC :: "./godot-cpp/gdextension/extension_api.json"
 
 @(test)
+state_type_map_contains_every_pod_type :: proc(t: ^testing.T) {
+    options := Options{
+        api_file = TEST_JSON_SPEC,
+    }
+    api, ok := load_api(options)
+    testing.expect(t, ok, "There was an error loading the api from the file.\n")
+
+    state := create_new_state(options, api)
+
+    for godot_type, odin_type in new_pod_type_map {
+        state_type, has_type := state.all_types[godot_type]
+        testing.expectf(t, has_type, "couldn't find type '%v' in all_types", godot_type)
+        _, ok := state_type.type.(NewStatePodType)
+        #partial switch _ in state_type.type {
+            case NewStateClass:
+                testing.errorf(t, "Expected POD derived type for '%v', got Class instead", godot_type)
+            case NewStateEnum:
+                testing.errorf(t, "Expected POD derived type for '%v', got Enum instead", godot_type)
+            case NewStateNativeStructure:
+                testing.errorf(t, "Expected POD derived type for '%v', got Native Struct instead", godot_type)
+        }
+
+        testing.expect_value(t, state_type.odin_type, odin_type)
+    }
+}
+
+@(test)
 state_type_map_contains_every_referred_type :: proc(t: ^testing.T) {
     options := Options{
         api_file = TEST_JSON_SPEC,
