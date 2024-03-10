@@ -67,7 +67,7 @@ NewStateClassMethod :: struct {
     godot_name: string,
     hash: i64,
 
-    arguments: []^NewStateClassMethodArgument,
+    arguments: []NewStateClassMethodArgument,
     return_type: Maybe(^NewStateType),
 }
 
@@ -283,7 +283,8 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
 
     state.all_types = make(map[string]^NewStateType)
     state.global_enums = make([]^NewStateType, len(api.enums))
-    state.builtin_classes = make([]^NewStateType, len(api.builtin_classes))
+    // we add an additional 2 items to the builtin classes array for the special Variant and Object types
+    state.builtin_classes = make([]^NewStateType, len(api.builtin_classes) + 2)
     state.classes = make([]^NewStateType, len(api.classes))
     state.native_structs = make([]^NewStateType, len(api.native_structs))
 
@@ -391,6 +392,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         state.global_enums[i] = enum_type
     }
 
+    // builtin classes initial pass - another one is made down further for operators, methods, constructors
     for api_builtin_class, i in api.builtin_classes {
         odin_name := godot_to_odin_case(api_builtin_class.name)
         state_type := new(NewStateType)
@@ -412,20 +414,15 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         }
         state_type.type = state_class
 
-        state.all_types[api_builtin_class.name] = state_type
+        // we don't wanna override the existing POD data type in all_types
+        if !state_type.odin_skip {
+            state.all_types[api_builtin_class.name] = state_type
+        }
         state.builtin_classes[i] = state_type
 
         for api_enum, i in api_builtin_class.enums {
             state_enum := _state_enum(state, api_enum, api_builtin_class.name)
             state_class.enums[i] = state_enum
-        }
-
-        for api_method, i in api_builtin_class.methods {
-            state_class.methods[i] = NewStateClassMethod {
-                odin_name = _class_method_name(state_class.odin_name, api_method.name),
-                godot_name = api_method.name,
-                hash = api_method.hash,
-            }
         }
     }
 
@@ -435,9 +432,38 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         state_type.odin_type = "Variant"
         state_type.type = NewStateClass {
             odin_name = "Variant",
+
+            is_builtin = true,
+            builtin_info = NewStateClassBuiltin {
+                float_32_size = builtin_sizes["float_32"]["Variant"],
+                float_64_size = builtin_sizes["float_64"]["Variant"],
+                double_32_size = builtin_sizes["double_32"]["Variant"],
+                double_64_size = builtin_sizes["double_64"]["Variant"],
+            },
         }
 
         state.all_types["Variant"] = state_type
+        state.builtin_classes[len(state.builtin_classes) - 1] = state_type
+    }
+
+    // and Object
+    {
+        state_type := new(NewStateType)
+        state_type.odin_type = "Object"
+        state_type.type = NewStateClass {
+            odin_name = "Object",
+
+            is_builtin = true,
+            builtin_info = NewStateClassBuiltin {
+                float_32_size = builtin_sizes["float_32"]["Object"],
+                float_64_size = builtin_sizes["float_64"]["Object"],
+                double_32_size = builtin_sizes["double_32"]["Object"],
+                double_64_size = builtin_sizes["double_64"]["Object"],
+            },
+        }
+
+        state.all_types["Object"] = state_type
+        state.builtin_classes[len(state.builtin_classes) - 2] = state_type
     }
 
     for api_class in api.classes {
@@ -488,6 +514,42 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
                 odin_name = real_odin_type,
             }
             state.all_types[godot_name] = state_struct
+        }
+    }
+
+    for api_builtin_class in api.builtin_classes {
+        state_class := state.all_types[api_builtin_class.name]
+
+        for api_method, i in api_builtin_class.methods {
+            class_method := NewStateClassMethod {
+                odin_name = _class_method_name(state_class.odin_type, api_method.name),
+                godot_name = api_method.name,
+                hash = api_method.hash,
+
+                arguments = make([]NewStateClassMethodArgument, len(api_method.arguments)),
+            }
+
+            if return_type, has_return_type := api_method.return_type.(string); has_return_type {
+                state_return_type, ok := state.all_types[return_type]
+                assert(ok, return_type)
+
+                class_method.return_type = state_return_type
+            }
+
+            for argument, i in api_method.arguments {
+                state_arg_type, ok := state.all_types[argument.type]
+                assert(ok, argument.type)
+                method_argument := NewStateClassMethodArgument {
+                    name = argument.name,
+                    type = state_arg_type,
+                }
+
+                // TODO: default args
+
+                class_method.arguments[i] = method_argument
+            }
+
+            state_class.type.(NewStateClass).methods[i] = class_method
         }
     }
 
