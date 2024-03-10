@@ -56,9 +56,24 @@ NewStateClass :: struct {
     odin_name: string,
 
     enums: []^NewStateType,
+    methods: []NewStateClassMethod,
 
     is_builtin: bool,
     builtin_info: Maybe(NewStateClassBuiltin),
+}
+
+NewStateClassMethod :: struct {
+    odin_name: string,
+    godot_name: string,
+    hash: i64,
+
+    arguments: []^NewStateClassMethodArgument,
+    return_type: Maybe(^NewStateType),
+}
+
+NewStateClassMethodArgument :: struct {
+    name: string,
+    type: ^NewStateType,
 }
 
 NewStateClassBuiltin :: struct {
@@ -255,6 +270,12 @@ _state_enum :: proc(state: ^NewState, api_enum: ApiEnum, class_name: Maybe(strin
     return state_type
 }
 
+_class_method_name :: proc(class_name: string, godot_method_name: string) -> string {
+    snake_case_class := odin_to_snake_case(class_name)
+    defer delete(snake_case_class)
+    return fmt.aprintf("%v_%v", snake_case_class, godot_method_name)
+}
+
 create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
     state = new(NewState)
     state.options = options
@@ -379,6 +400,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
             odin_name = odin_name,
 
             enums = make([]^NewStateType, len(api_builtin_class.enums)),
+            methods = make([]NewStateClassMethod, len(api_builtin_class.methods)),
 
             is_builtin = true,
             builtin_info = NewStateClassBuiltin {
@@ -396,6 +418,14 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         for api_enum, i in api_builtin_class.enums {
             state_enum := _state_enum(state, api_enum, api_builtin_class.name)
             state_class.enums[i] = state_enum
+        }
+
+        for api_method, i in api_builtin_class.methods {
+            state_class.methods[i] = NewStateClassMethod {
+                odin_name = _class_method_name(state_class.odin_name, api_method.name),
+                godot_name = api_method.name,
+                hash = api_method.hash,
+            }
         }
     }
 
