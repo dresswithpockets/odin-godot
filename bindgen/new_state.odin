@@ -2,7 +2,6 @@ package bindgen
 
 import "core:fmt"
 import "core:strings"
-import "core:thread"
 import "core:slice"
 
 /*
