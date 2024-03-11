@@ -37,6 +37,9 @@ NewStateType :: struct {
     // the name to use when specifying the type in the generated odin code
     odin_type: string,
 
+    // the name to use when the VariantType is required
+    variant_type: Maybe(string),
+
     odin_skip: bool,
 }
 
@@ -56,6 +59,7 @@ NewStateClass :: struct {
 
     enums: []^NewStateType,
     methods: []NewStateClassMethod,
+    operators: []NewStateOperator,
 
     is_builtin: bool,
     builtin_info: Maybe(NewStateClassBuiltin),
@@ -68,6 +72,27 @@ NewStateClassMethod :: struct {
 
     arguments: []NewStateClassMethodArgument,
     return_type: Maybe(^NewStateType),
+}
+
+NewStateOperator :: struct {
+    // proc group name
+    odin_name: string,
+
+    // VariantOperator name
+    variant_name: string,
+
+    overloads: []NewStateOperatorOverload,
+}
+
+NewStateOperatorOverload :: struct {
+    // proc name
+    odin_name: string,
+
+    // should never be nil
+    return_type: ^NewStateType,
+
+    // may be nil
+    right_type: ^NewStateType,
 }
 
 NewStateClassMethodArgument :: struct {
@@ -147,6 +172,43 @@ new_pod_type_map := map[string]string{
     "uint16"   = "u16",
     "uint32"   = "u32",
     "uint64"   = "u64",
+}
+
+operator_enum_map := map[string]string {
+    // comparison
+    "=="     = "Equal",
+    "!="     = "NotEqual",
+    "<"      = "Less",
+    "<="     = "LessEqual",
+    ">"      = "Greater",
+    ">="     = "GreaterEqual",
+
+    // maths
+    "+"      = "Add",
+    "-"      = "Subtract",
+    "*"      = "Multiply",
+    "/"      = "Divide",
+    "unary-" = "Negate",
+    "unary+" = "Positive",
+    "%"      = "Module",
+    "**"     = "Power",
+
+    // bits
+    "<<"     = "ShiftLeft",
+    ">>"     = "ShiftRight",
+    "&"      = "BitAnd",
+    "|"      = "BitOr",
+    "^"      = "BitXor",
+    "~"      = "BitNegate",
+
+    // logic
+    "and"    = "And",
+    "or"     = "Or",
+    "xor"    = "Xor",
+    "not"    = "Not",
+
+    // containment
+    "in"     = "In",
 }
 
 // new_state_godot_type_to_odin :: proc(state: ^NewState, godot_name: string) -> (type: ^NewStateType, ok: bool) {
@@ -275,6 +337,35 @@ _class_method_name :: proc(class_name: string, godot_method_name: string) -> str
     return fmt.aprintf("%v_%v", snake_case_class, godot_method_name)
 }
 
+_class_operator_name :: proc(class_name: string, variant_name: string) -> string {
+    snake_case_class := odin_to_snake_case(class_name)
+    snake_case_name := odin_to_snake_case(variant_name)
+    defer {
+        delete(snake_case_class)
+        delete(snake_case_name)
+    }
+    return fmt.aprintf("%v_%v", snake_case_class, snake_case_name)
+}
+
+_class_operator_overload_name :: proc(class_name: string, variant_name: string, right_type_variant_name: string) -> string {
+    snake_case_right := "self" if right_type_variant_name == "Nil" else odin_to_snake_case(right_type_variant_name)
+    defer if right_type_variant_name != "Nil" {
+        delete(snake_case_right)
+    }
+    return fmt.aprintf("%v_%v", _class_operator_name(class_name, variant_name), snake_case_right)
+}
+
+_unique_operators_count :: proc(operators: []ApiClassOperator) -> int {
+    operator_overloads := make(map[string]int)
+    for api_operator in operators {
+        operator_name, ok := operator_enum_map[api_operator.name]
+        assert(ok)
+        operator_overloads[operator_name] = 0
+    }
+
+    return len(operator_overloads)
+}
+
 create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
     state = new(NewState)
     state.options = options
@@ -301,6 +392,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         {
             state_type := new(NewStateType)
             state_type.odin_type = odin_type
+            state_type.variant_type = godot_to_odin_case(c_type)
             state_type.derived = NewStatePodType {
                 odin_type = odin_type,
             }
@@ -402,6 +494,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
 
             enums = make([]^NewStateType, len(api_builtin_class.enums)),
             methods = make([]NewStateClassMethod, len(api_builtin_class.methods)),
+            operators = make([]NewStateOperator, _unique_operators_count(api_builtin_class.operators)),
 
             is_builtin = true,
             builtin_info = NewStateClassBuiltin {
@@ -465,6 +558,18 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         state.builtin_classes[len(state.builtin_classes) - 2] = state_type
     }
 
+    // and Nil, which is only used for VariantType.Nil
+    {
+        state_type := new(NewStateType)
+        state_type.odin_type = "Nil"
+        state_type.odin_skip = true
+        state_type.derived = NewStatePodType {
+            odin_type = "",
+        }
+
+        state.all_types["Nil"] = state_type
+    }
+
     for api_class in api.classes {
         odin_name := godot_to_odin_case(api_class.name)
         state_type := new(NewStateType)
@@ -480,6 +585,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         }
     }
 
+    // adding all native struct types and their pointer equivalents to the all types map
     for native_struct in api.native_structs {
         odin_name := godot_to_odin_case(native_struct.name)
         {
@@ -518,6 +624,49 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
 
     for api_builtin_class in api.builtin_classes {
         state_type := state.all_types[api_builtin_class.name]
+        _, is_class := state_type.derived.(NewStateClass)
+        if !is_class {
+            continue
+        }
+
+        operator_overloads := make(map[string][dynamic]ApiClassOperator)
+        for api_operator in api_builtin_class.operators {
+            operator_name, ok := operator_enum_map[api_operator.name]
+            assert(ok)
+            if operator_name not_in operator_overloads {
+                operator_overloads[operator_name] = make([dynamic]ApiClassOperator)
+            }
+            append(&operator_overloads[operator_name], api_operator)
+        }
+
+        op_index := 0
+        for variant_name, api_operators in operator_overloads {
+            operator := NewStateOperator {
+                odin_name = _class_operator_name(state_type.odin_type, variant_name),
+                variant_name = variant_name,
+                overloads = make([]NewStateOperatorOverload, len(api_operators)),
+            }
+
+            for api_operator, i in api_operators {
+                // the right type in builtin class operators is used exclusively as a VariantType specifier when passed
+                // to `variant_get_ptr_operator_evaluator`, which expects Nil if right_type is non-existant or if its
+                // Variant
+                right_type_str := api_operator.right_type.(string) or_else "Nil"
+                if right_type_str == "Variant" {
+                    right_type_str = "Nil"
+                }
+                right_type := state.all_types[right_type_str]
+                return_type := state.all_types[api_operator.return_type]
+                operator.overloads[i] = NewStateOperatorOverload {
+                    odin_name = _class_operator_overload_name(state_type.odin_type, variant_name, right_type.odin_type),
+                    return_type = return_type,
+                    right_type = right_type,
+                }
+            }
+
+            state_type.derived.(NewStateClass).operators[op_index] = operator
+            op_index += 1
+        }
 
         for api_method, i in api_builtin_class.methods {
             class_method := NewStateClassMethod {
