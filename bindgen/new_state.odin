@@ -668,7 +668,8 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
             op_index += 1
         }
 
-        for api_method, i in api_builtin_class.methods {
+        // we process methods way at the end so that all dependent types have been mapped in all_types by this point
+        for api_method, method_index in api_builtin_class.methods {
             class_method := NewStateClassMethod {
                 odin_name = _class_method_name(state_type.odin_type, api_method.name),
                 godot_name = api_method.name,
@@ -684,7 +685,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
                 class_method.return_type = state_return_type
             }
 
-            for argument, i in api_method.arguments {
+            for argument, arg_index in api_method.arguments {
                 state_arg_type, ok := state.all_types[argument.type]
                 assert(ok, argument.type)
                 method_argument := NewStateClassMethodArgument {
@@ -694,10 +695,10 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
 
                 // TODO: default args
 
-                class_method.arguments[i] = method_argument
+                class_method.arguments[arg_index] = method_argument
             }
 
-            state_type.derived.(NewStateClass).methods[i] = class_method
+            state_type.derived.(NewStateClass).methods[method_index] = class_method
         }
     }
 
