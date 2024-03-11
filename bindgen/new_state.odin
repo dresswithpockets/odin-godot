@@ -65,6 +65,11 @@ NewStateClass :: struct {
     builtin_info: Maybe(NewStateClassBuiltin),
 }
 
+NewStateClassConstructor :: struct {
+    odin_name: string,
+    arguments: []NewStateClassMethodArgument,
+}
+
 NewStateClassMethod :: struct {
     odin_name: string,
     godot_name: string,
@@ -105,6 +110,10 @@ NewStateClassBuiltin :: struct {
     float_64_size: uint,
     double_32_size: uint,
     double_64_size: uint,
+
+    base_constructor_name: string,
+    constructors: []NewStateClassConstructor,
+    destructor_name: Maybe(string),
 }
 
 NewStateEnum :: struct {
@@ -366,6 +375,24 @@ _unique_operators_count :: proc(operators: []ApiClassOperator) -> int {
     return len(operator_overloads)
 }
 
+_class_constructor_name :: proc(base_constructor_name: string, arguments: []NewStateClassMethodArgument) -> string {
+    sb := strings.builder_make()
+    defer strings.builder_destroy(&sb)
+
+    fmt.sbprint(&sb, base_constructor_name)
+    if len(arguments) == 0 {
+        fmt.sbprint(&sb, "_default")
+        return strings.clone(strings.to_string(sb))
+    }
+
+    for argument in arguments {
+        snake_type := odin_to_snake_case(argument.type.odin_type)
+        fmt.sbprintf(&sb, "_%v", snake_type)
+    }
+
+    return strings.clone(strings.to_string(sb))
+}
+
 create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
     state = new(NewState)
     state.options = options
@@ -486,6 +513,8 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
     // builtin classes initial pass - another one is made down further for operators, methods, constructors
     for api_builtin_class, i in api.builtin_classes {
         odin_name := godot_to_odin_case(api_builtin_class.name)
+        snake_name := godot_to_snake_case(api_builtin_class.name)
+        defer delete(snake_name) // we only use the snake name to build other strings
         state_type := new(NewStateType)
         state_type.odin_type = odin_name
         state_type.odin_skip = slice.contains(skip_builtin_types_by_name, api_builtin_class.name)
@@ -502,8 +531,13 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
                 float_64_size = builtin_sizes["float_64"][api_builtin_class.name],
                 double_32_size = builtin_sizes["double_32"][api_builtin_class.name],
                 double_64_size = builtin_sizes["double_64"][api_builtin_class.name],
+
+                base_constructor_name = fmt.aprintf("new_%v", snake_name),
+                constructors = make([]NewStateClassConstructor, len(api_builtin_class.constructors)),
+                destructor_name = fmt.aprintf("free_%v", snake_name) if api_builtin_class.has_destructor else nil,
             },
         }
+
         state_type.derived = state_class
 
         // we don't wanna override the existing POD data type in all_types
@@ -627,6 +661,29 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         _, is_class := state_type.derived.(NewStateClass)
         if !is_class {
             continue
+        }
+
+        for api_constructor in api_builtin_class.constructors {
+            state_constructor := NewStateClassConstructor {
+                arguments = make([]NewStateClassMethodArgument, len(api_constructor.arguments)),
+            }
+
+            for argument, arg_index in api_constructor.arguments {
+                state_arg_type, ok := state.all_types[argument.type]
+                assert(ok, argument.type)
+                method_argument := NewStateClassMethodArgument {
+                    name = argument.name,
+                    type = state_arg_type,
+                }
+
+                state_constructor.arguments[arg_index] = method_argument
+            }
+
+            state_constructor.odin_name = _class_constructor_name(
+                state_type.derived.(NewStateClass).builtin_info.(NewStateClassBuiltin).base_constructor_name,
+                state_constructor.arguments,
+            )
+            state_type.derived.(NewStateClass).builtin_info.(NewStateClassBuiltin).constructors[api_constructor.index] = state_constructor
         }
 
         operator_overloads := make(map[string][dynamic]ApiClassOperator)

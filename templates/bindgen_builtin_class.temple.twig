@@ -27,6 +27,36 @@ when __bindgen_gde.BUILD_CONFIG == "float_32" {
 
 {% end %}
 
+{% if builtin_info, is_builtin := this.derived.(NewStateClass).builtin_info.(NewStateClassBuiltin); is_builtin && len(builtin_info.constructors) > 0 %}
+// constructors
+{{ builtin_info.base_constructor_name }} :: proc {
+{% for constructor in builtin_info.constructors %}
+    {{ constructor.odin_name }},
+{% end %}
+}
+
+{% for constructor, con_index in builtin_info.constructors %}
+{{ constructor.odin_name }} :: proc({% for arg, i in constructor.arguments %}{% if i > 0 %}, {% end %}{{ arg.name }}: {{arg.type.odin_type }}{% end %}) -> (ret: {{ this.odin_type }}) {
+{% for arg in constructor.arguments %}
+    {{ arg.name }} := {{ arg.name }}
+{% end %}
+    ret = {{ this.odin_type }}{}
+    __bindgen_gde.call_builtin_constructor(
+        __{{ this.odin_type }}__constructor_{{ int(con_index) }}_backing_ptr,
+        cast(__bindgen_gde.UninitializedTypePtr)&ret._opaque
+        {% for arg in constructor.arguments %}, cast(__bindgen_gde.TypePtr)&{{ arg.name }}{% if _, is_class := arg.type.derived.(NewStateClass); is_class %}._opaque{% end %}{% end %})
+    return
+}
+{% end %}
+
+{% if destructor_name, has_destructor := builtin_info.destructor_name.(string); has_destructor %}
+{{ destructor_name }} :: proc(self: {{ this.odin_type }}) {
+    self := self
+    __{{ this.odin_type }}__destructor_backing_ptr(cast(__bindgen_gde.TypePtr)&self._opaque)
+}
+{% end %}
+{% end %}
+
 // method frontends
 {% for method in this.derived.(NewStateClass).methods %}
 {{ method.odin_name }} :: proc(self: {{ this.odin_type }}
@@ -87,6 +117,15 @@ when __bindgen_gde.BUILD_CONFIG == "float_32" {
 
 // init function
 __{{ this.odin_type }}_init :: proc() {
+{% if builtin_info, is_builtin := this.derived.(NewStateClass).builtin_info.(NewStateClassBuiltin); is_builtin %}
+{% for constructor, con_index in builtin_info.constructors %}
+    __{{ this.odin_type }}__constructor_{{ int(con_index) }}_backing_ptr = __bindgen_gde.variant_get_ptr_constructor(__bindgen_gde.VariantType.{{ this.variant_type.(string) or_else this.odin_type }}, {{ int(con_index) }})
+{% end %}
+{% if builtin_info.destructor_name != nil %}
+    __{{ this.odin_type }}__destructor_backing_ptr = __bindgen_gde.variant_get_ptr_destructor(__bindgen_gde.VariantType.{{ this.variant_type.(string) or_else this.odin_type }})
+{% end %}
+{% end %}
+
 {% for operator in this.derived.(NewStateClass).operators %}
 {% for overload in operator.overloads %}
     __{{ overload.odin_name }}__backing_ptr = __bindgen_gde.variant_get_ptr_operator_evaluator(__bindgen_gde.VariantOperator.{{ operator.variant_name }}, __bindgen_gde.VariantType.{{ this.odin_type }}, __bindgen_gde.VariantType.{{ overload.return_type.variant_type.(string) or_else overload.return_type.odin_type }})
@@ -101,6 +140,16 @@ __{{ this.odin_type }}_init :: proc() {
 {% end %}
 {% end %}
 }
+
+{% if builtin_info, is_builtin := this.derived.(NewStateClass).builtin_info.(NewStateClassBuiltin); is_builtin %}
+// constructor backing procs
+{% for constructor, con_index in builtin_info.constructors %}
+__{{ this.odin_type }}__constructor_{{ int(con_index) }}_backing_ptr: __bindgen_gde.PtrConstructor
+{% end %}
+{% if builtin_info.destructor_name != nil %}
+__{{ this.odin_type }}__destructor_backing_ptr: __bindgen_gde.PtrDestructor
+{% end %}
+{% end %}
 
 // method backing ptrs
 {% for method in this.derived.(NewStateClass).methods %}
