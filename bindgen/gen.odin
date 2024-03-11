@@ -3,14 +3,6 @@ package bindgen
 
 import "core:fmt"
 import "core:os"
-import "core:slice"
-import "core:strings"
-import "core:path/filepath"
-import "core:strconv"
-import "core:io"
-import "core:sync"
-import "core:thread"
-import "base:runtime"
 
 @(private="file")
 UNIX_ALLOW_READ_WRITE_ALL :: 0o666
