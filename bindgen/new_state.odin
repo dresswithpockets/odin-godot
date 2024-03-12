@@ -74,6 +74,8 @@ NewStateClassConstructor :: struct {
 }
 
 NewStateClassMethod :: struct {
+    odin_skip: bool,
+
     odin_name: string,
     godot_name: string,
     hash: i64,
@@ -125,6 +127,14 @@ NewStateClassBuiltin :: struct {
     base_constructor_name: string,
     constructors: []NewStateClassConstructor,
     destructor_name: Maybe(string),
+
+    members: []NewStateClassBuiltinMember,
+}
+
+NewStateClassBuiltinMember :: struct {
+    odin_prefix: string,
+    name: string,
+    type: ^NewStateType,
 }
 
 NewStateEnum :: struct {
@@ -549,6 +559,8 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
                 base_constructor_name = fmt.aprintf("new_%v", snake_name),
                 constructors = make([]NewStateClassConstructor, len(api_builtin_class.constructors)),
                 destructor_name = fmt.aprintf("free_%v", snake_name) if api_builtin_class.has_destructor else nil,
+
+                members = make([]NewStateClassBuiltinMember, len(api_builtin_class.members)),
             },
         }
 
@@ -677,9 +689,18 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
             continue
         }
 
+        for api_member, i in api_builtin_class.members {
+            member_type := state.all_types[api_member.type]
+            state_member := NewStateClassBuiltinMember {
+                odin_prefix = odin_to_snake_case(state_type.odin_type),
+                name = api_member.name,
+                type = member_type,
+            }
+            state_type.derived.(NewStateClass).builtin_info.(NewStateClassBuiltin).members[i] = state_member
+        }
+
         for api_constant, i in api_builtin_class.constants {
-            constant_type, ok := state.all_types[api_constant.type]
-            assert(ok)
+            constant_type := state.all_types[api_constant.type]
             state_constant := NewStateConstant {
                 name = fmt.aprintf("%v_%v", odin_to_const_case(constant_type.odin_type), api_constant.name),
                 type = constant_type,
@@ -789,6 +810,9 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
                 odin_name = _class_method_name(state_type.odin_type, api_method.name),
                 godot_name = api_method.name,
                 hash = api_method.hash,
+
+                // HACK: for some ungodly reason the gdextension duplicates the getter for origin as a builtin method? Resulting in a redelcaration of the get_origin proc.
+                odin_skip = state_type.odin_type == "Transform2d" && api_method.name == "get_origin",
 
                 arguments = make([]NewStateClassMethodArgument, len(api_method.arguments)),
             }
