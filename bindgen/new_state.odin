@@ -534,7 +534,6 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
     // builtin classes initial pass - another one is made down further for operators, methods, constructors
     for api_builtin_class, i in api.builtin_classes {
         // TODO: what is is_keyed? indexing_return_type? probably index getter/setter like [idx]
-        // TODO: members
         odin_name := godot_to_odin_case(api_builtin_class.name)
         snake_name := godot_to_snake_case(api_builtin_class.name)
         defer delete(snake_name) // we only use the snake name to build other strings
