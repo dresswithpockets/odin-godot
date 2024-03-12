@@ -41,6 +41,8 @@ NewStateType :: struct {
     variant_type: Maybe(string),
 
     odin_skip: bool,
+
+    depends_on_core_math: bool,
 }
 
 NewStatePodType :: struct {
@@ -60,6 +62,7 @@ NewStateClass :: struct {
     enums: []^NewStateType,
     methods: []NewStateClassMethod,
     operators: []NewStateOperator,
+    constants: []NewStateConstant,
 
     is_builtin: bool,
     builtin_info: Maybe(NewStateClassBuiltin),
@@ -87,6 +90,14 @@ NewStateOperator :: struct {
     variant_name: string,
 
     overloads: []NewStateOperatorOverload,
+}
+
+NewStateConstant :: struct {
+    name: string,
+    type: ^NewStateType,
+    value: union { int, string },
+
+    odin_skip: bool,
 }
 
 NewStateOperatorOverload :: struct {
@@ -512,6 +523,9 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
 
     // builtin classes initial pass - another one is made down further for operators, methods, constructors
     for api_builtin_class, i in api.builtin_classes {
+        // TODO: what is is_keyed? indexing_return_type? probably index getter/setter like [idx]
+        // TODO: constants
+        // TODO: members
         odin_name := godot_to_odin_case(api_builtin_class.name)
         snake_name := godot_to_snake_case(api_builtin_class.name)
         defer delete(snake_name) // we only use the snake name to build other strings
@@ -524,6 +538,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
             enums = make([]^NewStateType, len(api_builtin_class.enums)),
             methods = make([]NewStateClassMethod, len(api_builtin_class.methods)),
             operators = make([]NewStateOperator, _unique_operators_count(api_builtin_class.operators)),
+            constants = make([]NewStateConstant, len(api_builtin_class.constants)),
 
             is_builtin = true,
             builtin_info = NewStateClassBuiltin {
@@ -661,6 +676,50 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         _, is_class := state_type.derived.(NewStateClass)
         if !is_class {
             continue
+        }
+
+        for api_constant, i in api_builtin_class.constants {
+            constant_type, ok := state.all_types[api_constant.type]
+            assert(ok)
+            state_constant := NewStateConstant {
+                name = fmt.aprintf("%v_%v", odin_to_const_case(constant_type.odin_type), api_constant.name),
+                type = constant_type,
+                value = api_constant.value,
+            }
+
+            // we already have enums for the Axis constants
+            if strings.has_prefix(state_type.odin_type, "Vector") && strings.has_prefix(api_constant.name, "AXIS") {
+                state_constant.odin_skip = true
+            }
+
+            // extension_api.json for 4.2.1 uses an invalid constructor form for some reason,
+            // I think its shorthand for 4 Vector3s though. For now im just going to pretend
+            // it doesnt exist and deal with it later (:
+            // TODO: deal with Transform, Projection, Basis constants
+            if value_string, is_string := api_constant.value.(string); is_string &&
+                (strings.has_prefix(value_string, "Transform3D(") ||
+                strings.has_prefix(value_string, "Transform2D(") ||
+                strings.has_prefix(value_string, "Projection(") ||
+                strings.has_prefix(value_string, "Basis(")) {
+
+                state_constant.odin_skip = true
+            }
+
+            // TODO: properly parse out the value into a function call?
+            if value_string, is_string := api_constant.value.(string); is_string &&
+               strings.contains_rune(value_string, '(') &&
+               strings.contains_rune(value_string, ')') {
+
+                split_value := strings.split_n(value_string, "(", 2)
+                constructor_type, ok := state.all_types[split_value[0]]
+                assert(ok)
+
+                value_string = fmt.aprintf("%v(%v", constructor_type.derived.(NewStateClass).builtin_info.(NewStateClassBuiltin).base_constructor_name, split_value[1])
+                // TODO: verify that inf is always passed as f64?
+                state_constant.value, _ = strings.replace_all(value_string, "inf", "__bindgen_math.INF_F64")
+                state_type.depends_on_core_math = true
+            }
+            state_type.derived.(NewStateClass).constants[i] = state_constant
         }
 
         for api_constructor in api_builtin_class.constructors {

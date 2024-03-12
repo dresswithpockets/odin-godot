@@ -2,6 +2,9 @@
 package variant
 
 import __bindgen_gde "../gdextension"
+{% if this.depends_on_core_math %}
+import __bindgen_math "core:math"
+{% end %}
 
 {{ this.odin_type }} :: struct {
     _opaque: __{{ this.odin_type }}OpaqueType
@@ -25,6 +28,13 @@ when __bindgen_gde.BUILD_CONFIG == "float_32" {
 {% embed "bindgen_enum.temple.twig" with state_enum.derived.(NewStateEnum) %}
 {% end %}
 
+{% end %}
+
+// constants
+{% for constant in this.derived.(NewStateClass).constants %}
+{% if !constant.odin_skip %}
+{{ constant.name }}: {{ constant.type.odin_type }} = {% if int_value, is_int := constant.value.(int); is_int %}{{ int(int_value) }}{% else %}{{ constant.value.(string) }}{% end %}
+{% end %}
 {% end %}
 
 {% if builtin_info, is_builtin := this.derived.(NewStateClass).builtin_info.(NewStateClassBuiltin); is_builtin && len(builtin_info.constructors) > 0 %}
