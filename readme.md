@@ -33,8 +33,9 @@ odin build temple/cli/ -o:speed -out:bin/temple_cli.exe
 # temple_cli will recursively search all odin files in the specified directory for
 # usages of `compiled` and `compiled_inline`, then it will generate Odin code with
 # the built templates in templates.odin, in the specified directory. in this case,
-# its looking in the bindgen directory, and outputs to temple/templates.odin.
-./bin/temple_cli.exe bindgen temple
+# its searching in the bindgen directory, and outputs to bindgen/templates.odin, with
+# the `bindgen` package name.
+./bin/temple_cli.exe bindgen bindgen bindgen
 
 # bindgen is the tool which uses the temple templates to generate the entire
 # GDExtension binding
