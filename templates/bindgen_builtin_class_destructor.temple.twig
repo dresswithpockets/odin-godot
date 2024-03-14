@@ -1,6 +1,0 @@
-{% if this.has_destructor %}free_{{ this.snake_name }} :: proc(self: {{ this.odin_name }}) {
-    using gdextension
-    self := self
-    __{{ this.godot_name }}__destructor(cast(TypePtr)&self._opaque)
-}
-{% end %}
