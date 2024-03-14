@@ -134,7 +134,7 @@ ApiConstant :: struct {
 
 ApiClassSignal :: struct {
     name: string `json:"name"`,
-    arguments: []ApiClassSignalArgument `json:"arguments"`
+    arguments: []ApiClassSignalArgument `json:"arguments"`,
 }
 
 ApiClassSignalArgument :: struct {

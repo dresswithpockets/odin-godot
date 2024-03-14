@@ -2,7 +2,7 @@ package bindgen
 
 global_enums_template := temple_compiled("../templates/bindgen_global_enums.temple.twig", ^NewState)
 builtin_class_template := temple_compiled("../templates/bindgen_builtin_class.temple.twig", ^NewStateType)
-// util_functions_template := temple_compiled("../templates/bindgen_util.temple.twig", ^NewState)
+util_functions_template := temple_compiled("../templates/bindgen_utility_functions.temple.twig", ^NewState)
 // variant_builtin_template := temple.compiled("../templates/bindgen_variant.temple.twig", ^State)
 // builtin_class_template := temple.compiled("../templates/bindgen_builtin_class.temple.twig", BuiltinClassStatePair)
 // class_template := temple.compiled("../templates/bindgen_class.temple.twig", ClassStatePair)

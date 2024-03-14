@@ -43,6 +43,19 @@ generate_global_enums :: proc(state: ^NewState) {
 }
 
 @private
+generate_utility_functions :: proc(state: ^NewState) {
+    fhandle, ferr := os.open("core/util.gen.odin", os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
+    if ferr != 0 {
+        fmt.eprintf("Error opening core/util.gen.odin\n")
+        return
+    }
+    defer os.close(fhandle)
+
+    fstream := os.stream_from_handle(fhandle)
+    util_functions_template.with(fstream, state)
+}
+
+@private
 generate_builtin_class :: proc(class: ^NewStateType) {
     file_path := fmt.tprintf("variant/%v.gen.odin", class.odin_type)
     defer delete(file_path, allocator = context.temp_allocator)
@@ -60,6 +73,7 @@ generate_builtin_class :: proc(class: ^NewStateType) {
 
 generate_bindings :: proc(state: ^NewState) {
     generate_global_enums(state)
+    generate_utility_functions(state)
 
     for builtin_class in state.builtin_classes do if !builtin_class.odin_skip {
         _, ok := builtin_class.derived.(NewStateClass)
