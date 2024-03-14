@@ -1,0 +1,5 @@
+{{ this.odin_name }} :: enum {
+{% for value in this.odin_values %}
+    {{ value.name }} = {{ int(value.value) }},
+{% end %}
+}

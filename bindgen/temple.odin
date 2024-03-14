@@ -1,13 +1,8 @@
-//+build windows
 package bindgen
 
-import "core:sys/windows"
-
-num_processors :: proc() -> int {
-    system_info: windows.SYSTEM_INFO
-    windows.GetSystemInfo(&system_info)
-    return cast(int)system_info.dwNumberOfProcessors
-}
+global_enums_template := temple_compiled("../templates/bindgen_global_enums.temple.twig", ^NewState)
+builtin_class_template := temple_compiled("../templates/bindgen_builtin_class.temple.twig", ^NewStateType)
+util_functions_template := temple_compiled("../templates/bindgen_utility_functions.temple.twig", ^NewState)
 
 /*
     Copyright 2023 Dresses Digital
