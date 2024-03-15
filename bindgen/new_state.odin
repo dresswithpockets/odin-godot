@@ -612,6 +612,8 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
     {
         state_type := new(NewStateType)
         state_type.odin_type = "Object"
+        // we skip this one since it is already covered by the manually written variant/Object.odin
+        state_type.odin_skip = true
         state_type.derived = NewStateClass {
             odin_name = "Object",
 
