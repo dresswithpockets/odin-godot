@@ -1,9 +1,10 @@
 # bindgen
+TODO rewrite state code to pre-calculate all fields used by templates
 DONE rewrite codegen to use temple templating engine
 TODO add support for vararg utility functions
 DONE add support for utility functions with default arg values
 DONE add frontend generation for class methods
-TODO add generation for engine (non-builtin) classes
+DONE add generation for engine (non-builtin) classes
 TODO add generation for built-in singletons
 TODO add generation for native structures (?)
 TODO add option to generate classes and methods in a class-per-package hierarchy (each class gets its own package)
