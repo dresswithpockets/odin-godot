@@ -38,6 +38,8 @@ NewStateType :: struct {
 
     // the name to use when specifying the type in the generated odin code
     odin_type: string,
+    godot_type: string,
+    snake_type: string,
 
     // the name to use when the VariantType is required
     variant_type: Maybe(string),
@@ -277,6 +279,8 @@ _state_enum :: proc(state: ^NewState, api_enum: ApiEnum, class_name: Maybe(strin
 
     state_type := new(NewStateType)
     state_type.odin_type = odin_name
+    state_type.godot_type = api_enum.name
+    state_type.snake_type = godot_to_snake_case(api_enum.name)
     state_enum := NewStateEnum {
         odin_name = odin_name,
         odin_values = make([]NewStateEnumValue, len(api_enum.values)),
@@ -544,6 +548,8 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         defer delete(snake_name) // we only use the snake name to build other strings
         state_type := new(NewStateType)
         state_type.odin_type = odin_name
+        state_type.godot_type = api_builtin_class.name
+        state_type.snake_type = snake_name
         state_type.odin_skip = slice.contains(skip_builtin_types_by_name, api_builtin_class.name)
         state_class := NewStateClass {
             odin_name = odin_name,
@@ -636,8 +642,11 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
 
     for api_class in api.classes {
         odin_name := godot_to_odin_case(api_class.name)
+        snake_name := godot_to_snake_case(api_class.name)
         state_type := new(NewStateType)
         state_type.odin_type = odin_name
+        state_type.godot_type = api_class.name
+        state_type.snake_type = snake_name
         state_type.derived = NewStateClass {
             odin_name = odin_name,
         }
