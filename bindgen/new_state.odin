@@ -68,6 +68,9 @@ NewStateClass :: struct {
     operators: []NewStateOperator,
     constants: []NewStateConstant,
 
+    api_type: string,
+    inherits: ^NewStateType,
+
     is_builtin: bool,
     builtin_info: Maybe(NewStateClassBuiltin),
 }
@@ -559,6 +562,8 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
             operators = make([]NewStateOperator, _unique_operators_count(api_builtin_class.operators)),
             constants = make([]NewStateConstant, len(api_builtin_class.constants)),
 
+            api_type = "variant",
+
             is_builtin = true,
             builtin_info = NewStateClassBuiltin {
                 float_32_size = builtin_sizes["float_32"][api_builtin_class.name],
@@ -595,6 +600,8 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         state_type.derived = NewStateClass {
             odin_name = "Variant",
 
+            api_type = "variant",
+
             is_builtin = true,
             builtin_info = NewStateClassBuiltin {
                 float_32_size = builtin_sizes["float_32"]["Variant"],
@@ -616,6 +623,8 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         state_type.odin_skip = true
         state_type.derived = NewStateClass {
             odin_name = "Object",
+
+            api_type = "variant",
 
             is_builtin = true,
             builtin_info = NewStateClassBuiltin {
@@ -642,7 +651,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         state.all_types["Nil"] = state_type
     }
 
-    for api_class in api.classes {
+    for api_class, i in api.classes {
         odin_name := godot_to_odin_case(api_class.name)
         snake_name := godot_to_snake_case(api_class.name)
         state_type := new(NewStateType)
@@ -651,9 +660,11 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         state_type.snake_type = snake_name
         state_type.derived = NewStateClass {
             odin_name = odin_name,
+            api_type = api_class.api_type,
         }
 
         state.all_types[api_class.name] = state_type
+        state.classes[i] = state_type
 
         for api_enum in api_class.enums {
             _state_enum(state, api_enum, api_class.name)
@@ -718,6 +729,21 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         }
 
         state.utility_functions[i] = state_function
+    }
+
+    for api_class in api.classes {
+        state_type := state.all_types[api_class.name]
+        _, is_class := state_type.derived.(NewStateClass)
+        if !is_class {
+            continue
+        }
+
+        // TODO: have a base "Wrapped"-like object like in godot-cpp, so we can autogen Object too
+        inherits := api_class.inherits.(string) or_else "Object"
+        inherits_type := state.all_types[inherits]
+        _, is_class = inherits_type.derived.(NewStateClass)
+        assert(is_class)
+        (&state_type.derived.(NewStateClass))^.inherits = inherits_type
     }
 
     for api_builtin_class in api.builtin_classes {

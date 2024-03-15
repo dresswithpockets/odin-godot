@@ -71,6 +71,22 @@ generate_builtin_class :: proc(class: ^NewStateType) {
     builtin_class_template.with(fstream, class)
 }
 
+@private
+generate_engine_class :: proc(class: ^NewStateType) {
+    file_path := fmt.tprintf("%v/%v.gen.odin", class.derived.(NewStateClass).api_type, class.odin_type)
+    defer delete(file_path, allocator = context.temp_allocator)
+
+    fhandle, ferr := os.open(file_path, os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
+    if ferr != 0 {
+        fmt.eprintf("Error opening %v\n", file_path)
+        return
+    }
+    defer os.close(fhandle)
+
+    fstream := os.stream_from_handle(fhandle)
+    engine_class_template.with(fstream, class)
+}
+
 generate_bindings :: proc(state: ^NewState) {
     generate_global_enums(state)
     generate_utility_functions(state)
@@ -79,6 +95,12 @@ generate_bindings :: proc(state: ^NewState) {
         _, ok := builtin_class.derived.(NewStateClass)
         assert(ok)
         generate_builtin_class(builtin_class)
+    }
+
+    for engine_class in state.classes do if !engine_class.odin_skip {
+        _, ok := engine_class.derived.(NewStateClass)
+        assert(ok)
+        generate_engine_class(engine_class)
     }
 }
 
