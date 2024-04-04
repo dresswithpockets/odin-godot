@@ -9,7 +9,7 @@ temple_cli_deps := $(wildcard $(temple_cli_dir)*.odin)
 temple_cli_out := $(OUT_DIR)/temple_cli$(exe_suffix)
 
 bindgen_dir := bindgen/
-bindgen_deps := $(wildcard $(bindgen_dir)*.odin)
+bindgen_deps := $(wildcard $(bindgen_dir)*.odin) $(bindgen_dir)templates.odin
 bindgen_out := $(OUT_DIR)/bindgen$(exe_suffix)
 debug_bindgen_out := $(OUT_DIR)/bindgen_debug$(exe_suffix)
 
