@@ -1,7 +1,7 @@
 .vscode/
 
 *.gen.odin
-#bindgen/templates.odin
+bindgen/templates.odin
 
 bin/
 !bin/.gitkeep
