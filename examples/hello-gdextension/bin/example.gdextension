@@ -1,0 +1,8 @@
+[configuration]
+
+entry_symbol = "example_library_init"
+compatibility_minimum = "4.2"
+
+[libraries]
+
+windows.x86_64="res://bin/example.windows.x86_64.dll"
