@@ -35,7 +35,7 @@ ObjectInstanceId :: u64
 MethodBindPtr :: distinct rawptr
 RefPtr :: distinct rawptr
 
-VariantType :: enum {
+VariantType :: enum c.int {
     Nil,
 
     /* atomic types */
@@ -87,7 +87,7 @@ VariantType :: enum {
     VariantMax,
 }
 
-VariantOperator :: enum {
+VariantOperator :: enum c.int {
     /* comparison */
     Equal,
     NotEqual,
@@ -125,7 +125,7 @@ VariantOperator :: enum {
     Max,
 }
 
-CallErrorType :: enum {
+CallErrorType :: enum c.int {
     Ok,
     InvalidMethod,
     InvalidArgument,
@@ -288,7 +288,7 @@ ExtensionClassLibraryPtr :: distinct rawptr
 
 // Method
 
-ExtensionClassMethodFlags :: enum {
+ExtensionClassMethodFlags :: enum c.int {
     Normal  = 1,
     Editor  = 2,
     Const   = 4,
@@ -298,7 +298,7 @@ ExtensionClassMethodFlags :: enum {
     Default = Normal,
 }
 
-ExtensionClassMethodArgumentMetadata :: enum {
+ExtensionClassMethodArgumentMetadata :: enum c.int {
     None,
     IntIsInt8,
     IntIsInt16,
@@ -318,7 +318,7 @@ ExtensionClassMethodCall :: #type proc "c" (
     args: [^]VariantPtr,
     argument_count: i64,
     ret: VariantPtr,
-    error: CallError,
+    error: ^CallError,
 )
 ExtensionClassMethodValidateCall :: #type proc "c" (
     method_user_data: rawptr,
@@ -339,22 +339,22 @@ ExtensionClassMethodInfo :: struct {
     call_func:              ExtensionClassMethodCall,
     ptr_call_func:          ExtensionClassMethodPtrCall,
     // bitfield of ExtensionClassMethodFlags 
-    method_flags:           u32,
+    method_flags:           c.uint32_t,
 
     // If `has_return_value` is false, `return_value_info` and `return_value_metadata` are ignored.
-    has_return_value:       bool,
+    has_return_value:       c.bool,
     return_value_info:      ^PropertyInfo,
     return_value_metadata:  ExtensionClassMethodArgumentMetadata,
 
     /* Arguments: `arguments_info` and `arguments_metadata` are array of size `argument_count`.
      * Name and hint information for the argument can be omitted in release builds. Class name should always be present if it applies.
      */
-    argument_count:         u32,
+    argument_count:         c.uint32_t,
     arguments_info:         [^]PropertyInfo,
     arguments_metadata:     [^]ExtensionClassMethodArgumentMetadata,
 
     // Default arguments: `default_arguments` is an array of size `default_argument_count`.
-    default_argument_count: u32,
+    default_argument_count: c.uint32_t,
     default_arguments:      [^]VariantPtr,
 }
 
@@ -610,7 +610,7 @@ GodotVersion :: struct {
     version_string:                                     cstring,
 }
 
-InitializationLevel :: enum {
+InitializationLevel :: enum c.int {
     Core,
     Servers,
     Scene,
