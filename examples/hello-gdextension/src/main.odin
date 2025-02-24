@@ -26,7 +26,8 @@ example_library_init :: proc "c" (
 
     initialization.initialize = initialize_example_module
     initialization.deinitialize = uninitialize_example_module
-    initialization.minimum_initialization_level = .Core
+    initialization.user_data = nil
+    initialization.minimum_initialization_level = .Scene
 
     return true
 }
@@ -38,14 +39,7 @@ initialize_example_module :: proc "c" (user_data: rawptr, level: gd.Initializati
         return
     }
 
-    test_string := var.new_string()
-    gd.string_new_with_latin1_chars(cast(gd.StringPtr)&test_string._opaque, "Hello GDExtension")
-
-    test_string_variant := var.Variant{}
-    string_variant_proc := gd.get_variant_from_type_constructor(.String)
-    string_variant_proc(cast(gd.UninitializedVariantPtr)&test_string_variant._opaque, cast(gd.TypePtr)&test_string._opaque)
-
-    core.gd_print(test_string_variant)
+    example_class_register()
 }
 
 uninitialize_example_module :: proc "c" (user_data: rawptr, level: gd.InitializationLevel) {
