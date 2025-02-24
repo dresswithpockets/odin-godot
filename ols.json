@@ -22,5 +22,5 @@
     "enable_semantic_tokens": true,
     "enable_hover": true,
     "enable_snippets": true,
-    "checker_args": "-vet-extra -strict-style-init-only -no-entry-point"
+    "checker_args": "-vet -strict-style -no-entry-point"
 }
