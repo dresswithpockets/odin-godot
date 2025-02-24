@@ -4,8 +4,10 @@ import gd "../../../gdextension"
 import var "../../../variant"
 
 ExampleClass :: struct {
-    amplitude: f64,
-    speed:     f64,
+    amplitude: gd.float,
+    speed:     gd.float,
+
+    time_passed: gd.float,
 
     object: gd.ObjectPtr,
 }
@@ -13,68 +15,14 @@ ExampleClass :: struct {
 example_class_constructor :: proc "c" (self: ^ExampleClass) {
     self.amplitude = 1.0
     self.speed = 1.0
+    self.time_passed = 0.0
 }
 
 example_class_destructor :: proc "c" (self: ^ExampleClass) {
 
 }
 
-GetterFloat :: proc "c" (instance: rawptr) -> gd.float
-SetterFloat :: proc "c" (instance: rawptr, value: gd.float)
-
-ptrcall_getter_float :: proc "c" (method_user_data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, call_return: gd.TypePtr) {
-    method := cast(GetterFloat)method_user_data
-    (cast(^gd.float)call_return)^ = method(instance)
-}
-
-ptrcall_setter_float :: proc "c" (method_user_data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, call_return: gd.TypePtr) {
-    method := cast(SetterFloat)method_user_data
-    method(instance, (cast(^gd.float)args[0])^)
-}
-
-call_getter_float :: proc "c" (method_user_data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.VariantPtr, arg_count: i64, call_return: gd.VariantPtr, error: ^gd.CallError) {
-    if arg_count != 0 {
-        error.error = .TooManyArguments
-        error.expected = 0
-        return
-    }
-    
-    method := cast(GetterFloat)method_user_data
-    result := method(instance)
-    var_float_constructor := gd.get_variant_from_type_constructor(.Float)
-    var_float_constructor(cast(gd.UninitializedVariantPtr)call_return, cast(gd.TypePtr)&result)
-}
-
-call_setter_float :: proc "c" (method_user_data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.VariantPtr, arg_count: i64, call_return: gd.VariantPtr, error: ^gd.CallError) {
-    if arg_count < 1 {
-        error.error = .TooFewArguments
-        error.expected = 1
-        return
-    }
-
-    if arg_count > 1 {
-        error.error = .TooManyArguments
-        error.expected = 1
-        return
-    }
-
-    type := gd.variant_get_type(args[0])
-    if type != .Float {
-        error.error = .InvalidArgument
-        error.expected = cast(i32)gd.VariantType.Float
-        error.argument = 0
-        return
-    }
-
-    arg1: f64
-    float_from_var_constructor := gd.get_variant_to_type_constructor(.Float)
-    float_from_var_constructor(cast(gd.TypePtr)&arg1, args[0])
-
-    method := cast(SetterFloat)method_user_data
-    method(instance, arg1)
-}
-
-example_class_set_amplitude :: proc "c" (self: ^ExampleClass, amplitude: f64) {
+example_class_set_amplitude :: proc "c" (self: ^ExampleClass, amplitude: gd.float) {
     self.amplitude = amplitude
 }
 
@@ -82,12 +30,35 @@ example_class_get_amplitude :: proc "c" (self: ^ExampleClass) -> gd.float {
     return self.amplitude
 }
 
-example_class_set_speed :: proc "c" (self: ^ExampleClass, speed: f64) {
+example_class_set_speed :: proc "c" (self: ^ExampleClass, speed: gd.float) {
     self.speed = speed
 }
 
-example_class_get_speed :: proc "c" (self: ^ExampleClass) -> f64 {
+example_class_get_speed :: proc "c" (self: ^ExampleClass) -> gd.float {
     return self.speed
+}
+
+example_class_process :: proc "c" (self: ^ExampleClass, delta: gd.float) {
+    self.time_passed += self.speed * delta
+}
+
+example_class_get_virtual_with_data :: proc "c" (class_user_data: rawptr, name: gd.StringNamePtr) -> rawptr {
+    process_string_name := var.StringName{}
+    gd.string_name_new_with_latin1_chars(cast(gd.StringNamePtr)&process_string_name, "_process", false)
+    defer var.free_string_name(process_string_name)
+
+    name_string_name := cast(^var.StringName)name
+    if var.string_name_equal(name_string_name^, process_string_name) {
+        return cast(rawptr)example_class_process
+    }
+
+    return nil
+}
+
+example_class_call_virtual_with_data :: proc "c" (instance: gd.ExtensionClassInstancePtr, name: gd.StringNamePtr, virtual_call_user_data: rawptr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
+    if virtual_call_user_data == cast(rawptr)example_class_process {
+        ptrcall_setter_float(virtual_call_user_data, instance, args, ret)
+    }
 }
 
 example_class_bind_methods :: proc() {
@@ -166,8 +137,8 @@ example_class_register :: proc "c" () {
         free_instance_func = example_class_free_instance,
         recreate_instance_func = nil,
         get_virtual_func = nil,
-        get_virtual_call_data_func = nil,
-        call_virtual_with_data_func = nil,
+        get_virtual_call_data_func = example_class_get_virtual_with_data,
+        call_virtual_with_data_func = example_class_call_virtual_with_data,
         get_rid_func = nil,
         class_userdata = nil,
     }
