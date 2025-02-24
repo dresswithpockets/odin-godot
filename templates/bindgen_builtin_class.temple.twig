@@ -172,7 +172,7 @@ __{{ this.odin_type }}_init :: proc "contextless" () {
 
 {% for operator in this.derived.(NewStateClass).operators %}
 {% for overload in operator.overloads %}
-    __{{ overload.odin_name }}__backing_ptr = __bindgen_gde.variant_get_ptr_operator_evaluator(__bindgen_gde.VariantOperator.{{ operator.variant_name }}, __bindgen_gde.VariantType.{{ this.odin_type }}, __bindgen_gde.VariantType.{{ overload.return_type.variant_type.(string) or_else overload.return_type.odin_type }})
+    __{{ overload.odin_name }}__backing_ptr = __bindgen_gde.variant_get_ptr_operator_evaluator(__bindgen_gde.VariantOperator.{{ operator.variant_name }}, __bindgen_gde.VariantType.{{ this.odin_type }}, __bindgen_gde.VariantType.{{ overload.right_type.variant_type.(string) or_else overload.right_type.odin_type }})
 {% end %}
 {% end %}
 
