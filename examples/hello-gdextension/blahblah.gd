@@ -14,3 +14,8 @@ func _ready():
     print("amplitude: ", thing.amplitude)
     thing.amplitude = 3.0
     print("amplitude: ", thing.amplitude)
+    
+    thing.time_passed.connect(on_time_passed)
+
+func on_time_passed(time_passed: float):
+    print(time_passed)

@@ -48,6 +48,11 @@ free_property :: proc(prop: ^gd.PropertyInfo) {
     free(prop.class_name)
 }
 
+MethodBindArgument :: struct {
+    name: cstring,
+    type: gd.VariantType,
+}
+
 bind_method_return :: proc(class_name: cstring, method_name: cstring, function: rawptr, return_type: gd.VariantType, call_func: gd.ExtensionClassMethodCall, ptr_call_func: gd.ExtensionClassMethodPtrCall, args: ..MethodBindArgument) {
     method_name_string := var.StringName{}
     gd.string_name_new_with_latin1_chars(cast(gd.StringNamePtr)&method_name_string, method_name, false)
@@ -76,46 +81,6 @@ bind_method_return :: proc(class_name: cstring, method_name: cstring, function: 
             args_info[idx] = new_property(arg.type, arg.name)
             args_metadata[idx] = .None
         }
-    }
-
-    class_name_string := var.StringName{}
-    gd.string_name_new_with_latin1_chars(cast(gd.StringNamePtr)&class_name_string, class_name, false)
-    defer var.free_string_name(class_name_string)
-
-    gd.classdb_register_extension_class_method(gd.library, cast(gd.StringNamePtr)&class_name_string, &method_info)
-}
-
-MethodBindArgument :: struct {
-    name: cstring,
-    type: gd.VariantType,
-}
-
-bind_method_1_no_return :: proc(class_name: cstring, method_name: cstring, function: rawptr, call_func: gd.ExtensionClassMethodCall, ptr_call_func: gd.ExtensionClassMethodPtrCall, arg_type: gd.VariantType, arg_name: cstring) {
-    method_name_string := var.StringName{}
-    gd.string_name_new_with_latin1_chars(cast(gd.StringNamePtr)&method_name_string, method_name, false)
-    defer var.free_string_name(method_name_string)
-
-    args_info := [1]gd.PropertyInfo {
-        new_property(arg_type, arg_name)
-    }
-    defer free_property(&args_info[0])
-
-    args_metadata := [1]gd.ExtensionClassMethodArgumentMetadata {
-        .None
-    }
-
-    method_info := gd.ExtensionClassMethodInfo{
-        name                   = cast(gd.StringNamePtr)&method_name_string,
-        method_user_data       = function,
-        call_func              = call_func,
-        ptr_call_func          = ptr_call_func,
-        method_flags           = cast(u32)core.MethodFlags.Default,
-        has_return_value       = false,
-        argument_count         = 1,
-        arguments_info         = &args_info[0],
-        arguments_metadata     = &args_metadata[0],
-        default_argument_count = 0,
-        default_arguments      = nil,
     }
 
     class_name_string := var.StringName{}
@@ -181,6 +146,30 @@ bind_property :: proc(class_name: cstring, name: cstring, type: gd.VariantType, 
     defer var.free_string_name(setter_name)
 
     gd.classdb_register_extension_class_property(gd.library, cast(gd.StringNamePtr)&class_name_string, &info, cast(gd.StringNamePtr)&setter_name, cast(gd.StringNamePtr)&getter_name)
+}
+
+bind_signal :: proc(class_name: cstring, signal_name: cstring, args: ..MethodBindArgument) {
+    class_name_string := var.StringName{}
+    gd.string_name_new_with_latin1_chars(cast(gd.StringNamePtr)&class_name_string, class_name, false)
+    defer var.free_string_name(class_name_string)
+    
+    signal_name_string := var.StringName{}
+    gd.string_name_new_with_latin1_chars(cast(gd.StringNamePtr)&signal_name_string, signal_name, false)
+    defer var.free_string_name(signal_name_string)
+
+    if len(args) == 0 {
+        gd.classdb_register_extension_class_signal(gd.library, cast(gd.StringNamePtr)&class_name_string, cast(gd.StringNamePtr)&signal_name_string, nil, 0)
+        return
+    }
+
+    args_info := make([]gd.PropertyInfo, len(args))
+    defer delete(args_info)
+
+    for arg, idx in args {
+        args_info[idx] = new_property(arg.type, arg.name)
+    }
+
+    gd.classdb_register_extension_class_signal(gd.library, cast(gd.StringNamePtr)&class_name_string, cast(gd.StringNamePtr)&signal_name_string, raw_data(args_info), cast(i64)len(args))
 }
 
 GetterFloat :: proc "c" (instance: rawptr) -> gd.float
