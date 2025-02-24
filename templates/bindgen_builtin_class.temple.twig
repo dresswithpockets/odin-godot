@@ -46,7 +46,7 @@ when __bindgen_gde.BUILD_CONFIG == "float_32" {
 }
 
 {% for constructor, con_index in builtin_info.constructors %}
-{{ constructor.odin_name }} :: proc({% for arg, i in constructor.arguments %}{% if i > 0 %}, {% end %}{{ arg.name }}: {{arg.type.odin_type }}{% end %}) -> (ret: {{ this.odin_type }}) {
+{{ constructor.odin_name }} :: proc "contextless" ({% for arg, i in constructor.arguments %}{% if i > 0 %}, {% end %}{{ arg.name }}: {{arg.type.odin_type }}{% end %}) -> (ret: {{ this.odin_type }}) {
 {% for arg in constructor.arguments %}
     {{ arg.name }} := {{ arg.name }}
 {% end %}
@@ -60,7 +60,7 @@ when __bindgen_gde.BUILD_CONFIG == "float_32" {
 {% end %}
 
 {% if destructor_name, has_destructor := builtin_info.destructor_name.(string); has_destructor %}
-{{ destructor_name }} :: proc(self: {{ this.odin_type }}) {
+{{ destructor_name }} :: proc "contextless" (self: {{ this.odin_type }}) {
     self := self
     __{{ this.odin_type }}__destructor_backing_ptr(cast(__bindgen_gde.TypePtr)&self._opaque)
 }
@@ -69,7 +69,7 @@ when __bindgen_gde.BUILD_CONFIG == "float_32" {
 
 // member/property frontends
 {% for member in this.derived.(NewStateClass).builtin_info.(NewStateClassBuiltin).members %}
-{{ member.odin_prefix }}_set_{{ member.name }} :: proc(self: {{ this.odin_type }}, value: {{ member.type.odin_type }}) {
+{{ member.odin_prefix }}_set_{{ member.name }} :: proc "contextless" (self: {{ this.odin_type }}, value: {{ member.type.odin_type }}) {
     self := self
     value := value
 {% if _, is_class := member.type.derived.(NewStateClass); is_class %}
@@ -79,7 +79,7 @@ when __bindgen_gde.BUILD_CONFIG == "float_32" {
 {% end %}
 }
 
-{{ member.odin_prefix }}_get_{{ member.name }} :: proc(self: {{ this.odin_type }}) -> (ret: {{ member.type.odin_type }}) {
+{{ member.odin_prefix }}_get_{{ member.name }} :: proc "contextless" (self: {{ this.odin_type }}) -> (ret: {{ member.type.odin_type }}) {
     self := self
 {% if _, is_class := member.type.derived.(NewStateClass); is_class %}
     __{{ this.odin_type }}__member__{{ member.name }}_getter(cast(__bindgen_gde.TypePtr)&self._opaque, cast(__bindgen_gde.TypePtr)&ret._opaque)
@@ -94,7 +94,7 @@ when __bindgen_gde.BUILD_CONFIG == "float_32" {
 // method frontends
 {% for method in this.derived.(NewStateClass).methods %}
 {% if !method.odin_skip %}
-{{ method.odin_name }} :: proc(self: {{ this.odin_type }}
+{{ method.odin_name }} :: proc "contextless" (self: {{ this.odin_type }}
 {% for argument in method.arguments %}, {{ argument.name }}: {{ argument.type.odin_type }}
 {% end %})
 {% if return_type, has_return_type := method.return_type.(^NewStateType); has_return_type %} -> {{ return_type.odin_type }}{% end %} {
@@ -128,7 +128,7 @@ when __bindgen_gde.BUILD_CONFIG == "float_32" {
 // operator frontends
 {% for operator in this.derived.(NewStateClass).operators %}
 {% for overload in operator.overloads %}
-{{ overload.odin_name }} :: proc(self: {{ this.odin_type }}{% if overload.right_type.odin_type != "Nil" %}, other: {{ overload.right_type.odin_type }}{% end %}) -> (ret: {{ overload.return_type.odin_type }}) {
+{{ overload.odin_name }} :: proc "contextless" (self: {{ this.odin_type }}{% if overload.right_type.odin_type != "Nil" %}, other: {{ overload.right_type.odin_type }}{% end %}) -> (ret: {{ overload.return_type.odin_type }}) {
     self := self
 {% if overload.right_type.odin_type != "Nil" %}
     other := other
@@ -152,7 +152,7 @@ when __bindgen_gde.BUILD_CONFIG == "float_32" {
 {% end %}
 
 // init function
-__{{ this.odin_type }}_init :: proc() {
+__{{ this.odin_type }}_init :: proc "contextless" () {
     _gde_name: __StringNameOpaqueType
 
 {% if builtin_info, is_builtin := this.derived.(NewStateClass).builtin_info.(NewStateClassBuiltin); is_builtin %}
