@@ -1,7 +1,0 @@
-[configuration]
-
-entry_symbol = "example_library_init"
-
-[libraries]
-
-windows.x86_64="res://bin/example.windows.x86_64.dll"
