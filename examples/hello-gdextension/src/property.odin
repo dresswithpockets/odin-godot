@@ -164,3 +164,21 @@ bind_method_no_return :: proc(class_name: cstring, method_name: cstring, functio
 
     gd.classdb_register_extension_class_method(gd.library, cast(gd.StringNamePtr)&class_name_string, &method_info)
 }
+
+bind_property :: proc(class_name: cstring, name: cstring, type: gd.VariantType, getter: cstring, setter: cstring) {
+    class_name_string := var.StringName{}
+    gd.string_name_new_with_latin1_chars(cast(gd.StringNamePtr)&class_name_string, class_name, false)
+    defer var.free_string_name(class_name_string)
+
+    info := new_property(type, name)
+
+    getter_name := var.StringName{}
+    gd.string_name_new_with_latin1_chars(cast(gd.StringNamePtr)&getter_name, getter, false)
+    defer var.free_string_name(getter_name)
+
+    setter_name := var.StringName{}
+    gd.string_name_new_with_latin1_chars(cast(gd.StringNamePtr)&setter_name, setter, false)
+    defer var.free_string_name(setter_name)
+
+    gd.classdb_register_extension_class_property(gd.library, cast(gd.StringNamePtr)&class_name_string, &info, cast(gd.StringNamePtr)&setter_name, cast(gd.StringNamePtr)&getter_name)
+}

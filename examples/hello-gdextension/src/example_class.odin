@@ -93,9 +93,11 @@ example_class_get_speed :: proc "c" (self: ^ExampleClass) -> f64 {
 example_class_bind_methods :: proc() {
     bind_method_return("ExampleClass", "get_amplitude", cast(rawptr)example_class_get_amplitude, .Float, call_getter_float, ptrcall_getter_float)
     bind_method_no_return("ExampleClass", "set_amplitude", cast(rawptr)example_class_set_amplitude, call_setter_float, ptrcall_setter_float, MethodBindArgument{ name = "amplitude", type = .Float })
+    bind_property("ExampleClass", "amplitude", .Float, "get_amplitude", "set_amplitude")
 
     bind_method_return("ExampleClass", "get_speed", cast(rawptr)example_class_get_speed, .Float, call_getter_float, ptrcall_getter_float)
     bind_method_no_return("ExampleClass", "set_speed", cast(rawptr)example_class_set_speed, call_setter_float, ptrcall_setter_float, MethodBindArgument{ name = "speed", type = .Float })
+    bind_property("ExampleClass", "speed", .Float, "get_speed", "set_speed")
 }
 
 example_class_binding_callbacks := gd.InstanceBindingCallbacks{
