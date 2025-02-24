@@ -1961,7 +1961,7 @@ editor_add_plugin: ExtensionInterfaceEditorAddPlugin
 editor_remove_plugin: ExtensionInterfaceEditorRemovePlugin
 
 
-initialize_procs :: proc(get_proc_address: ExtensionInterfaceGetProcAddress) {
+initialize_procs :: proc "contextless" (get_proc_address: ExtensionInterfaceGetProcAddress) {
     mem_alloc = cast(ExtensionInterfaceMemAlloc)get_proc_address("mem_alloc")
     mem_realloc = cast(ExtensionInterfaceMemRealloc)get_proc_address("mem_realloc")
     mem_free = cast(ExtensionInterfaceMemFree)get_proc_address("mem_free")

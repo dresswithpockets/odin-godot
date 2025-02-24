@@ -1,4 +1,4 @@
-//+build windows
+#+build windows
 package bindgen
 
 import "core:sys/windows"

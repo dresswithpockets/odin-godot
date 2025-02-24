@@ -1,4 +1,4 @@
-//+private
+#+private
 package godin
 
 // taken from core:os

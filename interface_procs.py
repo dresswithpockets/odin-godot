@@ -154,7 +154,7 @@ def write_interface(typedefs: list[TypeDef]):
         print(f"{typedef.func_name}: {typedef.type_name}\n")
 
     print()
-    print("initialize_procs :: proc(get_proc_address: ExtensionInterfaceGetProcAddress) {")
+    print("initialize_procs :: proc \"contextless\" (get_proc_address: ExtensionInterfaceGetProcAddress) {")
     for typedef in typedefs:
         print(f"    {typedef.func_name} = cast({typedef.type_name})get_proc_address(\"{typedef.func_name}\")")
     print("}")

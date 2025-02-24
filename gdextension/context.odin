@@ -1,7 +1,7 @@
 package gdextension
 
 import "core:c"
-import "core:runtime"
+import "base:runtime"
 import "core:mem"
 
 godot_allocator_proc :: proc(

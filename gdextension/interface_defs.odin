@@ -49,7 +49,7 @@ ExtensionInterfaceMemFree :: #type proc "c" (p_ptr: rawptr)
  * @param p_line The line where the error occurred.
  * @param p_editor_notify Whether or not to notify the editor.
  */
-ExtensionInterfacePrintError :: #type proc "c" (p_description: ^c.char, p_function: ^c.char, p_file: ^c.char, p_line: i32, p_editor_notify: bool)
+ExtensionInterfacePrintError :: #type proc "c" (p_description: cstring, p_function: cstring, p_file: cstring, p_line: i32, p_editor_notify: bool)
 
 /**
  * @name print_error_with_message
@@ -64,7 +64,7 @@ ExtensionInterfacePrintError :: #type proc "c" (p_description: ^c.char, p_functi
  * @param p_line The line where the error occurred.
  * @param p_editor_notify Whether or not to notify the editor.
  */
-ExtensionInterfacePrintErrorWithMessage :: #type proc "c" (p_description: ^c.char, p_message: ^c.char, p_function: ^c.char, p_file: ^c.char, p_line: i32, p_editor_notify: bool)
+ExtensionInterfacePrintErrorWithMessage :: #type proc "c" (p_description: cstring, p_message: cstring, p_function: cstring, p_file: cstring, p_line: i32, p_editor_notify: bool)
 
 /**
  * @name print_warning
@@ -78,7 +78,7 @@ ExtensionInterfacePrintErrorWithMessage :: #type proc "c" (p_description: ^c.cha
  * @param p_line The line where the warning occurred.
  * @param p_editor_notify Whether or not to notify the editor.
  */
-ExtensionInterfacePrintWarning :: #type proc "c" (p_description: ^c.char, p_function: ^c.char, p_file: ^c.char, p_line: i32, p_editor_notify: bool)
+ExtensionInterfacePrintWarning :: #type proc "c" (p_description: cstring, p_function: cstring, p_file: cstring, p_line: i32, p_editor_notify: bool)
 
 /**
  * @name print_warning_with_message
@@ -93,7 +93,7 @@ ExtensionInterfacePrintWarning :: #type proc "c" (p_description: ^c.char, p_func
  * @param p_line The line where the warning occurred.
  * @param p_editor_notify Whether or not to notify the editor.
  */
-ExtensionInterfacePrintWarningWithMessage :: #type proc "c" (p_description: ^c.char, p_message: ^c.char, p_function: ^c.char, p_file: ^c.char, p_line: i32, p_editor_notify: bool)
+ExtensionInterfacePrintWarningWithMessage :: #type proc "c" (p_description: cstring, p_message: cstring, p_function: cstring, p_file: cstring, p_line: i32, p_editor_notify: bool)
 
 /**
  * @name print_script_error
@@ -107,7 +107,7 @@ ExtensionInterfacePrintWarningWithMessage :: #type proc "c" (p_description: ^c.c
  * @param p_line The line where the error occurred.
  * @param p_editor_notify Whether or not to notify the editor.
  */
-ExtensionInterfacePrintScriptError :: #type proc "c" (p_description: ^c.char, p_function: ^c.char, p_file: ^c.char, p_line: i32, p_editor_notify: bool)
+ExtensionInterfacePrintScriptError :: #type proc "c" (p_description: cstring, p_function: cstring, p_file: cstring, p_line: i32, p_editor_notify: bool)
 
 /**
  * @name print_script_error_with_message
@@ -122,7 +122,7 @@ ExtensionInterfacePrintScriptError :: #type proc "c" (p_description: ^c.char, p_
  * @param p_line The line where the error occurred.
  * @param p_editor_notify Whether or not to notify the editor.
  */
-ExtensionInterfacePrintScriptErrorWithMessage :: #type proc "c" (p_description: ^c.char, p_message: ^c.char, p_function: ^c.char, p_file: ^c.char, p_line: i32, p_editor_notify: bool)
+ExtensionInterfacePrintScriptErrorWithMessage :: #type proc "c" (p_description: cstring, p_message: cstring, p_function: cstring, p_file: cstring, p_line: i32, p_editor_notify: bool)
 
 /**
  * @name get_native_struct_size
@@ -755,7 +755,7 @@ ExtensionInterfaceVariantGetPtrUtilityFunction :: #type proc "c" (p_function: St
  * @param r_dest A pointer to a Variant to hold the newly created String.
  * @param p_contents A pointer to a Latin-1 encoded C string (null terminated).
  */
-ExtensionInterfaceStringNewWithLatin1Chars :: #type proc "c" (r_dest: StringPtr, p_contents: ^c.char)
+ExtensionInterfaceStringNewWithLatin1Chars :: #type proc "c" (r_dest: StringPtr, p_contents: cstring)
 
 /**
  * @name string_new_with_utf8_chars
@@ -766,7 +766,7 @@ ExtensionInterfaceStringNewWithLatin1Chars :: #type proc "c" (r_dest: StringPtr,
  * @param r_dest A pointer to a Variant to hold the newly created String.
  * @param p_contents A pointer to a UTF-8 encoded C string (null terminated).
  */
-ExtensionInterfaceStringNewWithUtf8Chars :: #type proc "c" (r_dest: StringPtr, p_contents: ^c.char)
+ExtensionInterfaceStringNewWithUtf8Chars :: #type proc "c" (r_dest: StringPtr, p_contents: cstring)
 
 /**
  * @name string_new_with_utf16_chars
@@ -811,7 +811,7 @@ ExtensionInterfaceStringNewWithWideChars :: #type proc "c" (r_dest: StringPtr, p
  * @param p_contents A pointer to a Latin-1 encoded C string.
  * @param p_size The number of characters (= number of bytes).
  */
-ExtensionInterfaceStringNewWithLatin1CharsAndLen :: #type proc "c" (r_dest: StringPtr, p_contents: ^c.char, p_size: i64)
+ExtensionInterfaceStringNewWithLatin1CharsAndLen :: #type proc "c" (r_dest: StringPtr, p_contents: cstring, p_size: i64)
 
 /**
  * @name string_new_with_utf8_chars_and_len
@@ -823,7 +823,7 @@ ExtensionInterfaceStringNewWithLatin1CharsAndLen :: #type proc "c" (r_dest: Stri
  * @param p_contents A pointer to a UTF-8 encoded C string.
  * @param p_size The number of bytes (not code units).
  */
-ExtensionInterfaceStringNewWithUtf8CharsAndLen :: #type proc "c" (r_dest: StringPtr, p_contents: ^c.char, p_size: i64)
+ExtensionInterfaceStringNewWithUtf8CharsAndLen :: #type proc "c" (r_dest: StringPtr, p_contents: cstring, p_size: i64)
 
 /**
  * @name string_new_with_utf16_chars_and_len
@@ -875,7 +875,7 @@ ExtensionInterfaceStringNewWithWideCharsAndLen :: #type proc "c" (r_dest: String
  *
  * @return The resulting encoded string length in characters (not bytes), not including a null terminator.
  */
-ExtensionInterfaceStringToLatin1Chars :: #type proc "c" (p_self: StringPtr, r_text: ^c.char, p_max_write_length: i64) -> i64
+ExtensionInterfaceStringToLatin1Chars :: #type proc "c" (p_self: StringPtr, r_text: cstring, p_max_write_length: i64) -> i64
 
 /**
  * @name string_to_utf8_chars
@@ -891,7 +891,7 @@ ExtensionInterfaceStringToLatin1Chars :: #type proc "c" (p_self: StringPtr, r_te
  *
  * @return The resulting encoded string length in characters (not bytes), not including a null terminator.
  */
-ExtensionInterfaceStringToUtf8Chars :: #type proc "c" (p_self: StringPtr, r_text: ^c.char, p_max_write_length: i64) -> i64
+ExtensionInterfaceStringToUtf8Chars :: #type proc "c" (p_self: StringPtr, r_text: cstring, p_max_write_length: i64) -> i64
 
 /**
  * @name string_to_utf16_chars
@@ -998,7 +998,7 @@ ExtensionInterfaceStringOperatorPlusEqChar :: #type proc "c" (p_self: StringPtr,
  * @param p_self A pointer to the String.
  * @param p_b A pointer to a Latin-1 encoded C string (null terminated).
  */
-ExtensionInterfaceStringOperatorPlusEqCstr :: #type proc "c" (p_self: StringPtr, p_b: ^c.char)
+ExtensionInterfaceStringOperatorPlusEqCstr :: #type proc "c" (p_self: StringPtr, p_b: cstring)
 
 /**
  * @name string_operator_plus_eq_wcstr
@@ -1069,7 +1069,7 @@ ExtensionInterfaceStringNameNewWithLatin1Chars :: #type proc "c" (r_dest: String
  * @param r_dest A pointer to uninitialized storage, into which the newly created StringName is constructed.
  * @param p_contents A pointer to a C string (null terminated and UTF-8 encoded).
  */
-ExtensionInterfaceStringNameNewWithUtf8Chars :: #type proc "c" (r_dest: StringNamePtr, p_contents: ^c.char)
+ExtensionInterfaceStringNameNewWithUtf8Chars :: #type proc "c" (r_dest: StringNamePtr, p_contents: cstring)
 
 /**
  * @name string_name_new_with_utf8_chars_and_len
@@ -1081,7 +1081,7 @@ ExtensionInterfaceStringNameNewWithUtf8Chars :: #type proc "c" (r_dest: StringNa
  * @param p_contents A pointer to a C string (null terminated and UTF-8 encoded).
  * @param p_size The number of bytes (not UTF-8 code points).
  */
-ExtensionInterfaceStringNameNewWithUtf8CharsAndLen :: #type proc "c" (r_dest: StringNamePtr, p_contents: ^c.char, p_size: i64)
+ExtensionInterfaceStringNameNewWithUtf8CharsAndLen :: #type proc "c" (r_dest: StringNamePtr, p_contents: cstring, p_size: i64)
 
 /**
  * @name xml_parser_open_buffer

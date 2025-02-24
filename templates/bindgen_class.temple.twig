@@ -5,7 +5,11 @@ import __bindgen_gde "../gdextension"
 import __bindgen_var "../variant"
 
 {{ this.odin_type }} :: struct {
-    using derived: {{ this.derived.(NewStateClass).inherits.odin_type }}
+{% if this.derived.(NewStateClass).inherits.odin_type == "Object" %}
+    using derived{{ this.derived.(NewStateClass).inherits.odin_type }}: __bindgen_var.Object
+{% else %}
+    using derived{{ this.derived.(NewStateClass).inherits.odin_type }}: {{ this.derived.(NewStateClass).inherits.odin_type }}
+{% end %}
 }
 
 init_{{ this.snake_type }} :: proc() {
@@ -14,13 +18,13 @@ init_{{ this.snake_type }} :: proc() {
 
 new_{{ this.snake_type }} :: proc() -> ^{{ this.odin_type }} {
     instance := new({{ this.odin_type }})
-    instance._owner = __bindgen_gde.classdb_construct_object(cast(__bindgen_gde.StringNamePtr)&__{{ this.odin_type }}__class_name._opaque)
+    instance._opaque = __bindgen_gde.classdb_construct_object(cast(__bindgen_gde.StringNamePtr)&__{{ this.odin_type }}__class_name._opaque)
     return instance
 }
 
-new_{{ this.snake_type }}_from_object :: proc(object: rawptr) -> ^{{ this.odin_type }} {
+new_{{ this.snake_type }}_from_object :: proc(object: __bindgen_gde.ObjectPtr) -> ^{{ this.odin_type }} {
     instance := new({{ this.odin_type }})
-    instance._owner = object
+    instance._opaque = object
     return instance
 }
 

@@ -1,3 +1,4 @@
+#+feature dynamic-literals
 package bindgen
 
 import "core:fmt"
@@ -658,6 +659,9 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         state_type.odin_type = odin_name
         state_type.godot_type = api_class.name
         state_type.snake_type = snake_name
+        // HACK: don't generate Object.gen.odin for now, we need to add support for bindgen'd Object
+        //       but, for now, we rely on the premade variant/Object.odin
+        state_type.odin_skip = odin_name == "Object"
         state_type.derived = NewStateClass {
             odin_name = odin_name,
             api_type = api_class.api_type,
