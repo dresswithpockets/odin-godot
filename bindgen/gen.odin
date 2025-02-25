@@ -3,6 +3,8 @@ package bindgen
 
 import "core:fmt"
 import "core:os"
+import "core:thread"
+import "base:runtime"
 
 @(private="file")
 UNIX_ALLOW_READ_WRITE_ALL :: 0o666
@@ -100,22 +102,52 @@ generate_engine_class :: proc(class: ^NewStateType) {
     engine_class_template.with(fstream, class)
 }
 
-generate_bindings :: proc(state: ^NewState) {
+generate_global_enums_task :: proc(task: thread.Task) {
+    state := cast(^NewState)task.data
     generate_global_enums(state)
+}
+
+generate_utility_functions_task :: proc(task: thread.Task) {
+    state := cast(^NewState)task.data
     generate_utility_functions(state)
+}
+
+generate_native_structs_task :: proc(task: thread.Task) {
+    state := cast(^NewState)task.data
     generate_native_structs(state)
+}
+
+generate_builtin_class_task :: proc(task: thread.Task) {
+    builtin_class := cast(^NewStateType)task.data
+    generate_builtin_class(builtin_class)
+}
+
+generate_engine_class_task :: proc(task: thread.Task) {
+    engine_class := cast(^NewStateType)task.data
+    generate_engine_class(engine_class)
+}
+
+generate_bindings :: proc(state: ^NewState) {
+    thread_pool: thread.Pool
+    thread.pool_init(&thread_pool, context.allocator, state.options.job_count)
+    thread.pool_add_task(&thread_pool, context.allocator, generate_global_enums_task, state)
+    thread.pool_add_task(&thread_pool, context.allocator, generate_utility_functions_task, state)
+    thread.pool_add_task(&thread_pool, context.allocator, generate_native_structs_task, state)
 
     for builtin_class in state.builtin_classes do if !builtin_class.odin_skip {
         _, ok := builtin_class.derived.(NewStateClass)
         assert(ok)
-        generate_builtin_class(builtin_class)
+        thread.pool_add_task(&thread_pool, context.allocator, generate_builtin_class_task, builtin_class)
     }
 
     for engine_class in state.classes do if !engine_class.odin_skip {
         _, ok := engine_class.derived.(NewStateClass)
         assert(ok)
-        generate_engine_class(engine_class)
+        thread.pool_add_task(&thread_pool, context.allocator, generate_engine_class_task, engine_class)
     }
+
+    thread.pool_start(&thread_pool)
+    thread.pool_finish(&thread_pool)
 }
 
 /*
