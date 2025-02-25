@@ -814,6 +814,7 @@ string_new_with_latin1_chars_and_len: ExtensionInterfaceStringNewWithLatin1Chars
 /**
  * @name string_new_with_utf8_chars_and_len
  * @since 4.1
+ * @deprecated in Godot 4.3. Use `string_new_with_utf8_chars_and_len2` instead.
  *
  * Creates a String from a UTF-8 encoded C string with the given length.
  *
@@ -824,8 +825,23 @@ string_new_with_latin1_chars_and_len: ExtensionInterfaceStringNewWithLatin1Chars
 string_new_with_utf8_chars_and_len: ExtensionInterfaceStringNewWithUtf8CharsAndLen
 
 /**
+ * @name string_new_with_utf8_chars_and_len2
+ * @since 4.3
+ *
+ * Creates a String from a UTF-8 encoded C string with the given length.
+ *
+ * @param r_dest A pointer to a Variant to hold the newly created String.
+ * @param p_contents A pointer to a UTF-8 encoded C string.
+ * @param p_size The number of bytes (not code units).
+ *
+ * @return Error code signifying if the operation successful.
+ */
+string_new_with_utf8_chars_and_len2: ExtensionInterfaceStringNewWithUtf8CharsAndLen2
+
+/**
  * @name string_new_with_utf16_chars_and_len
  * @since 4.1
+ * @deprecated in Godot 4.3. Use `string_new_with_utf16_chars_and_len2` instead.
  *
  * Creates a String from a UTF-16 encoded C string with the given length.
  *
@@ -834,6 +850,21 @@ string_new_with_utf8_chars_and_len: ExtensionInterfaceStringNewWithUtf8CharsAndL
  * @param p_size The number of characters (not bytes).
  */
 string_new_with_utf16_chars_and_len: ExtensionInterfaceStringNewWithUtf16CharsAndLen
+
+/**
+ * @name string_new_with_utf16_chars_and_len2
+ * @since 4.3
+ *
+ * Creates a String from a UTF-16 encoded C string with the given length.
+ *
+ * @param r_dest A pointer to a Variant to hold the newly created String.
+ * @param p_contents A pointer to a UTF-16 encoded C string.
+ * @param p_size The number of characters (not bytes).
+ * @param p_default_little_endian If true, UTF-16 use little endian.
+ *
+ * @return Error code signifying if the operation successful.
+ */
+string_new_with_utf16_chars_and_len2: ExtensionInterfaceStringNewWithUtf16CharsAndLen2
 
 /**
  * @name string_new_with_utf32_chars_and_len
@@ -1126,6 +1157,34 @@ file_access_store_buffer: ExtensionInterfaceFileAccessStoreBuffer
 file_access_get_buffer: ExtensionInterfaceFileAccessGetBuffer
 
 /**
+ * @name image_ptrw
+ * @since 4.3
+ *
+ * Returns writable pointer to internal Image buffer.
+ *
+ * @param p_instance A pointer to a Image object.
+ *
+ * @return Pointer to internal Image buffer.
+ *
+ * @see Image::ptrw()
+ */
+image_ptrw: ExtensionInterfaceImagePtrw
+
+/**
+ * @name image_ptr
+ * @since 4.3
+ *
+ * Returns read only pointer to internal Image buffer.
+ *
+ * @param p_instance A pointer to a Image object.
+ *
+ * @return Pointer to internal Image buffer.
+ *
+ * @see Image::ptr()
+ */
+image_ptr: ExtensionInterfaceImagePtr
+
+/**
  * @name worker_thread_pool_add_native_group_task
  * @since 4.1
  *
@@ -1185,32 +1244,6 @@ packed_byte_array_operator_index: ExtensionInterfacePackedByteArrayOperatorIndex
  * @return A const pointer to the requested byte.
  */
 packed_byte_array_operator_index_const: ExtensionInterfacePackedByteArrayOperatorIndexConst
-
-/**
- * @name packed_color_array_operator_index
- * @since 4.1
- *
- * Gets a pointer to a color in a PackedColorArray.
- *
- * @param p_self A pointer to a PackedColorArray object.
- * @param p_index The index of the Color to get.
- *
- * @return A pointer to the requested Color.
- */
-packed_color_array_operator_index: ExtensionInterfacePackedColorArrayOperatorIndex
-
-/**
- * @name packed_color_array_operator_index_const
- * @since 4.1
- *
- * Gets a const pointer to a color in a PackedColorArray.
- *
- * @param p_self A const pointer to a const PackedColorArray object.
- * @param p_index The index of the Color to get.
- *
- * @return A const pointer to the requested Color.
- */
-packed_color_array_operator_index_const: ExtensionInterfacePackedColorArrayOperatorIndexConst
 
 /**
  * @name packed_float32_array_operator_index
@@ -1395,6 +1428,58 @@ packed_vector3_array_operator_index: ExtensionInterfacePackedVector3ArrayOperato
 packed_vector3_array_operator_index_const: ExtensionInterfacePackedVector3ArrayOperatorIndexConst
 
 /**
+ * @name packed_vector4_array_operator_index
+ * @since 4.3
+ *
+ * Gets a pointer to a Vector4 in a PackedVector4Array.
+ *
+ * @param p_self A pointer to a PackedVector4Array object.
+ * @param p_index The index of the Vector4 to get.
+ *
+ * @return A pointer to the requested Vector4.
+ */
+packed_vector4_array_operator_index: ExtensionInterfacePackedVector4ArrayOperatorIndex
+
+/**
+ * @name packed_vector4_array_operator_index_const
+ * @since 4.3
+ *
+ * Gets a const pointer to a Vector4 in a PackedVector4Array.
+ *
+ * @param p_self A const pointer to a PackedVector4Array object.
+ * @param p_index The index of the Vector4 to get.
+ *
+ * @return A const pointer to the requested Vector4.
+ */
+packed_vector4_array_operator_index_const: ExtensionInterfacePackedVector4ArrayOperatorIndexConst
+
+/**
+ * @name packed_color_array_operator_index
+ * @since 4.1
+ *
+ * Gets a pointer to a color in a PackedColorArray.
+ *
+ * @param p_self A pointer to a PackedColorArray object.
+ * @param p_index The index of the Color to get.
+ *
+ * @return A pointer to the requested Color.
+ */
+packed_color_array_operator_index: ExtensionInterfacePackedColorArrayOperatorIndex
+
+/**
+ * @name packed_color_array_operator_index_const
+ * @since 4.1
+ *
+ * Gets a const pointer to a color in a PackedColorArray.
+ *
+ * @param p_self A const pointer to a PackedColorArray object.
+ * @param p_index The index of the Color to get.
+ *
+ * @return A const pointer to the requested Color.
+ */
+packed_color_array_operator_index_const: ExtensionInterfacePackedColorArrayOperatorIndexConst
+
+/**
  * @name array_operator_index
  * @since 4.1
  *
@@ -1576,6 +1661,9 @@ object_set_instance: ExtensionInterfaceObjectSetInstance
  *
  * Gets the class name of an Object.
  *
+ * If the GDExtension wraps the Godot object in an abstraction specific to its class, this is the
+ * function that should be used to determine which wrapper to use.
+ *
  * @param p_object A pointer to the Object.
  * @param p_library A pointer the library received by the GDExtension's entry point function.
  * @param r_class_name A pointer to a String to receive the class name.
@@ -1622,6 +1710,34 @@ object_get_instance_from_id: ExtensionInterfaceObjectGetInstanceFromId
 object_get_instance_id: ExtensionInterfaceObjectGetInstanceId
 
 /**
+ * @name object_has_script_method
+ * @since 4.3
+ *
+ * Checks if this object has a script with the given method.
+ *
+ * @param p_object A pointer to the Object.
+ * @param p_method A pointer to a StringName identifying the method.
+ *
+ * @returns true if the object has a script and that script has a method with the given name. Returns false if the object has no script.
+ */
+object_has_script_method: ExtensionInterfaceObjectHasScriptMethod
+
+/**
+ * @name object_call_script_method
+ * @since 4.3
+ *
+ * Call the given script method on this object.
+ *
+ * @param p_object A pointer to the Object.
+ * @param p_method A pointer to a StringName identifying the method.
+ * @param p_args A pointer to a C array of Variant.
+ * @param p_argument_count The number of arguments.
+ * @param r_return A pointer a Variant which will be assigned the return value.
+ * @param r_error A pointer the structure which will hold error information.
+ */
+object_call_script_method: ExtensionInterfaceObjectCallScriptMethod
+
+/**
  * @name ref_get_object
  * @since 4.1
  *
@@ -1647,7 +1763,7 @@ ref_set_object: ExtensionInterfaceRefSetObject
 /**
  * @name script_instance_create
  * @since 4.1
- * @deprecated in Godot 4.2. Use `script_instance_create2` instead.
+ * @deprecated in Godot 4.2. Use `script_instance_create3` instead.
  *
  * Creates a script instance that contains the given info and instance data.
  *
@@ -1661,6 +1777,7 @@ script_instance_create: ExtensionInterfaceScriptInstanceCreate
 /**
  * @name script_instance_create2
  * @since 4.2
+ * @deprecated in Godot 4.3. Use `script_instance_create3` instead.
  *
  * Creates a script instance that contains the given info and instance data.
  *
@@ -1670,6 +1787,19 @@ script_instance_create: ExtensionInterfaceScriptInstanceCreate
  * @return A pointer to a ScriptInstanceExtension object.
  */
 script_instance_create2: ExtensionInterfaceScriptInstanceCreate2
+
+/**
+ * @name script_instance_create3
+ * @since 4.3
+ *
+ * Creates a script instance that contains the given info and instance data.
+ *
+ * @param p_info A pointer to a GDExtensionScriptInstanceInfo3 struct.
+ * @param p_instance_data A pointer to a data representing the script instance in the GDExtension. This will be passed to all the function pointers on p_info.
+ *
+ * @return A pointer to a ScriptInstanceExtension object.
+ */
+script_instance_create3: ExtensionInterfaceScriptInstanceCreate3
 
 /**
  * @name placeholder_script_instance_create
@@ -1718,6 +1848,7 @@ object_get_script_instance: ExtensionInterfaceObjectGetScriptInstance
 /**
  * @name callable_custom_create
  * @since 4.2
+ * @deprecated in Godot 4.3. Use `callable_custom_create2` instead.
  *
  * Creates a custom Callable object from a function pointer.
  *
@@ -1727,6 +1858,19 @@ object_get_script_instance: ExtensionInterfaceObjectGetScriptInstance
  * @param p_callable_custom_info The info required to construct a Callable.
  */
 callable_custom_create: ExtensionInterfaceCallableCustomCreate
+
+/**
+ * @name callable_custom_create2
+ * @since 4.3
+ *
+ * Creates a custom Callable object from a function pointer.
+ *
+ * Provided struct can be safely freed once the function returns.
+ *
+ * @param r_callable A pointer that will receive the new Callable.
+ * @param p_callable_custom_info The info required to construct a Callable.
+ */
+callable_custom_create2: ExtensionInterfaceCallableCustomCreate2
 
 /**
  * @name callable_custom_get_userdata
@@ -1784,7 +1928,7 @@ classdb_get_class_tag: ExtensionInterfaceClassdbGetClassTag
 /**
  * @name classdb_register_extension_class
  * @since 4.1
- * @deprecated in Godot 4.2. Use `classdb_register_extension_class2` instead.
+ * @deprecated in Godot 4.2. Use `classdb_register_extension_class3` instead.
  *
  * Registers an extension class in the ClassDB.
  *
@@ -1800,6 +1944,7 @@ classdb_register_extension_class: ExtensionInterfaceClassdbRegisterExtensionClas
 /**
  * @name classdb_register_extension_class2
  * @since 4.2
+ * @deprecated in Godot 4.3. Use `classdb_register_extension_class3` instead.
  *
  * Registers an extension class in the ClassDB.
  *
@@ -1811,6 +1956,21 @@ classdb_register_extension_class: ExtensionInterfaceClassdbRegisterExtensionClas
  * @param p_extension_funcs A pointer to a GDExtensionClassCreationInfo2 struct.
  */
 classdb_register_extension_class2: ExtensionInterfaceClassdbRegisterExtensionClass2
+
+/**
+ * @name classdb_register_extension_class3
+ * @since 4.3
+ *
+ * Registers an extension class in the ClassDB.
+ *
+ * Provided struct can be safely freed once the function returns.
+ *
+ * @param p_library A pointer the library received by the GDExtension's entry point function.
+ * @param p_class_name A pointer to a StringName with the class name.
+ * @param p_parent_class_name A pointer to a StringName with the parent class name.
+ * @param p_extension_funcs A pointer to a GDExtensionClassCreationInfo2 struct.
+ */
+classdb_register_extension_class3: ExtensionInterfaceClassdbRegisterExtensionClass3
 
 /**
  * @name classdb_register_extension_class_method
@@ -1827,17 +1987,35 @@ classdb_register_extension_class2: ExtensionInterfaceClassdbRegisterExtensionCla
 classdb_register_extension_class_method: ExtensionInterfaceClassdbRegisterExtensionClassMethod
 
 /**
+ * @name classdb_register_extension_class_virtual_method
+ * @since 4.3
+ *
+ * Registers a virtual method on an extension class in ClassDB, that can be implemented by scripts or other extensions.
+ *
+ * Provided struct can be safely freed once the function returns.
+ *
+ * @param p_library A pointer the library received by the GDExtension's entry point function.
+ * @param p_class_name A pointer to a StringName with the class name.
+ * @param p_method_info A pointer to a GDExtensionClassMethodInfo struct.
+ */
+classdb_register_extension_class_virtual_method: ExtensionInterfaceClassdbRegisterExtensionClassVirtualMethod
+
+/**
  * @name classdb_register_extension_class_integer_constant
  * @since 4.1
  *
  * Registers an integer constant on an extension class in the ClassDB.
+ *
+ * Note about registering bitfield values (if p_is_bitfield is true): even though p_constant_value is signed, language bindings are
+ * advised to treat bitfields as uint64_t, since this is generally clearer and can prevent mistakes like using -1 for setting all bits.
+ * Language APIs should thus provide an abstraction that registers bitfields (uint64_t) separately from regular constants (int64_t).
  *
  * @param p_library A pointer the library received by the GDExtension's entry point function.
  * @param p_class_name A pointer to a StringName with the class name.
  * @param p_enum_name A pointer to a StringName with the enum name.
  * @param p_constant_name A pointer to a StringName with the constant name.
  * @param p_constant_value The constant value.
- * @param p_is_bitfield Whether or not this is a bit field.
+ * @param p_is_bitfield Whether or not this constant is part of a bitfield.
  */
 classdb_register_extension_class_integer_constant: ExtensionInterfaceClassdbRegisterExtensionClassIntegerConstant
 
@@ -1960,6 +2138,31 @@ editor_add_plugin: ExtensionInterfaceEditorAddPlugin
  */
 editor_remove_plugin: ExtensionInterfaceEditorRemovePlugin
 
+/**
+ * @name editor_help_load_xml_from_utf8_chars
+ * @since 4.3
+ *
+ * Loads new XML-formatted documentation data in the editor.
+ *
+ * The provided pointer can be immediately freed once the function returns.
+ *
+ * @param p_data A pointer to a UTF-8 encoded C string (null terminated).
+ */
+editor_help_load_xml_from_utf8_chars: ExtensionsInterfaceEditorHelpLoadXmlFromUtf8Chars
+
+/**
+ * @name editor_help_load_xml_from_utf8_chars_and_len
+ * @since 4.3
+ *
+ * Loads new XML-formatted documentation data in the editor.
+ *
+ * The provided pointer can be immediately freed once the function returns.
+ *
+ * @param p_data A pointer to a UTF-8 encoded C string.
+ * @param p_size The number of bytes (not code units).
+ */
+editor_help_load_xml_from_utf8_chars_and_len: ExtensionsInterfaceEditorHelpLoadXmlFromUtf8CharsAndLen
+
 
 initialize_procs :: proc "contextless" (get_proc_address: ExtensionInterfaceGetProcAddress) {
     mem_alloc = cast(ExtensionInterfaceMemAlloc)get_proc_address("mem_alloc")
@@ -2025,7 +2228,9 @@ initialize_procs :: proc "contextless" (get_proc_address: ExtensionInterfaceGetP
     string_new_with_wide_chars = cast(ExtensionInterfaceStringNewWithWideChars)get_proc_address("string_new_with_wide_chars")
     string_new_with_latin1_chars_and_len = cast(ExtensionInterfaceStringNewWithLatin1CharsAndLen)get_proc_address("string_new_with_latin1_chars_and_len")
     string_new_with_utf8_chars_and_len = cast(ExtensionInterfaceStringNewWithUtf8CharsAndLen)get_proc_address("string_new_with_utf8_chars_and_len")
+    string_new_with_utf8_chars_and_len2 = cast(ExtensionInterfaceStringNewWithUtf8CharsAndLen2)get_proc_address("string_new_with_utf8_chars_and_len2")
     string_new_with_utf16_chars_and_len = cast(ExtensionInterfaceStringNewWithUtf16CharsAndLen)get_proc_address("string_new_with_utf16_chars_and_len")
+    string_new_with_utf16_chars_and_len2 = cast(ExtensionInterfaceStringNewWithUtf16CharsAndLen2)get_proc_address("string_new_with_utf16_chars_and_len2")
     string_new_with_utf32_chars_and_len = cast(ExtensionInterfaceStringNewWithUtf32CharsAndLen)get_proc_address("string_new_with_utf32_chars_and_len")
     string_new_with_wide_chars_and_len = cast(ExtensionInterfaceStringNewWithWideCharsAndLen)get_proc_address("string_new_with_wide_chars_and_len")
     string_to_latin1_chars = cast(ExtensionInterfaceStringToLatin1Chars)get_proc_address("string_to_latin1_chars")
@@ -2047,12 +2252,12 @@ initialize_procs :: proc "contextless" (get_proc_address: ExtensionInterfaceGetP
     xml_parser_open_buffer = cast(ExtensionInterfaceXmlParserOpenBuffer)get_proc_address("xml_parser_open_buffer")
     file_access_store_buffer = cast(ExtensionInterfaceFileAccessStoreBuffer)get_proc_address("file_access_store_buffer")
     file_access_get_buffer = cast(ExtensionInterfaceFileAccessGetBuffer)get_proc_address("file_access_get_buffer")
+    image_ptrw = cast(ExtensionInterfaceImagePtrw)get_proc_address("image_ptrw")
+    image_ptr = cast(ExtensionInterfaceImagePtr)get_proc_address("image_ptr")
     worker_thread_pool_add_native_group_task = cast(ExtensionInterfaceWorkerThreadPoolAddNativeGroupTask)get_proc_address("worker_thread_pool_add_native_group_task")
     worker_thread_pool_add_native_task = cast(ExtensionInterfaceWorkerThreadPoolAddNativeTask)get_proc_address("worker_thread_pool_add_native_task")
     packed_byte_array_operator_index = cast(ExtensionInterfacePackedByteArrayOperatorIndex)get_proc_address("packed_byte_array_operator_index")
     packed_byte_array_operator_index_const = cast(ExtensionInterfacePackedByteArrayOperatorIndexConst)get_proc_address("packed_byte_array_operator_index_const")
-    packed_color_array_operator_index = cast(ExtensionInterfacePackedColorArrayOperatorIndex)get_proc_address("packed_color_array_operator_index")
-    packed_color_array_operator_index_const = cast(ExtensionInterfacePackedColorArrayOperatorIndexConst)get_proc_address("packed_color_array_operator_index_const")
     packed_float32_array_operator_index = cast(ExtensionInterfacePackedFloat32ArrayOperatorIndex)get_proc_address("packed_float32_array_operator_index")
     packed_float32_array_operator_index_const = cast(ExtensionInterfacePackedFloat32ArrayOperatorIndexConst)get_proc_address("packed_float32_array_operator_index_const")
     packed_float64_array_operator_index = cast(ExtensionInterfacePackedFloat64ArrayOperatorIndex)get_proc_address("packed_float64_array_operator_index")
@@ -2067,6 +2272,10 @@ initialize_procs :: proc "contextless" (get_proc_address: ExtensionInterfaceGetP
     packed_vector2_array_operator_index_const = cast(ExtensionInterfacePackedVector2ArrayOperatorIndexConst)get_proc_address("packed_vector2_array_operator_index_const")
     packed_vector3_array_operator_index = cast(ExtensionInterfacePackedVector3ArrayOperatorIndex)get_proc_address("packed_vector3_array_operator_index")
     packed_vector3_array_operator_index_const = cast(ExtensionInterfacePackedVector3ArrayOperatorIndexConst)get_proc_address("packed_vector3_array_operator_index_const")
+    packed_vector4_array_operator_index = cast(ExtensionInterfacePackedVector4ArrayOperatorIndex)get_proc_address("packed_vector4_array_operator_index")
+    packed_vector4_array_operator_index_const = cast(ExtensionInterfacePackedVector4ArrayOperatorIndexConst)get_proc_address("packed_vector4_array_operator_index_const")
+    packed_color_array_operator_index = cast(ExtensionInterfacePackedColorArrayOperatorIndex)get_proc_address("packed_color_array_operator_index")
+    packed_color_array_operator_index_const = cast(ExtensionInterfacePackedColorArrayOperatorIndexConst)get_proc_address("packed_color_array_operator_index_const")
     array_operator_index = cast(ExtensionInterfaceArrayOperatorIndex)get_proc_address("array_operator_index")
     array_operator_index_const = cast(ExtensionInterfaceArrayOperatorIndexConst)get_proc_address("array_operator_index_const")
     array_ref = cast(ExtensionInterfaceArrayRef)get_proc_address("array_ref")
@@ -2085,21 +2294,27 @@ initialize_procs :: proc "contextless" (get_proc_address: ExtensionInterfaceGetP
     object_cast_to = cast(ExtensionInterfaceObjectCastTo)get_proc_address("object_cast_to")
     object_get_instance_from_id = cast(ExtensionInterfaceObjectGetInstanceFromId)get_proc_address("object_get_instance_from_id")
     object_get_instance_id = cast(ExtensionInterfaceObjectGetInstanceId)get_proc_address("object_get_instance_id")
+    object_has_script_method = cast(ExtensionInterfaceObjectHasScriptMethod)get_proc_address("object_has_script_method")
+    object_call_script_method = cast(ExtensionInterfaceObjectCallScriptMethod)get_proc_address("object_call_script_method")
     ref_get_object = cast(ExtensionInterfaceRefGetObject)get_proc_address("ref_get_object")
     ref_set_object = cast(ExtensionInterfaceRefSetObject)get_proc_address("ref_set_object")
     script_instance_create = cast(ExtensionInterfaceScriptInstanceCreate)get_proc_address("script_instance_create")
     script_instance_create2 = cast(ExtensionInterfaceScriptInstanceCreate2)get_proc_address("script_instance_create2")
+    script_instance_create3 = cast(ExtensionInterfaceScriptInstanceCreate3)get_proc_address("script_instance_create3")
     placeholder_script_instance_create = cast(ExtensionInterfacePlaceHolderScriptInstanceCreate)get_proc_address("placeholder_script_instance_create")
     placeholder_script_instance_update = cast(ExtensionInterfacePlaceHolderScriptInstanceUpdate)get_proc_address("placeholder_script_instance_update")
     object_get_script_instance = cast(ExtensionInterfaceObjectGetScriptInstance)get_proc_address("object_get_script_instance")
     callable_custom_create = cast(ExtensionInterfaceCallableCustomCreate)get_proc_address("callable_custom_create")
+    callable_custom_create2 = cast(ExtensionInterfaceCallableCustomCreate2)get_proc_address("callable_custom_create2")
     callable_custom_get_userdata = cast(ExtensionInterfaceCallableCustomGetUserData)get_proc_address("callable_custom_get_userdata")
     classdb_construct_object = cast(ExtensionInterfaceClassdbConstructObject)get_proc_address("classdb_construct_object")
     classdb_get_method_bind = cast(ExtensionInterfaceClassdbGetMethodBind)get_proc_address("classdb_get_method_bind")
     classdb_get_class_tag = cast(ExtensionInterfaceClassdbGetClassTag)get_proc_address("classdb_get_class_tag")
     classdb_register_extension_class = cast(ExtensionInterfaceClassdbRegisterExtensionClass)get_proc_address("classdb_register_extension_class")
     classdb_register_extension_class2 = cast(ExtensionInterfaceClassdbRegisterExtensionClass2)get_proc_address("classdb_register_extension_class2")
+    classdb_register_extension_class3 = cast(ExtensionInterfaceClassdbRegisterExtensionClass3)get_proc_address("classdb_register_extension_class3")
     classdb_register_extension_class_method = cast(ExtensionInterfaceClassdbRegisterExtensionClassMethod)get_proc_address("classdb_register_extension_class_method")
+    classdb_register_extension_class_virtual_method = cast(ExtensionInterfaceClassdbRegisterExtensionClassVirtualMethod)get_proc_address("classdb_register_extension_class_virtual_method")
     classdb_register_extension_class_integer_constant = cast(ExtensionInterfaceClassdbRegisterExtensionClassIntegerConstant)get_proc_address("classdb_register_extension_class_integer_constant")
     classdb_register_extension_class_property = cast(ExtensionInterfaceClassdbRegisterExtensionClassProperty)get_proc_address("classdb_register_extension_class_property")
     classdb_register_extension_class_property_indexed = cast(ExtensionInterfaceClassdbRegisterExtensionClassPropertyIndexed)get_proc_address("classdb_register_extension_class_property_indexed")
@@ -2110,4 +2325,6 @@ initialize_procs :: proc "contextless" (get_proc_address: ExtensionInterfaceGetP
     get_library_path = cast(ExtensionInterfaceGetLibraryPath)get_proc_address("get_library_path")
     editor_add_plugin = cast(ExtensionInterfaceEditorAddPlugin)get_proc_address("editor_add_plugin")
     editor_remove_plugin = cast(ExtensionInterfaceEditorRemovePlugin)get_proc_address("editor_remove_plugin")
+    editor_help_load_xml_from_utf8_chars = cast(ExtensionsInterfaceEditorHelpLoadXmlFromUtf8Chars)get_proc_address("editor_help_load_xml_from_utf8_chars")
+    editor_help_load_xml_from_utf8_chars_and_len = cast(ExtensionsInterfaceEditorHelpLoadXmlFromUtf8CharsAndLen)get_proc_address("editor_help_load_xml_from_utf8_chars_and_len")
 }

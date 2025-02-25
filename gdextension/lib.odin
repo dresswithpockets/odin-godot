@@ -82,6 +82,7 @@ VariantType :: enum c.int {
     PackedVector2Array,
     PackedVector3Array,
     PackedColorArray,
+    PackedVector4Array,
 
     /* enum max */
     VariantMax,
@@ -205,6 +206,7 @@ MethodInfo :: struct {
 
 ExtensionClassGetPropertyList :: #type proc "c" (instance: ExtensionClassInstancePtr, count: ^u32) -> [^]PropertyInfo
 ExtensionClassFreePropertyList :: #type proc "c" (instance: ExtensionClassInstancePtr, list: ^PropertyInfo)
+ExtensionClassFreePropertyList2 :: #type proc "c" (instance: ExtensionClassInstancePtr, list: ^PropertyInfo, count: c.uint32_t)
 ExtensionClassPropertyCanRevert :: #type proc "c" (instance: ExtensionClassInstancePtr, name: StringNamePtr) -> bool
 ExtensionClassPropertyGetRevert :: #type proc "c" (
     instance: ExtensionClassInstancePtr,
@@ -226,7 +228,7 @@ ExtensionClassGetVirtual :: #type proc "c" (class_user_data: rawptr, name: Strin
 ExtensionClassGetVirtualCallData :: #type proc "c" (class_user_data: rawptr, name: StringNamePtr) -> rawptr
 ExtensionClassCallVirtualWithData :: #type proc "c" (instance: ExtensionClassInstancePtr, name: StringNamePtr, virtual_call_userdata: rawptr, args: [^]TypePtr, ret: TypePtr)
 
-// Deprecated. Use ExtensionClassCreationInfo2 instead.
+// Deprecated. Use ExtensionClassCreationInfo3 instead.
 ExtensionClassCreationInfo :: struct {
     is_virtual:               bool,
     is_abstract:              bool,
@@ -251,6 +253,7 @@ ExtensionClassCreationInfo :: struct {
     class_user_data:          rawptr,
 }
 
+// Deprecated. Use ExtensionClassCreationInfo3 instead.
 ExtensionClassCreationInfo2 :: struct {
     is_virtual: bool,
     is_abstract: bool,
@@ -259,6 +262,40 @@ ExtensionClassCreationInfo2 :: struct {
     get_func: ExtensionClassGet,
     get_property_list_func: ExtensionClassGetPropertyList,
     free_property_list_func: ExtensionClassFreePropertyList,
+    property_can_revert_func: ExtensionClassPropertyCanRevert,
+    property_get_revert_func: ExtensionClassPropertyGetRevert,
+    validate_property_func: ExtensionClassValidateProperty,
+    notification_func: ExtensionClassNotification2,
+    to_string_func: ExtensionClassToString,
+    reference_func: ExtensionClassReference,
+    unreference_func: ExtensionClassUnreference,
+    create_instance_func: ExtensionClassCreateInstance, // (Default) constructor; mandatory. If the class is not instantiable, consider making it virtual or abstract.
+    free_instance_func: ExtensionClassFreeInstance, // Destructor; mandatory.
+    recreate_instance_func: ExtensionClassRecreateInstance,
+    // Queries a virtual function by name and returns a callback to invoke the requested virtual function.
+    get_virtual_func: ExtensionClassGetVirtual,
+    // Paired with `call_virtual_with_data_func`, this is an alternative to `get_virtual_func` for extensions that
+    // need or benefit from extra data when calling virtual functions.
+    // Returns user data that will be passed to `call_virtual_with_data_func`.
+    // Returning `NULL` from this function signals to Godot that the virtual function is not overridden.
+    // Data returned from this function should be managed by the extension and must be valid until the extension is deinitialized.
+    // You should supply either `get_virtual_func`, or `get_virtual_call_data_func` with `call_virtual_with_data_func`.
+    get_virtual_call_data_func: ExtensionClassGetVirtualCallData,
+    // Used to call virtual functions when `get_virtual_call_data_func` is not null.
+    call_virtual_with_data_func: ExtensionClassCallVirtualWithData,
+    get_rid_func: ExtensionClassGetRid,
+    class_userdata: rawptr, // Per-class user data, later accessible in instance bindings.
+}
+
+ExtensionClassCreationInfo3 :: struct {
+    is_virtual: bool,
+    is_abstract: bool,
+    is_exposed: bool,
+    is_runtime: bool,
+    set_func: ExtensionClassSet,
+    get_func: ExtensionClassGet,
+    get_property_list_func: ExtensionClassGetPropertyList,
+    free_property_list_func: ExtensionClassFreePropertyList2,
     property_can_revert_func: ExtensionClassPropertyCanRevert,
     property_get_revert_func: ExtensionClassPropertyGetRevert,
     validate_property_func: ExtensionClassValidateProperty,
@@ -341,14 +378,19 @@ ExtensionClassMethodInfo :: struct {
     // bitfield of ExtensionClassMethodFlags 
     method_flags:           c.uint32_t,
 
-    // If `has_return_value` is false, `return_value_info` and `return_value_metadata` are ignored.
+    /* If `has_return_value` is false, `return_value_info` and `return_value_metadata` are ignored.
+	 *
+	 * @todo Consider dropping `has_return_value` and making the other two properties match `GDExtensionMethodInfo` and `GDExtensionClassVirtualMethod` for consistency in future version of this struct.
+	 */
     has_return_value:       c.bool,
     return_value_info:      ^PropertyInfo,
     return_value_metadata:  ExtensionClassMethodArgumentMetadata,
 
     /* Arguments: `arguments_info` and `arguments_metadata` are array of size `argument_count`.
      * Name and hint information for the argument can be omitted in release builds. Class name should always be present if it applies.
-     */
+	 *
+	 * @todo Consider renaming `arguments_info` to `arguments` for consistency in future version of this struct.
+	 */
     argument_count:         c.uint32_t,
     arguments_info:         [^]PropertyInfo,
     arguments_metadata:     [^]ExtensionClassMethodArgumentMetadata,
@@ -358,7 +400,19 @@ ExtensionClassMethodInfo :: struct {
     default_arguments:      [^]VariantPtr,
 }
 
-ExtensionCallableCustomCall :: #type proc "c" (callable_userdata: rawptr, args: [^]VariantPtr, arg_count: i64)
+ExtensionClassVirtualMethodInfo :: struct {
+	name: StringNamePtr,
+	method_flags: c.uint32_t, // Bitfield of `GDExtensionClassMethodFlags`.
+
+	return_value: PropertyInfo,
+	return_value_metadata: ExtensionClassMethodArgumentMetadata,
+
+	argument_count: c.uint32_t,
+	arguments: [^]PropertyInfo,
+	arguments_metadata: [^]ExtensionClassMethodArgumentMetadata,
+}
+
+ExtensionCallableCustomCall :: #type proc "c" (callable_userdata: rawptr, args: [^]VariantPtr, arg_count: i64, ret: VariantPtr, error: ^CallError)
 ExtensionCallableCustomIsValid :: #type proc "c" (callable_userdata: rawptr) -> bool
 ExtensionCallableCustomFree :: #type proc "c" (callable_userdata: rawptr)
 
@@ -368,6 +422,9 @@ ExtensionCallableCustomLessThan :: #type proc "c" (callable_userdata_a, callable
 
 ExtensionCallableCustomToString :: #type proc "c" (callable_userdata: rawptr, is_valid: ^bool, out: StringPtr)
 
+ExtensionCallableCustomGetArgumentCount :: #type proc "c" (callable_userdata: rawptr, is_valid: ^bool) -> i64
+
+// Deprecated. Use ExtensionCallableCustomInfo2 instead.
 ExtensionCallableCustomInfo :: struct {
     /* Only `call_func` and `token` are strictly required, however, `object_id` should be passed if its not a static method.
      *
@@ -399,6 +456,39 @@ ExtensionCallableCustomInfo :: struct {
     to_string_func: ExtensionCallableCustomToString,
 }
 
+ExtensionCallableCustomInfo2 :: struct {
+    /* Only `call_func` and `token` are strictly required, however, `object_id` should be passed if its not a static method.
+     *
+     * `token` should point to an address that uniquely identifies the GDExtension (for example, the
+     * `ExtensionClassLibraryPtr` passed to the entry symbol function.
+     *
+     * `hash_func`, `equal_func`, and `less_than_func` are optional. If not provided both `call_func` and
+     * `callable_userdata` together are used as the identity of the callable for hashing and comparison purposes.
+     *
+     * The hash returned by `hash_func` is cached, `hash_func` will not be called more than once per callable.
+     *
+     * `is_valid_func` is necessary if the validity of the callable can change before destruction.
+     *
+     * `free_func` is necessary if `callable_userdata` needs to be cleaned up when the callable is freed.
+     */
+    callable_userdata: rawptr,
+    token: rawptr,
+
+    object_id: c.uint64_t,
+
+    call_func: ExtensionCallableCustomCall,
+    is_valid_func: ExtensionCallableCustomIsValid,
+    free_func: ExtensionCallableCustomFree,
+
+    hash_func: ExtensionCallableCustomHash,
+    equal_func: ExtensionCallableCustomEqual,
+    less_than_func: ExtensionCallableCustomLessThan,
+
+    to_string_func: ExtensionCallableCustomToString,
+
+    get_argument_count_func: ExtensionCallableCustomGetArgumentCount,
+}
+
 /* SCRIPT INSTANCE EXTENSION */
 
 // Pointer to custom ScriptInstance native implementation.
@@ -418,9 +508,15 @@ ExtensionScriptInstanceGetPropertyList :: #type proc "c" (
     instance: ExtensionScriptInstanceDataPtr,
     count: ^u32,
 ) -> [^]PropertyInfo
+// Deprecated. Use ExtensionScriptInstanceFreePropertyList2 instead.
 ExtensionScriptInstanceFreePropertyList :: #type proc "c" (
     instance: ExtensionScriptInstanceDataPtr,
     list: ^PropertyInfo,
+)
+ExtensionScriptInstanceFreePropertyList2 :: #type proc "c" (
+    instance: ExtensionScriptInstanceDataPtr,
+    list: ^PropertyInfo,
+    count: u32,
 )
 ExtensionScriptInstanceGetClassCategory :: #type proc "c" (
     instance: ExtensionScriptInstanceDataPtr,
@@ -456,12 +552,16 @@ ExtensionScriptInstanceGetMethodList :: #type proc "c" (
     instance: ExtensionScriptInstanceDataPtr,
     count: ^u32,
 ) -> [^]MethodInfo
+// Deprecated. Use ExtensionScriptInstanceFreeMethodList2 instead.
 ExtensionScriptInstanceFreeMethodList :: #type proc "c" (instance: ExtensionScriptInstanceDataPtr, list: ^MethodInfo)
+ExtensionScriptInstanceFreeMethodList2 :: #type proc "c" (instance: ExtensionScriptInstanceDataPtr, list: ^MethodInfo, count: u32)
 
 ExtensionScriptInstanceHasMethod :: #type proc "c" (
     instance: ExtensionScriptInstanceDataPtr,
     name: StringNamePtr,
 ) -> bool
+
+ExtensionScriptInstanceGetMethodArgumentCount :: #type proc "c" (instance: ExtensionScriptInstanceDataPtr, name: StringNamePtr, is_valid: ^bool) -> i64
 
 ExtensionScriptInstanceCall :: #type proc "c" (
     self: ExtensionScriptInstanceDataPtr,
@@ -497,7 +597,7 @@ ExtensionScriptInstanceFree :: #type proc "c" (instance: ExtensionScriptInstance
 // Pointer to ScriptInstance.
 ScriptInstancePtr :: distinct rawptr
 
-// Deprecated. Use ExtensionScriptInstanceInfo2 instead.
+// Deprecated. Use ExtensionScriptInstanceInfo3 instead.
 ExtensionScriptInstanceInfo :: struct {
     set_func:                  ExtensionScriptInstanceSet,
     get_func:                  ExtensionScriptInstanceGet,
@@ -563,6 +663,48 @@ ExtensionScriptInstanceInfo2 :: struct {
     get_language_func: ExtensionScriptInstanceGetLanguage,
 
     free_func: ExtensionScriptInstanceFree,
+}
+
+ExtensionScriptInstanceInfo3 :: struct {
+	set_func: ExtensionScriptInstanceSet,
+	get_func: ExtensionScriptInstanceGet,
+	get_property_list_func: ExtensionScriptInstanceGetPropertyList,
+	free_property_list_func: ExtensionScriptInstanceFreePropertyList2,
+	get_class_category_func: ExtensionScriptInstanceGetClassCategory, // Optional. Set to NULL for the default behavior.
+
+	property_can_revert_func: ExtensionScriptInstancePropertyCanRevert,
+	property_get_revert_func: ExtensionScriptInstancePropertyGetRevert,
+
+	get_owner_func: ExtensionScriptInstanceGetOwner,
+	get_property_state_func: ExtensionScriptInstanceGetPropertyState,
+
+	get_method_list_func: ExtensionScriptInstanceGetMethodList,
+	free_method_list_func: ExtensionScriptInstanceFreeMethodList2,
+	get_property_type_func: ExtensionScriptInstanceGetPropertyType,
+	validate_property_func: ExtensionScriptInstanceValidateProperty,
+
+	has_method_func: ExtensionScriptInstanceHasMethod,
+
+	get_method_argument_count_func: ExtensionScriptInstanceGetMethodArgumentCount,
+
+	call_func: ExtensionScriptInstanceCall,
+	notification_func: ExtensionScriptInstanceNotification2,
+
+	to_string_func: ExtensionScriptInstanceToString,
+
+	refcount_incremented_func: ExtensionScriptInstanceRefCountIncremented,
+	refcount_decremented_func: ExtensionScriptInstanceRefCountDecremented,
+
+	get_script_func: ExtensionScriptInstanceGetScript,
+
+	is_placeholder_func: ExtensionScriptInstanceIsPlaceholder,
+
+	set_fallback_func: ExtensionScriptInstanceSet,
+	get_fallback_func: ExtensionScriptInstanceGet,
+
+	get_language_func: ExtensionScriptInstanceGetLanguage,
+
+	free_func: ExtensionScriptInstanceFree,
 }
 
 ExtensionInterfaceGetProcAddress :: #type proc "c" (function_name: cstring) -> rawptr
