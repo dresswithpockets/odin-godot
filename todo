@@ -1,13 +1,20 @@
 # bindgen
+TODO generate special constructors for String, StringName, and Variant (see gdextension/interface.odin)
+TODO generate Variant constructors that convert from another type (see get_variant_from_type_constructor)
+TODO generate Object in core instead of in variant/
+TODO generate class methods
+TODO merge core/, variant/, into godot/ package?
+
 TODO rewrite state code to pre-calculate all fields used by templates
-DONE rewrite codegen to use temple templating engine
 TODO add support for vararg utility functions
-DONE add support for utility functions with default arg values
-DONE add frontend generation for class methods
-DONE add generation for engine (non-builtin) classes
 TODO add generation for built-in singletons
 TODO add generation for native structures (?)
 TODO add option to generate classes and methods in a class-per-package hierarchy (each class gets its own package)
+
+DONE rewrite codegen to use temple templating engine
+DONE add support for utility functions with default arg values
+DONE add frontend generation for class methods
+DONE add generation for engine (non-builtin) classes
 
 # godin
 TODO rewrite godin with better Odin parsing support via core:odin/parser
