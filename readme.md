@@ -5,7 +5,7 @@
 >
 > If you are using parts of it, beware of sudden major changes to the API, structure, and features.
 
-This currently targets Godot v4.2. This may work with v4.1, **but it will not work with v4.0**. For a version which works with `v4.0` use the [dev-4.0-2024-02 release](https://github.com/dresswithpockets/odin-godot/tree/dev-4.0-2024-02).
+This currently targets Godot v4.3. The interface should be backwards compatible with 4.2, and may even work with 4.1, **but it will not work with v4.0**. For a version which works with `v4.0` use the [dev-4.0-2024-02 release](https://github.com/dresswithpockets/odin-godot/tree/dev-4.0-2024-02).
 
 ## Base GDExtension Bindings
 
