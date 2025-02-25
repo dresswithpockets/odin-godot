@@ -33,7 +33,7 @@ types_with_odin_string_constructors :: []string{"String", "StringName"}
 generate_global_enums :: proc(state: ^NewState) {
     fhandle, ferr := os.open("core/enums.gen.odin", os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
     if ferr != 0 {
-        fmt.eprintf("Error opening core/enums.gen.odin\n")
+        fmt.eprintln("Error opening core/enums.gen.odin")
         return
     }
     defer os.close(fhandle)
@@ -46,13 +46,26 @@ generate_global_enums :: proc(state: ^NewState) {
 generate_utility_functions :: proc(state: ^NewState) {
     fhandle, ferr := os.open("core/util.gen.odin", os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
     if ferr != 0 {
-        fmt.eprintf("Error opening core/util.gen.odin\n")
+        fmt.eprintln("Error opening core/util.gen.odin")
         return
     }
     defer os.close(fhandle)
 
     fstream := os.stream_from_handle(fhandle)
     util_functions_template.with(fstream, state)
+}
+
+@private
+generate_native_structs :: proc(state: ^NewState) {
+    fhandle, ferr := os.open("variant/native.gen.odin", os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
+    if ferr != 0 {
+        fmt.eprintln("Error opening variant/native.gen.odin")
+        return
+    }
+    defer os.close(fhandle)
+
+    fstream := os.stream_from_handle(fhandle)
+    native_struct_template.with(fstream, state)
 }
 
 @private
@@ -90,6 +103,7 @@ generate_engine_class :: proc(class: ^NewStateType) {
 generate_bindings :: proc(state: ^NewState) {
     generate_global_enums(state)
     generate_utility_functions(state)
+    generate_native_structs(state)
 
     for builtin_class in state.builtin_classes do if !builtin_class.odin_skip {
         _, ok := builtin_class.derived.(NewStateClass)

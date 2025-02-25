@@ -20,20 +20,20 @@ BUILD_CONFIG :: #config(BUILD_CONFIG, "float_64")
 // - Some types have no destructor (see `extension_api.json`'s `has_destructor` field), for
 //   them it is always safe to skip the constructor for the return value if you are in a hurry ;-)
 
-VariantPtr :: distinct rawptr
-UninitializedVariantPtr :: distinct rawptr
-StringNamePtr :: distinct rawptr
-UninitializedStringNamePtr :: distinct rawptr
-StringPtr :: distinct rawptr
-UninitializedStringPtr :: distinct rawptr
-ObjectPtr :: distinct rawptr
-UninitializedObjectPtr :: distinct rawptr
-TypePtr :: distinct rawptr
-UninitializedTypePtr :: distinct rawptr
+VariantPtr :: rawptr
+UninitializedVariantPtr :: rawptr
+StringNamePtr :: rawptr
+UninitializedStringNamePtr :: rawptr
+StringPtr :: rawptr
+UninitializedStringPtr :: rawptr
+ObjectPtr :: rawptr
+UninitializedObjectPtr :: rawptr
+TypePtr :: rawptr
+UninitializedTypePtr :: rawptr
 
 ObjectInstanceId :: u64
-MethodBindPtr :: distinct rawptr
-RefPtr :: distinct rawptr
+MethodBindPtr :: rawptr
+RefPtr :: rawptr
 
 VariantType :: enum c.int {
     Nil,

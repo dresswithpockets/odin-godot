@@ -8,12 +8,59 @@ import __bindgen_var "../variant"
 {% if this.derived.(NewStateClass).inherits.odin_type == "Object" %}
     using derived{{ this.derived.(NewStateClass).inherits.odin_type }}: __bindgen_var.Object
 {% else %}
-    using derived{{ this.derived.(NewStateClass).inherits.odin_type }}: {{ this.derived.(NewStateClass).inherits.odin_type }}
+    using derived{{ this.derived.(NewStateClass).inherits.odin_type }}: {{ bindgen_class_reference_type(this.derived.(NewStateClass).inherits) }}
 {% end %}
 }
 
+// enums
+{% for state_enum in this.derived.(NewStateClass).enums %}
+
+{% if !state_enum.odin_skip %}
+{% embed "bindgen_enum.temple.twig" with state_enum.derived.(NewStateEnum) %}
+{% end %}
+
+{% end %}
+
+// method frontends
+{% for method in this.derived.(NewStateClass).methods %}
+{% if !method.odin_skip %}
+{{ method.odin_name }} :: proc "contextless" (self: {{ this.odin_type }}
+{% for argument in method.arguments %}, {{ argument.name }}_: {{ bindgen_class_reference_type(argument.type) }}
+{% end %})
+{% if return_type, has_return_type := method.return_type.(^NewStateType); has_return_type %} -> {{ bindgen_class_reference_type(return_type) }}{% end %} {
+    self := self
+{% for argument in method.arguments %}
+    {{ argument.name }}_ := {{ argument.name }}_
+{% end %}
+{% if return_type, has_return_type := method.return_type.(^NewStateType); has_return_type %}
+    return __bindgen_gde.call_method_ptr_ret(
+        __{{ method.odin_name }}__backing_ptr,
+        {{ bindgen_class_reference_type(return_type) }},
+        cast(__bindgen_gde.ObjectPtr)&self,
+{% else %}
+    __bindgen_gde.call_method_ptr_no_ret(
+        __{{ method.odin_name }}__backing_ptr,
+        cast(__bindgen_gde.ObjectPtr)&self,
+{% end %}
+{% for argument in method.arguments %}
+        cast(__bindgen_gde.TypePtr)&{{ argument.name }}_,
+{% end %}
+    )
+}
+
+{% end %}
+{% end %}
+
 init_{{ this.snake_type }} :: proc() {
     __bindgen_gde.string_name_new_with_latin1_chars(cast(__bindgen_gde.StringNamePtr)&__{{ this.odin_type }}__class_name._opaque, "{{ this.godot_type }}", true)
+    _gde_name: __bindgen_var.StringName
+
+{% for method in this.derived.(NewStateClass).methods %}
+{% if !method.odin_skip %}
+    __bindgen_gde.string_name_new_with_latin1_chars(cast(__bindgen_gde.StringNamePtr)&_gde_name, "{{ method.godot_name }}", true)
+    __{{ method.odin_name }}__backing_ptr = __bindgen_gde.classdb_get_method_bind(cast(__bindgen_gde.StringNamePtr)&__{{ this.odin_type }}__class_name, cast(__bindgen_gde.StringNamePtr)&_gde_name, {{ i64(method.hash) }})
+{% end %}
+{% end %}
 }
 
 new_{{ this.snake_type }} :: proc() -> ^{{ this.odin_type }} {
@@ -30,3 +77,11 @@ new_{{ this.snake_type }}_from_object :: proc(object: __bindgen_gde.ObjectPtr) -
 
 @(private="file")
 __{{ this.odin_type }}__class_name: __bindgen_var.StringName
+
+// method backing ptrs
+{% for method in this.derived.(NewStateClass).methods %}
+{% if !method.odin_skip %}
+@(private="file")
+__{{ method.odin_name }}__backing_ptr: __bindgen_gde.MethodBindPtr
+{% end %}
+{% end %}

@@ -21,6 +21,10 @@ godot_to_odin_case :: proc(name: string) -> (s: string) {
         r := runes[i]
         previous := runes[i - 1]
         next := runes[i + 1]
+        if r == '.' {
+            fmt.sbprint(&sb, '_')
+            continue
+        }
         if unicode.is_upper(r) &&
            (unicode.is_upper(previous) || unicode.is_number(previous)) &&
            unicode.is_upper(next) {

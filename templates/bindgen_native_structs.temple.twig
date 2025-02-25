@@ -1,0 +1,8 @@
+package variant
+
+{% for type in this.native_structs %}
+{{ type.odin_type }} :: struct {
+
+}
+
+{% end %}

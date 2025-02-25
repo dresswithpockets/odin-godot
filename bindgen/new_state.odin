@@ -151,6 +151,8 @@ NewStateEnum :: struct {
 
     // the ordered key-value pairs of all enum values
     odin_values: []NewStateEnumValue,
+
+    parent_class: Maybe(^NewStateType),
 }
 
 NewStateEnumValue :: struct {
@@ -190,9 +192,12 @@ skip_builtin_types_by_name :: []string{
 @private
 new_pod_type_map := map[string]string{
     "bool"     = "bool",
+
+    // TODO: these should map to gd.float, not f64
     "real_t"   = "f64",
     "float"    = "f64",
     "double"   = "f64",
+
     "int"      = "int",
     "int8_t"   = "i8",
     "int16_t"  = "i16",
@@ -268,17 +273,15 @@ new_state_godot_type_in_map :: proc(state: ^NewState, godot_name: string) -> boo
     return godot_name in state.all_types
 }
 
-_state_enum :: proc(state: ^NewState, api_enum: ApiEnum, class_name: Maybe(string) = nil) -> ^NewStateType {
+_state_enum :: proc(state: ^NewState, api_enum: ApiEnum, class: Maybe(^NewStateType) = nil) -> ^NewStateType {
     godot_name := api_enum.name
-    odin_name := godot_name
+    odin_name := godot_to_odin_case(godot_name)
 
     // enums in classes must follow the format of "ClassName.EnumName"
     // and the odin name must follow the foramt of "ClassName_EnumName"
-    if cname, has_class_name := class_name.(string); has_class_name {
-        odin_name = godot_to_odin_case(fmt.aprintf("%v_%v", cname, godot_name))
-        godot_name = fmt.aprintf("%v.%v", cname, godot_name)
-    } else {
-        odin_name = godot_to_odin_case(godot_name)
+    if parent_class, has_parent_class := class.(^NewStateType); has_parent_class {
+        odin_name = fmt.aprintf("%v_%v", parent_class.odin_type, odin_name)
+        godot_name = fmt.aprintf("%v.%v", parent_class.godot_type, godot_name)
     }
 
     state_type := new(NewStateType)
@@ -288,6 +291,7 @@ _state_enum :: proc(state: ^NewState, api_enum: ApiEnum, class_name: Maybe(strin
     state_enum := NewStateEnum {
         odin_name = odin_name,
         odin_values = make([]NewStateEnumValue, len(api_enum.values)),
+        parent_class = class,
     }
     state_type.derived = state_enum
 
@@ -544,7 +548,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
     }
 
     // builtin classes initial pass - another one is made down further for operators, methods, constructors
-    for api_builtin_class, i in api.builtin_classes {
+    for api_builtin_class, api_builtin_class_index in api.builtin_classes {
         // TODO: handle is_keyed
         // TODO: handle indexing_return_type (these can be special cases for Array/Dictionary/PackedXXArray)
         odin_name := godot_to_odin_case(api_builtin_class.name)
@@ -586,11 +590,11 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         if !state_type.odin_skip {
             state.all_types[api_builtin_class.name] = state_type
         }
-        state.builtin_classes[i] = state_type
+        state.builtin_classes[api_builtin_class_index] = state_type
 
-        for api_enum, i in api_builtin_class.enums {
-            state_enum := _state_enum(state, api_enum, api_builtin_class.name)
-            state_class.enums[i] = state_enum
+        for api_enum, enum_index in api_builtin_class.enums {
+            state_enum := _state_enum(state, api_enum, state_type)
+            state_class.enums[enum_index] = state_enum
         }
     }
 
@@ -652,7 +656,8 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         state.all_types["Nil"] = state_type
     }
 
-    for api_class, i in api.classes {
+    // initial pass for engine classes, another one is made further down for things like methods
+    for api_class, api_class_index in api.classes {
         odin_name := godot_to_odin_case(api_class.name)
         snake_name := godot_to_snake_case(api_class.name)
         state_type := new(NewStateType)
@@ -662,51 +667,60 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         // HACK: don't generate Object.gen.odin for now, we need to add support for bindgen'd Object
         //       but, for now, we rely on the premade variant/Object.odin
         state_type.odin_skip = odin_name == "Object"
-        state_type.derived = NewStateClass {
+        state_class := NewStateClass {
             odin_name = odin_name,
             api_type = api_class.api_type,
+            
+            methods = make([]NewStateFunction, len(api_class.methods)),
+            constants = make([]NewStateConstant, len(api_class.constants)),
+            enums = make([]^NewStateType, len(api_class.enums)),
+            operators = make([]NewStateOperator, len(api_class.operators))
         }
 
-        state.all_types[api_class.name] = state_type
-        state.classes[i] = state_type
+        state_type.derived = state_class
 
-        for api_enum in api_class.enums {
-            _state_enum(state, api_enum, api_class.name)
+        state.all_types[api_class.name] = state_type
+        state.classes[api_class_index] = state_type
+
+        for api_enum, enum_index in api_class.enums {
+            state_enum := _state_enum(state, api_enum, state_type)
+            state_class.enums[enum_index] = state_enum
         }
     }
 
     // adding all native struct types and their pointer equivalents to the all types map
-    for native_struct in api.native_structs {
-        odin_name := godot_to_odin_case(native_struct.name)
+    for api_native_struct, api_native_struct_index in api.native_structs {
+        odin_name := godot_to_odin_case(api_native_struct.name)
         {
             state_type := new(NewStateType)
             state_type.odin_type = odin_name
             state_type.derived = NewStateNativeStructure {
                 odin_name = odin_name,
             }
-            state.all_types[native_struct.name] = state_type
+            state.all_types[api_native_struct.name] = state_type
+            state.native_structs[api_native_struct_index] = state_type
         }
 
         // pointer
         {
-            godot_name := fmt.aprintf("%v*", native_struct.name)
+            godot_name := fmt.aprintf("%v*", api_native_struct.name)
             real_odin_type := fmt.aprintf("^%v", odin_name)
             state_type := new(NewStateType)
             state_type.odin_type = real_odin_type
             state_type.derived = NewStateNativeStructure {
-                odin_name = real_odin_type,
+                odin_name = odin_name,
             }
             state.all_types[godot_name] = state_type
         }
 
         // const pointer
         {
-            godot_name := fmt.aprintf("const %v*", native_struct.name)
+            godot_name := fmt.aprintf("const %v*", api_native_struct.name)
             real_odin_type := fmt.aprintf("^%v", odin_name)
             state_type := new(NewStateType)
             state_type.odin_type = real_odin_type
             state_type.derived = NewStateNativeStructure {
-                odin_name = real_odin_type,
+                odin_name = odin_name,
             }
             state.all_types[godot_name] = state_type
         }
@@ -735,6 +749,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         state.utility_functions[i] = state_function
     }
 
+    // second engine class pass
     for api_class in api.classes {
         state_type := state.all_types[api_class.name]
         _, is_class := state_type.derived.(NewStateClass)
@@ -748,8 +763,55 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         _, is_class = inherits_type.derived.(NewStateClass)
         assert(is_class)
         (&state_type.derived.(NewStateClass))^.inherits = inherits_type
+
+        // we process methods way at the end so that all dependent types have been mapped in all_types by this point
+        for api_method, method_index in api_class.methods {
+            class_method := NewStateFunction {
+                odin_name = _class_method_name(state_type.odin_type, api_method.name),
+                godot_name = api_method.name,
+                hash = api_method.hash,
+
+                // HACK: for some ungodly reason the gdextension duplicates the getter for origin as a builtin method? Resulting in a redelcaration of the get_origin proc.
+                odin_skip = state_type.odin_type == "Transform2d" && api_method.name == "get_origin",
+
+                arguments = make([]NewStateFunctionArgument, len(api_method.arguments)),
+            }
+
+            if return_value, has_return_value := api_method.return_value.(ApiClassMethodReturnValue); has_return_value {
+                return_type := return_value.meta.(string) or_else return_value.type
+                if strings.has_prefix(return_type, "typedarray::") {
+                    return_type = "Array"
+                }
+
+                state_return_type, ok := state.all_types[return_type]
+                assert(ok, return_type)
+
+                class_method.return_type = state_return_type
+            }
+
+            for argument, arg_index in api_method.arguments {
+                argument_type := argument.type
+                if strings.has_prefix(argument_type, "typedarray::") {
+                    argument_type = "Array"
+                }
+
+                state_arg_type, ok := state.all_types[argument_type]
+                assert(ok, argument_type)
+                method_argument := NewStateFunctionArgument {
+                    name = argument.name,
+                    type = state_arg_type,
+                }
+
+                // TODO: default args
+
+                class_method.arguments[arg_index] = method_argument
+            }
+
+            state_type.derived.(NewStateClass).methods[method_index] = class_method
+        }
     }
 
+    // second builtin class pass
     for api_builtin_class in api.builtin_classes {
         state_type := state.all_types[api_builtin_class.name]
         _, is_class := state_type.derived.(NewStateClass)

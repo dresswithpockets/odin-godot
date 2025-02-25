@@ -1,9 +1,52 @@
 package bindgen
 
+import "core:fmt"
+import "core:strings"
+import "core:slice"
+
 global_enums_template := temple_compiled("../templates/bindgen_global_enums.temple.twig", ^NewState)
 builtin_class_template := temple_compiled("../templates/bindgen_builtin_class.temple.twig", ^NewStateType)
 util_functions_template := temple_compiled("../templates/bindgen_utility_functions.temple.twig", ^NewState)
 engine_class_template := temple_compiled("../templates/bindgen_class.temple.twig", ^NewStateType)
+native_struct_template := temple_compiled("../templates/bindgen_native_structs.temple.twig", ^NewState)
+
+bindgen_class_reference_type :: proc(type: ^NewStateType) -> string {
+    // HACK: Variant.Type and Variant.Operator are provided by the gdextension interface
+    if type.godot_type == "Variant.Type" {
+        return "__bindgen_gde.VariantType"
+    }
+
+    if type.godot_type == "Variant.Operator" {
+        return "__bindgen_gde.VariantOperator"
+    }
+
+    if class, is_class := type.derived.(NewStateClass); is_class && class.is_builtin {
+        return fmt.tprintf("__bindgen_var.%s", type.odin_type)
+    }
+
+    if enum_type, is_enum_type := type.derived.(NewStateEnum); is_enum_type && enum_type.parent_class != nil {
+        parent_class := enum_type.parent_class.(^NewStateType).derived.(NewStateClass)
+        if parent_class.is_builtin {
+            return fmt.tprintf("__bindgen_var.%s", type.odin_type)
+        }
+    }
+
+    if struct_type, is_struct_type := type.derived.(NewStateNativeStructure); is_struct_type {
+        caret_index := strings.last_index(struct_type.odin_name, "^")
+        if caret_index == -1 {
+            return fmt.tprintf("__bindgen_var.%s", struct_type.odin_name)
+        }
+
+        carets, carets_ok := strings.substring_to(struct_type.odin_name, caret_index + 1)
+        assert(carets_ok)
+        odin_name, odin_name_ok := strings.substring_from(struct_type.odin_name, caret_index + 1)
+        assert(odin_name_ok)
+        
+        return fmt.tprintf("%s__bindgen_var.%s", carets, odin_name)
+    }
+
+    return type.odin_type
+}
 
 /*
     Copyright 2023 Dresses Digital
