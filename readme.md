@@ -48,37 +48,18 @@ odin build bindgen/ -o:speed -out:bin/bindgen.exe
 
 ## Creating a GDExtension
 
-See [the example godot project](example_project/) for a working usage of these bindings.
-
-Otherwise, create and export an entrypoint for your extension:
-
-```odin
-package example
-
-// assuming odin-godot was cloned into your defacto shared collection
-import gd "shared:odin-godot/gdextension"
-
-@(export)
-example_init :: proc "c" (
-    interface: ^gd.Interface,
-    library: gd.ExtensionClassLibraryPtr,
-    initialization: ^gd.Initialization,
-) -> bool {
-    // do usual initialization
-    return true
-}
-```
-
-Build as a shared library
-```sh
-odin build . -build-mode:shared
-```
+See [the example godot project](examples/hello-gdextension) for a working usage of these bindings.
 
 Then, follow the instructions for [using the extension module](https://docs.godotengine.org/en/stable/tutorials/scripting/gdextension/gdextension_cpp_example.html#using-the-gdextension-module).
 
 ## Godin
 
 Godin is a preprocessor which generates most of the boilerplate for Extension Classes, Methods, Enums, Properties, Signals, Groups, and Subgroups.
+
+> [!WARNING]
+> **Godin is suuuuper work in progress!**
+>
+> Godin doesn't produce correct gdextension useage in its current state, and may not even run in some cases.
 
 For example, the following Odin code will produce all of the boilerplate for an extension class "Player" that extends "Node2D".
 ```odin
