@@ -719,7 +719,7 @@ ExtensionInterfaceVariantGetPtrKeyedGetter :: #type proc "c" (p_type: VariantTyp
  *
  * @return A pointer to a function that can check a key on the given Variant type.
  */
-ExtensionInterfaceVariantGetPtrKeyedChecker :: #type proc "c" (p_type: VariantType) -> PtrKeyedChecker
+ExtensionInterfaceVariantGetPtrKeyedChecker :: #type proc "c" (p_type: VariantType) -> PtrKeyedGetter
 
 /**
  * @name variant_get_constant_value
@@ -816,6 +816,7 @@ ExtensionInterfaceStringNewWithLatin1CharsAndLen :: #type proc "c" (r_dest: Stri
 /**
  * @name string_new_with_utf8_chars_and_len
  * @since 4.1
+ * @deprecated in Godot 4.3. Use `string_new_with_utf8_chars_and_len2` instead.
  *
  * Creates a String from a UTF-8 encoded C string with the given length.
  *
@@ -826,8 +827,23 @@ ExtensionInterfaceStringNewWithLatin1CharsAndLen :: #type proc "c" (r_dest: Stri
 ExtensionInterfaceStringNewWithUtf8CharsAndLen :: #type proc "c" (r_dest: StringPtr, p_contents: cstring, p_size: i64)
 
 /**
+ * @name string_new_with_utf8_chars_and_len2
+ * @since 4.3
+ *
+ * Creates a String from a UTF-8 encoded C string with the given length.
+ *
+ * @param r_dest A pointer to a Variant to hold the newly created String.
+ * @param p_contents A pointer to a UTF-8 encoded C string.
+ * @param p_size The number of bytes (not code units).
+ *
+ * @return Error code signifying if the operation successful.
+ */
+ExtensionInterfaceStringNewWithUtf8CharsAndLen2 :: #type proc "c" (r_dest: StringPtr, p_contents: cstring, p_size: i64) -> i64
+
+/**
  * @name string_new_with_utf16_chars_and_len
  * @since 4.1
+ * @deprecated in Godot 4.3. Use `string_new_with_utf16_chars_and_len2` instead.
  *
  * Creates a String from a UTF-16 encoded C string with the given length.
  *
@@ -836,6 +852,21 @@ ExtensionInterfaceStringNewWithUtf8CharsAndLen :: #type proc "c" (r_dest: String
  * @param p_size The number of characters (not bytes).
  */
 ExtensionInterfaceStringNewWithUtf16CharsAndLen :: #type proc "c" (r_dest: StringPtr, p_contents: ^u16, p_char_count: i64)
+
+/**
+ * @name string_new_with_utf16_chars_and_len2
+ * @since 4.3
+ *
+ * Creates a String from a UTF-16 encoded C string with the given length.
+ *
+ * @param r_dest A pointer to a Variant to hold the newly created String.
+ * @param p_contents A pointer to a UTF-16 encoded C string.
+ * @param p_size The number of characters (not bytes).
+ * @param p_default_little_endian If true, UTF-16 use little endian.
+ *
+ * @return Error code signifying if the operation successful.
+ */
+ExtensionInterfaceStringNewWithUtf16CharsAndLen2 :: #type proc "c" (r_dest: StringPtr, p_contents: ^u16, p_char_count: i64, p_default_little_endian: bool) -> i64
 
 /**
  * @name string_new_with_utf32_chars_and_len
@@ -1128,6 +1159,34 @@ ExtensionInterfaceFileAccessStoreBuffer :: #type proc "c" (p_instance: ObjectPtr
 ExtensionInterfaceFileAccessGetBuffer :: #type proc "c" (p_instance: ObjectPtr, p_dst: ^u8, p_length: u64) -> u64
 
 /**
+ * @name image_ptrw
+ * @since 4.3
+ *
+ * Returns writable pointer to internal Image buffer.
+ *
+ * @param p_instance A pointer to a Image object.
+ *
+ * @return Pointer to internal Image buffer.
+ *
+ * @see Image::ptrw()
+ */
+ExtensionInterfaceImagePtrw :: #type proc "c" (p_instance: ObjectPtr) -> ^u8
+
+/**
+ * @name image_ptr
+ * @since 4.3
+ *
+ * Returns read only pointer to internal Image buffer.
+ *
+ * @param p_instance A pointer to a Image object.
+ *
+ * @return Pointer to internal Image buffer.
+ *
+ * @see Image::ptr()
+ */
+ExtensionInterfaceImagePtr :: #type proc "c" (p_instance: ObjectPtr) -> ^u8
+
+/**
  * @name worker_thread_pool_add_native_group_task
  * @since 4.1
  *
@@ -1144,7 +1203,7 @@ ExtensionInterfaceFileAccessGetBuffer :: #type proc "c" (p_instance: ObjectPtr, 
  *
  * @see WorkerThreadPool::add_group_task()
  */
-ExtensionInterfaceWorkerThreadPoolAddNativeGroupTask :: #type proc "c" (p_instance: ObjectPtr, p_func: proc "c" (rawptr, u32), p_userdata: rawptr, p_elements: int, p_tasks: int, p_high_priority: bool, p_description: StringPtr) -> i64
+ExtensionInterfaceWorkerThreadPoolAddNativeGroupTask :: #type proc "c" (p_instance: ObjectPtr, p_func: proc "c" (rawptr, c.uint32_t), p_userdata: rawptr, p_elements: int, p_tasks: int, p_high_priority: bool, p_description: StringPtr) -> i64
 
 /**
  * @name worker_thread_pool_add_native_task
@@ -1187,32 +1246,6 @@ ExtensionInterfacePackedByteArrayOperatorIndex :: #type proc "c" (p_self: TypePt
  * @return A const pointer to the requested byte.
  */
 ExtensionInterfacePackedByteArrayOperatorIndexConst :: #type proc "c" (p_self: TypePtr, p_index: i64) -> ^u8
-
-/**
- * @name packed_color_array_operator_index
- * @since 4.1
- *
- * Gets a pointer to a color in a PackedColorArray.
- *
- * @param p_self A pointer to a PackedColorArray object.
- * @param p_index The index of the Color to get.
- *
- * @return A pointer to the requested Color.
- */
-ExtensionInterfacePackedColorArrayOperatorIndex :: #type proc "c" (p_self: TypePtr, p_index: i64) -> TypePtr
-
-/**
- * @name packed_color_array_operator_index_const
- * @since 4.1
- *
- * Gets a const pointer to a color in a PackedColorArray.
- *
- * @param p_self A const pointer to a const PackedColorArray object.
- * @param p_index The index of the Color to get.
- *
- * @return A const pointer to the requested Color.
- */
-ExtensionInterfacePackedColorArrayOperatorIndexConst :: #type proc "c" (p_self: TypePtr, p_index: i64) -> TypePtr
 
 /**
  * @name packed_float32_array_operator_index
@@ -1397,6 +1430,58 @@ ExtensionInterfacePackedVector3ArrayOperatorIndex :: #type proc "c" (p_self: Typ
 ExtensionInterfacePackedVector3ArrayOperatorIndexConst :: #type proc "c" (p_self: TypePtr, p_index: i64) -> TypePtr
 
 /**
+ * @name packed_vector4_array_operator_index
+ * @since 4.3
+ *
+ * Gets a pointer to a Vector4 in a PackedVector4Array.
+ *
+ * @param p_self A pointer to a PackedVector4Array object.
+ * @param p_index The index of the Vector4 to get.
+ *
+ * @return A pointer to the requested Vector4.
+ */
+ExtensionInterfacePackedVector4ArrayOperatorIndex :: #type proc "c" (p_self: TypePtr, p_index: i64) -> TypePtr
+
+/**
+ * @name packed_vector4_array_operator_index_const
+ * @since 4.3
+ *
+ * Gets a const pointer to a Vector4 in a PackedVector4Array.
+ *
+ * @param p_self A const pointer to a PackedVector4Array object.
+ * @param p_index The index of the Vector4 to get.
+ *
+ * @return A const pointer to the requested Vector4.
+ */
+ExtensionInterfacePackedVector4ArrayOperatorIndexConst :: #type proc "c" (p_self: TypePtr, p_index: i64) -> TypePtr
+
+/**
+ * @name packed_color_array_operator_index
+ * @since 4.1
+ *
+ * Gets a pointer to a color in a PackedColorArray.
+ *
+ * @param p_self A pointer to a PackedColorArray object.
+ * @param p_index The index of the Color to get.
+ *
+ * @return A pointer to the requested Color.
+ */
+ExtensionInterfacePackedColorArrayOperatorIndex :: #type proc "c" (p_self: TypePtr, p_index: i64) -> TypePtr
+
+/**
+ * @name packed_color_array_operator_index_const
+ * @since 4.1
+ *
+ * Gets a const pointer to a color in a PackedColorArray.
+ *
+ * @param p_self A const pointer to a PackedColorArray object.
+ * @param p_index The index of the Color to get.
+ *
+ * @return A const pointer to the requested Color.
+ */
+ExtensionInterfacePackedColorArrayOperatorIndexConst :: #type proc "c" (p_self: TypePtr, p_index: i64) -> TypePtr
+
+/**
  * @name array_operator_index
  * @since 4.1
  *
@@ -1530,7 +1615,7 @@ ExtensionInterfaceGlobalGetSingleton :: #type proc "c" (p_name: StringNamePtr) -
  *
  * @param p_o A pointer to the Object.
  * @param p_library A token the library received by the GDExtension's entry point function.
- * @param p_callbacks A pointer to a GDExtensionInstanceBindingCallbacks struct.
+ * @param p_callbacks A pointer to a InstanceBindingCallbacks struct.
  *
  * @return
  */
@@ -1545,7 +1630,7 @@ ExtensionInterfaceObjectGetInstanceBinding :: #type proc "c" (p_o: ObjectPtr, p_
  * @param p_o A pointer to the Object.
  * @param p_library A token the library received by the GDExtension's entry point function.
  * @param p_binding A pointer to the instance binding.
- * @param p_callbacks A pointer to a GDExtensionInstanceBindingCallbacks struct.
+ * @param p_callbacks A pointer to a InstanceBindingCallbacks struct.
  */
 ExtensionInterfaceObjectSetInstanceBinding :: #type proc "c" (p_o: ObjectPtr, p_token: rawptr, p_binding: rawptr, p_callbacks: ^InstanceBindingCallbacks)
 
@@ -1577,6 +1662,9 @@ ExtensionInterfaceObjectSetInstance :: #type proc "c" (p_o: ObjectPtr, p_classna
  * @since 4.1
  *
  * Gets the class name of an Object.
+ *
+ * If the GDExtension wraps the Godot object in an abstraction specific to its class, this is the
+ * function that should be used to determine which wrapper to use.
  *
  * @param p_object A pointer to the Object.
  * @param p_library A pointer the library received by the GDExtension's entry point function.
@@ -1624,6 +1712,34 @@ ExtensionInterfaceObjectGetInstanceFromId :: #type proc "c" (p_instance_id: Obje
 ExtensionInterfaceObjectGetInstanceId :: #type proc "c" (p_object: ObjectPtr) -> ObjectInstanceId
 
 /**
+ * @name object_has_script_method
+ * @since 4.3
+ *
+ * Checks if this object has a script with the given method.
+ *
+ * @param p_object A pointer to the Object.
+ * @param p_method A pointer to a StringName identifying the method.
+ *
+ * @returns true if the object has a script and that script has a method with the given name. Returns false if the object has no script.
+ */
+ExtensionInterfaceObjectHasScriptMethod :: #type proc "c" (p_object: ObjectPtr, p_method: StringNamePtr) -> bool
+
+/**
+ * @name object_call_script_method
+ * @since 4.3
+ *
+ * Call the given script method on this object.
+ *
+ * @param p_object A pointer to the Object.
+ * @param p_method A pointer to a StringName identifying the method.
+ * @param p_args A pointer to a C array of Variant.
+ * @param p_argument_count The number of arguments.
+ * @param r_return A pointer a Variant which will be assigned the return value.
+ * @param r_error A pointer the structure which will hold error information.
+ */
+ExtensionInterfaceObjectCallScriptMethod :: #type proc "c" (p_object: ObjectPtr, p_method: StringNamePtr, p_args: ^VariantPtr, p_argument_count: i64, r_return: VariantPtr, r_error: ^CallError)
+
+/**
  * @name ref_get_object
  * @since 4.1
  *
@@ -1649,7 +1765,7 @@ ExtensionInterfaceRefSetObject :: #type proc "c" (p_ref: RefPtr, p_object: Objec
 /**
  * @name script_instance_create
  * @since 4.1
- * @deprecated in Godot 4.2. Use `script_instance_create2` instead.
+ * @deprecated in Godot 4.2. Use `script_instance_create3` instead.
  *
  * Creates a script instance that contains the given info and instance data.
  *
@@ -1663,6 +1779,7 @@ ExtensionInterfaceScriptInstanceCreate :: #type proc "c" (p_info: ^ExtensionScri
 /**
  * @name script_instance_create2
  * @since 4.2
+ * @deprecated in Godot 4.3. Use `script_instance_create3` instead.
  *
  * Creates a script instance that contains the given info and instance data.
  *
@@ -1672,6 +1789,19 @@ ExtensionInterfaceScriptInstanceCreate :: #type proc "c" (p_info: ^ExtensionScri
  * @return A pointer to a ScriptInstanceExtension object.
  */
 ExtensionInterfaceScriptInstanceCreate2 :: #type proc "c" (p_info: ^ExtensionScriptInstanceInfo2, p_instance_data: ExtensionScriptInstanceDataPtr) -> ScriptInstancePtr
+
+/**
+ * @name script_instance_create3
+ * @since 4.3
+ *
+ * Creates a script instance that contains the given info and instance data.
+ *
+ * @param p_info A pointer to a GDExtensionScriptInstanceInfo3 struct.
+ * @param p_instance_data A pointer to a data representing the script instance in the GDExtension. This will be passed to all the function pointers on p_info.
+ *
+ * @return A pointer to a ScriptInstanceExtension object.
+ */
+ExtensionInterfaceScriptInstanceCreate3 :: #type proc "c" (p_info: ^ExtensionScriptInstanceInfo3, p_instance_data: ExtensionScriptInstanceDataPtr) -> ScriptInstancePtr
 
 /**
  * @name placeholder_script_instance_create
@@ -1720,6 +1850,7 @@ ExtensionInterfaceObjectGetScriptInstance :: #type proc "c" (p_object: ObjectPtr
 /**
  * @name callable_custom_create
  * @since 4.2
+ * @deprecated in Godot 4.3. Use `callable_custom_create2` instead.
  *
  * Creates a custom Callable object from a function pointer.
  *
@@ -1729,6 +1860,19 @@ ExtensionInterfaceObjectGetScriptInstance :: #type proc "c" (p_object: ObjectPtr
  * @param p_callable_custom_info The info required to construct a Callable.
  */
 ExtensionInterfaceCallableCustomCreate :: #type proc "c" (r_callable: TypePtr, p_callable_custom_info: ^ExtensionCallableCustomInfo)
+
+/**
+ * @name callable_custom_create2
+ * @since 4.3
+ *
+ * Creates a custom Callable object from a function pointer.
+ *
+ * Provided struct can be safely freed once the function returns.
+ *
+ * @param r_callable A pointer that will receive the new Callable.
+ * @param p_callable_custom_info The info required to construct a Callable.
+ */
+ExtensionInterfaceCallableCustomCreate2 :: #type proc "c" (r_callable: TypePtr, p_callable_custom_info: ^ExtensionCallableCustomInfo2)
 
 /**
  * @name callable_custom_get_userdata
@@ -1786,7 +1930,7 @@ ExtensionInterfaceClassdbGetClassTag :: #type proc "c" (p_classname: StringNameP
 /**
  * @name classdb_register_extension_class
  * @since 4.1
- * @deprecated in Godot 4.2. Use `classdb_register_extension_class2` instead.
+ * @deprecated in Godot 4.2. Use `classdb_register_extension_class3` instead.
  *
  * Registers an extension class in the ClassDB.
  *
@@ -1802,6 +1946,7 @@ ExtensionInterfaceClassdbRegisterExtensionClass :: #type proc "c" (p_library: Ex
 /**
  * @name classdb_register_extension_class2
  * @since 4.2
+ * @deprecated in Godot 4.3. Use `classdb_register_extension_class3` instead.
  *
  * Registers an extension class in the ClassDB.
  *
@@ -1813,6 +1958,21 @@ ExtensionInterfaceClassdbRegisterExtensionClass :: #type proc "c" (p_library: Ex
  * @param p_extension_funcs A pointer to a GDExtensionClassCreationInfo2 struct.
  */
 ExtensionInterfaceClassdbRegisterExtensionClass2 :: #type proc "c" (p_library: ExtensionClassLibraryPtr, p_class_name: StringNamePtr, p_parent_class_name: StringNamePtr, p_extension_funcs: ^ExtensionClassCreationInfo2)
+
+/**
+ * @name classdb_register_extension_class3
+ * @since 4.3
+ *
+ * Registers an extension class in the ClassDB.
+ *
+ * Provided struct can be safely freed once the function returns.
+ *
+ * @param p_library A pointer the library received by the GDExtension's entry point function.
+ * @param p_class_name A pointer to a StringName with the class name.
+ * @param p_parent_class_name A pointer to a StringName with the parent class name.
+ * @param p_extension_funcs A pointer to a GDExtensionClassCreationInfo2 struct.
+ */
+ExtensionInterfaceClassdbRegisterExtensionClass3 :: #type proc "c" (p_library: ExtensionClassLibraryPtr, p_class_name: StringNamePtr, p_parent_class_name: StringNamePtr, p_extension_funcs: ^ExtensionClassCreationInfo3)
 
 /**
  * @name classdb_register_extension_class_method
@@ -1829,17 +1989,35 @@ ExtensionInterfaceClassdbRegisterExtensionClass2 :: #type proc "c" (p_library: E
 ExtensionInterfaceClassdbRegisterExtensionClassMethod :: #type proc "c" (p_library: ExtensionClassLibraryPtr, p_class_name: StringNamePtr, p_method_info: ^ExtensionClassMethodInfo)
 
 /**
+ * @name classdb_register_extension_class_virtual_method
+ * @since 4.3
+ *
+ * Registers a virtual method on an extension class in ClassDB, that can be implemented by scripts or other extensions.
+ *
+ * Provided struct can be safely freed once the function returns.
+ *
+ * @param p_library A pointer the library received by the GDExtension's entry point function.
+ * @param p_class_name A pointer to a StringName with the class name.
+ * @param p_method_info A pointer to a GDExtensionClassMethodInfo struct.
+ */
+ExtensionInterfaceClassdbRegisterExtensionClassVirtualMethod :: #type proc "c" (p_library: ExtensionClassLibraryPtr, p_class_name: StringNamePtr, p_method_info: ^ExtensionClassVirtualMethodInfo)
+
+/**
  * @name classdb_register_extension_class_integer_constant
  * @since 4.1
  *
  * Registers an integer constant on an extension class in the ClassDB.
+ *
+ * Note about registering bitfield values (if p_is_bitfield is true): even though p_constant_value is signed, language bindings are
+ * advised to treat bitfields as uint64_t, since this is generally clearer and can prevent mistakes like using -1 for setting all bits.
+ * Language APIs should thus provide an abstraction that registers bitfields (uint64_t) separately from regular constants (int64_t).
  *
  * @param p_library A pointer the library received by the GDExtension's entry point function.
  * @param p_class_name A pointer to a StringName with the class name.
  * @param p_enum_name A pointer to a StringName with the enum name.
  * @param p_constant_name A pointer to a StringName with the constant name.
  * @param p_constant_value The constant value.
- * @param p_is_bitfield Whether or not this is a bit field.
+ * @param p_is_bitfield Whether or not this constant is part of a bitfield.
  */
 ExtensionInterfaceClassdbRegisterExtensionClassIntegerConstant :: #type proc "c" (p_library: ExtensionClassLibraryPtr, p_class_name: StringNamePtr, p_enum_name: StringNamePtr, p_constant_name: StringNamePtr, p_constant_value: i64, p_is_bitfield: bool)
 
@@ -1961,4 +2139,29 @@ ExtensionInterfaceEditorAddPlugin :: #type proc "c" (p_class_name: StringNamePtr
  * @param p_class_name A pointer to a StringName with the name of a class that was previously added as an editor plugin.
  */
 ExtensionInterfaceEditorRemovePlugin :: #type proc "c" (p_class_name: StringNamePtr)
+
+/**
+ * @name editor_help_load_xml_from_utf8_chars
+ * @since 4.3
+ *
+ * Loads new XML-formatted documentation data in the editor.
+ *
+ * The provided pointer can be immediately freed once the function returns.
+ *
+ * @param p_data A pointer to a UTF-8 encoded C string (null terminated).
+ */
+ExtensionsInterfaceEditorHelpLoadXmlFromUtf8Chars :: #type proc "c" (p_data: cstring)
+
+/**
+ * @name editor_help_load_xml_from_utf8_chars_and_len
+ * @since 4.3
+ *
+ * Loads new XML-formatted documentation data in the editor.
+ *
+ * The provided pointer can be immediately freed once the function returns.
+ *
+ * @param p_data A pointer to a UTF-8 encoded C string.
+ * @param p_size The number of bytes (not code units).
+ */
+ExtensionsInterfaceEditorHelpLoadXmlFromUtf8CharsAndLen :: #type proc "c" (p_data: cstring, p_size: i64)
 
