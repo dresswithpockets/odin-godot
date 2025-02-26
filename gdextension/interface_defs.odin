@@ -1570,7 +1570,7 @@ ExtensionInterfaceDictionaryOperatorIndexConst :: #type proc "c" (p_self: TypePt
  * @param r_ret A pointer to Variant which will receive the return value.
  * @param r_error A pointer to a GDExtensionCallError struct that will receive error information.
  */
-ExtensionInterfaceObjectMethodBindCall :: #type proc "c" (p_method_bind: MethodBindPtr, p_instance: ObjectPtr, p_args: ^VariantPtr, p_arg_count: i64, r_ret: VariantPtr, r_error: ^CallError)
+ExtensionInterfaceObjectMethodBindCall :: #type proc "c" (p_method_bind: MethodBindPtr, p_instance: ObjectPtr, p_args: [^]VariantPtr, p_arg_count: i64, r_ret: VariantPtr, r_error: ^CallError)
 
 /**
  * @name object_method_bind_ptrcall
