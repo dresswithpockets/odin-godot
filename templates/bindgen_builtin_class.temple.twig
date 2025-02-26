@@ -43,6 +43,13 @@ when __bindgen_gde.BUILD_CONFIG == "float_32" {
 {% for constructor in builtin_info.constructors %}
     {{ constructor.odin_name }},
 {% end %}
+{% if this.odin_type == "StringName" %}
+    new_string_name_odin,
+    new_string_name_cstring,
+{% elseif this.odin_type == "String" %}
+    new_string_odin,
+    new_string_cstring,
+{% end %} 
 }
 
 {% for constructor, con_index in builtin_info.constructors %}
