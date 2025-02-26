@@ -31,78 +31,6 @@ native_odin_types :: []string {
 
 types_with_odin_string_constructors :: []string{"String", "StringName"}
 
-@private
-generate_global_enums :: proc(state: ^NewState) {
-    fhandle, ferr := os.open("core/enums.gen.odin", os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
-    if ferr != 0 {
-        fmt.eprintln("Error opening core/enums.gen.odin")
-        return
-    }
-    defer os.close(fhandle)
-
-    fstream := os.stream_from_handle(fhandle)
-    global_enums_template.with(fstream, state)
-}
-
-@private
-generate_utility_functions :: proc(state: ^NewState) {
-    fhandle, ferr := os.open("core/util.gen.odin", os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
-    if ferr != 0 {
-        fmt.eprintln("Error opening core/util.gen.odin")
-        return
-    }
-    defer os.close(fhandle)
-
-    fstream := os.stream_from_handle(fhandle)
-    util_functions_template.with(fstream, state)
-}
-
-@private
-generate_native_structs :: proc(state: ^NewState) {
-    fhandle, ferr := os.open("core/native.gen.odin", os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
-    if ferr != 0 {
-        fmt.eprintln("Error opening core/native.gen.odin")
-        return
-    }
-    defer os.close(fhandle)
-
-    fstream := os.stream_from_handle(fhandle)
-    native_struct_template.with(fstream, state)
-}
-
-@private
-generate_builtin_class :: proc(class: ^NewStateType) {
-    file_path := fmt.tprintf("variant/%v.gen.odin", class.odin_type)
-    defer delete(file_path, allocator = context.temp_allocator)
-
-    fhandle, ferr := os.open(file_path, os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
-    if ferr != 0 {
-        fmt.eprintf("Error opening %v\n", file_path)
-        return
-    }
-    defer os.close(fhandle)
-
-    fstream := os.stream_from_handle(fhandle)
-    builtin_class_template.with(fstream, class)
-}
-
-@private
-generate_engine_class :: proc(class: ^NewStateType) {
-    file_path := fmt.tprintf("%v/%v.gen.odin", class.derived.(NewStateClass).api_type, class.odin_type)
-    defer delete(file_path, allocator = context.temp_allocator)
-
-    fhandle, ferr := os.open(file_path, os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
-    if ferr != 0 {
-        fmt.eprintf("Error opening %v\n", file_path)
-        return
-    }
-    defer os.close(fhandle)
-
-    fstream := os.stream_from_handle(fhandle)
-    engine_class_template.with(fstream, class)
-}
-
-@private
 generate_variant_init_task :: proc(task: thread.Task) {
     
     fhandle, ferr := os.open("variant/init.gen.odin", os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
@@ -117,28 +45,73 @@ generate_variant_init_task :: proc(task: thread.Task) {
 }
 
 generate_global_enums_task :: proc(task: thread.Task) {
-    state := cast(^NewState)task.data
-    generate_global_enums(state)
+    fhandle, ferr := os.open("core/enums.gen.odin", os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
+    if ferr != 0 {
+        fmt.eprintln("Error opening core/enums.gen.odin")
+        return
+    }
+    defer os.close(fhandle)
+
+    fstream := os.stream_from_handle(fhandle)
+    global_enums_template.with(fstream, cast(^NewState)task.data)
 }
 
 generate_utility_functions_task :: proc(task: thread.Task) {
-    state := cast(^NewState)task.data
-    generate_utility_functions(state)
+    fhandle, ferr := os.open("core/util.gen.odin", os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
+    if ferr != 0 {
+        fmt.eprintln("Error opening core/util.gen.odin")
+        return
+    }
+    defer os.close(fhandle)
+
+    fstream := os.stream_from_handle(fhandle)
+    util_functions_template.with(fstream, cast(^NewState)task.data)
 }
 
 generate_native_structs_task :: proc(task: thread.Task) {
-    state := cast(^NewState)task.data
-    generate_native_structs(state)
+    fhandle, ferr := os.open("core/native.gen.odin", os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
+    if ferr != 0 {
+        fmt.eprintln("Error opening core/native.gen.odin")
+        return
+    }
+    defer os.close(fhandle)
+
+    fstream := os.stream_from_handle(fhandle)
+    native_struct_template.with(fstream, cast(^NewState)task.data)
 }
 
 generate_builtin_class_task :: proc(task: thread.Task) {
-    builtin_class := cast(^NewStateType)task.data
-    generate_builtin_class(builtin_class)
+    class := cast(^NewStateType)task.data
+
+    file_path := fmt.tprintf("variant/%v.gen.odin", class.odin_type)
+    defer delete(file_path, allocator = context.temp_allocator)
+
+    fhandle, ferr := os.open(file_path, os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
+    if ferr != 0 {
+        fmt.eprintf("Error opening %v\n", file_path)
+        return
+    }
+    defer os.close(fhandle)
+
+    fstream := os.stream_from_handle(fhandle)
+    builtin_class_template.with(fstream, class)
 }
 
 generate_engine_class_task :: proc(task: thread.Task) {
-    engine_class := cast(^NewStateType)task.data
-    generate_engine_class(engine_class)
+    class := cast(^NewStateType)task.data
+
+    file_path := fmt.tprintf("%v/%v.gen.odin", class.derived.(NewStateClass).api_type, class.odin_type)
+    defer delete(file_path, allocator = context.temp_allocator)
+
+    fhandle, ferr := os.open(file_path, os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
+    if ferr != 0 {
+        fmt.eprintf("Error opening %v\n", file_path)
+        return
+    }
+    defer os.close(fhandle)
+
+    fstream := os.stream_from_handle(fhandle)
+    engine_class_template.with(fstream, class)
 }
 
 generate_bindings :: proc(state: ^NewState) {
