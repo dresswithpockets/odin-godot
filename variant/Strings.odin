@@ -55,7 +55,7 @@ Inputs:
 Returns:
 - res: A cloned Godot String
 */
-new_string_cstring :: proc(from: cstring) -> (ret: String) {
+new_string_cstring :: proc "contextless" (from: cstring) -> (ret: String) {
     ret = String{}
     gd.string_new_with_utf8_chars(&ret, from)
     return
@@ -90,7 +90,7 @@ Inputs:
 Returns:
 - res: A cloned Godot StringName
 */
-new_string_name_cstring :: proc(from: cstring, static: bool) -> (ret: StringName) {
+new_string_name_cstring :: proc "contextless" (from: cstring, static: bool) -> (ret: StringName) {
     ret = StringName{}
     gd.string_name_new_with_utf8_chars(&ret, from)
     return
