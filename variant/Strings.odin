@@ -4,6 +4,28 @@ import "core:strings"
 import "core:mem"
 import gd "../gdextension"
 
+@(private)
+EmptyString := String{}
+
+@(private)
+EmptyStringName := StringName{}
+
+string_empty :: proc "contextless" () -> String {
+    return EmptyString
+}
+
+string_name_empty :: proc "contextless" () -> StringName {
+    return EmptyStringName
+}
+
+string_empty_ref :: proc "contextless" () -> ^String {
+    return &EmptyString
+}
+
+string_name_empty_ref :: proc "contextless" () -> ^StringName {
+    return &EmptyStringName
+}
+
 /*
 Clones a UTF8 Odin string into a Godot String
 
