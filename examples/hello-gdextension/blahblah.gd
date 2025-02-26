@@ -19,3 +19,5 @@ func _ready():
 
 func on_time_passed(time_passed: float):
     print(time_passed)
+    thing.queue_free()
+    thing = null
