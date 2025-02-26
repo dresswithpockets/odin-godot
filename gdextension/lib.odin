@@ -171,7 +171,7 @@ InstanceBindingCallbacks :: struct {
 
 // Extension Classes
 
-ExtensionClassInstancePtr :: distinct rawptr
+ExtensionClassInstancePtr :: rawptr
 
 ExtensionClassSet :: #type proc "c" (
     instance: ExtensionClassInstancePtr,
