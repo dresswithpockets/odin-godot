@@ -9,6 +9,7 @@ builtin_class_template := temple_compiled("../templates/bindgen_builtin_class.te
 util_functions_template := temple_compiled("../templates/bindgen_utility_functions.temple.twig", ^NewState)
 engine_class_template := temple_compiled("../templates/bindgen_class.temple.twig", ^NewStateType)
 native_struct_template := temple_compiled("../templates/bindgen_native_structs.temple.twig", ^NewState)
+variant_init_template := temple_compiled("../templates/bindgen_variant_init.temple.twig", ^NewState)
 
 bindgen_class_reference_type :: proc(type: ^NewStateType) -> string {
     // HACK: Variant.Type and Variant.Operator are provided by the gdextension interface

@@ -48,7 +48,8 @@ __Object_postinit :: proc(self: ^Object) {
     __bindgen_gde.object_set_instance_binding(self._opaque, rawptr(__bindgen_gde.library), rawptr(self), &__Object_binding_callbacks)
 }
 
-init_Object :: proc() {
+@(private)
+__Object_init :: proc "contextless" () {
     __bindgen_gde.string_name_new_with_latin1_chars(cast(__bindgen_gde.StringNamePtr)&__Object__class_name._opaque, "Object", true)
 }
 
