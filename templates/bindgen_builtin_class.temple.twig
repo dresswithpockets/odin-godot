@@ -53,8 +53,8 @@ when __bindgen_gde.BUILD_CONFIG == "float_32" {
     ret = {{ this.odin_type }}{}
     __bindgen_gde.call_builtin_constructor(
         __{{ this.odin_type }}__constructor_{{ int(con_index) }}_backing_ptr,
-        cast(__bindgen_gde.UninitializedTypePtr)&ret._opaque
-        {% for arg in constructor.arguments %}, cast(__bindgen_gde.TypePtr)&{{ arg.name }}{% if _, is_class := arg.type.derived.(NewStateClass); is_class %}._opaque{% end %}{% end %})
+        &ret
+        {% for arg in constructor.arguments %}, &{{ arg.name }}{% end %})
     return
 }
 {% end %}
@@ -62,7 +62,7 @@ when __bindgen_gde.BUILD_CONFIG == "float_32" {
 {% if destructor_name, has_destructor := builtin_info.destructor_name.(string); has_destructor %}
 {{ destructor_name }} :: proc "contextless" (self: {{ this.odin_type }}) {
     self := self
-    __{{ this.odin_type }}__destructor_backing_ptr(cast(__bindgen_gde.TypePtr)&self._opaque)
+    __{{ this.odin_type }}__destructor_backing_ptr(&self)
 }
 {% end %}
 {% end %}
@@ -72,20 +72,12 @@ when __bindgen_gde.BUILD_CONFIG == "float_32" {
 {{ member.odin_prefix }}_set_{{ member.name }} :: proc "contextless" (self: {{ this.odin_type }}, value: {{ member.type.odin_type }}) {
     self := self
     value := value
-{% if _, is_class := member.type.derived.(NewStateClass); is_class %}
-    __{{ this.odin_type }}__member__{{ member.name }}_setter(cast(__bindgen_gde.TypePtr)&self._opaque, cast(__bindgen_gde.TypePtr)&value._opaque)
-{% else %}
-    __{{ this.odin_type }}__member__{{ member.name }}_setter(cast(__bindgen_gde.TypePtr)&self._opaque, cast(__bindgen_gde.TypePtr)&value)
-{% end %}
+    __{{ this.odin_type }}__member__{{ member.name }}_setter(&self, &value)
 }
 
 {{ member.odin_prefix }}_get_{{ member.name }} :: proc "contextless" (self: {{ this.odin_type }}) -> (ret: {{ member.type.odin_type }}) {
     self := self
-{% if _, is_class := member.type.derived.(NewStateClass); is_class %}
-    __{{ this.odin_type }}__member__{{ member.name }}_getter(cast(__bindgen_gde.TypePtr)&self._opaque, cast(__bindgen_gde.TypePtr)&ret._opaque)
-{% else %}
-    __{{ this.odin_type }}__member__{{ member.name }}_getter(cast(__bindgen_gde.TypePtr)&self._opaque, cast(__bindgen_gde.TypePtr)&ret)
-{% end %}
+    __{{ this.odin_type }}__member__{{ member.name }}_getter(&self, &ret)
     return
 }
 
@@ -105,19 +97,15 @@ when __bindgen_gde.BUILD_CONFIG == "float_32" {
 {% if return_type, has_return_type := method.return_type.(^NewStateType); has_return_type %}
     return __bindgen_gde.call_builtin_method_ptr_ret(
         __{{ method.odin_name }}__backing_ptr,
-        cast(__bindgen_gde.TypePtr)&self,
+        &self,
         {{ return_type.odin_type }},
 {% else %}
     __bindgen_gde.call_builtin_method_ptr_no_ret(
         __{{ method.odin_name }}__backing_ptr,
-        cast(__bindgen_gde.TypePtr)&self,
+        &self,
 {% end %}
 {% for argument in method.arguments %}
-{% if _, is_class := argument.type.derived.(NewStateClass); is_class %}
-        cast(__bindgen_gde.TypePtr)&{{ argument.name }}._opaque,
-{% else %}
-        cast(__bindgen_gde.TypePtr)&{{ argument.name }},
-{% end %}
+        &{{ argument.name }},
 {% end %}
     )
 }
@@ -132,13 +120,9 @@ when __bindgen_gde.BUILD_CONFIG == "float_32" {
     self := self
 {% if overload.right_type.odin_type != "Nil" %}
     other := other
-{% if _, is_class := overload.right_type.derived.(NewStateClass); is_class %}
-    return __bindgen_gde.call_builtin_operator_ptr(__{{ overload.odin_name }}__backing_ptr, cast(__bindgen_gde.TypePtr)&self._opaque, cast(__bindgen_gde.TypePtr)&other._opaque, {{ overload.return_type.odin_type }})
+    return __bindgen_gde.call_builtin_operator_ptr(__{{ overload.odin_name }}__backing_ptr, &self, &other, {{ overload.return_type.odin_type }})
 {% else %}
-    return __bindgen_gde.call_builtin_operator_ptr(__{{ overload.odin_name }}__backing_ptr, cast(__bindgen_gde.TypePtr)&self._opaque, cast(__bindgen_gde.TypePtr)&other, {{ overload.return_type.odin_type }})
-{% end %}
-{% else %}
-    return __bindgen_gde.call_builtin_operator_ptr(__{{ overload.odin_name }}__backing_ptr, cast(__bindgen_gde.TypePtr)&self._opaque, cast(__bindgen_gde.TypePtr)nil, {{ overload.return_type.odin_type }})
+    return __bindgen_gde.call_builtin_operator_ptr(__{{ overload.odin_name }}__backing_ptr, &self, nil, {{ overload.return_type.odin_type }})
 {% end %}
 }
 
@@ -165,9 +149,9 @@ __{{ this.odin_type }}_init :: proc "contextless" () {
 {% end %}
 
 {% for member in this.derived.(NewStateClass).builtin_info.(NewStateClassBuiltin).members %}
-    __bindgen_gde.string_name_new_with_latin1_chars(cast(__bindgen_gde.StringNamePtr)&_gde_name, "{{ member.name }}", true)
-    __{{ this.odin_type }}__member__{{ member.name }}_setter = __bindgen_gde.variant_get_ptr_setter(__bindgen_gde.VariantType.{{ this.variant_type.(string) or_else this.odin_type }}, cast(__bindgen_gde.StringNamePtr)&_gde_name)
-    __{{ this.odin_type }}__member__{{ member.name }}_getter = __bindgen_gde.variant_get_ptr_getter(__bindgen_gde.VariantType.{{ this.variant_type.(string) or_else this.odin_type }}, cast(__bindgen_gde.StringNamePtr)&_gde_name)
+    __bindgen_gde.string_name_new_with_latin1_chars(&_gde_name, "{{ member.name }}", true)
+    __{{ this.odin_type }}__member__{{ member.name }}_setter = __bindgen_gde.variant_get_ptr_setter(__bindgen_gde.VariantType.{{ this.variant_type.(string) or_else this.odin_type }}, &_gde_name)
+    __{{ this.odin_type }}__member__{{ member.name }}_getter = __bindgen_gde.variant_get_ptr_getter(__bindgen_gde.VariantType.{{ this.variant_type.(string) or_else this.odin_type }}, &_gde_name)
 {% end %}
 
 {% for operator in this.derived.(NewStateClass).operators %}
@@ -178,8 +162,8 @@ __{{ this.odin_type }}_init :: proc "contextless" () {
 
 {% for method in this.derived.(NewStateClass).methods %}
 {% if !method.odin_skip %}
-    __bindgen_gde.string_name_new_with_latin1_chars(cast(__bindgen_gde.StringNamePtr)&_gde_name, "{{ method.godot_name }}", true)
-    __{{ method.odin_name }}__backing_ptr = __bindgen_gde.variant_get_ptr_builtin_method(__bindgen_gde.VariantType.{{ this.odin_type }}, cast(__bindgen_gde.StringNamePtr)&_gde_name, {{ i64(method.hash) }})
+    __bindgen_gde.string_name_new_with_latin1_chars(&_gde_name, "{{ method.godot_name }}", true)
+    __{{ method.odin_name }}__backing_ptr = __bindgen_gde.variant_get_ptr_builtin_method(__bindgen_gde.VariantType.{{ this.odin_type }}, &_gde_name, {{ i64(method.hash) }})
 {% end %}
 {% end %}
 }
