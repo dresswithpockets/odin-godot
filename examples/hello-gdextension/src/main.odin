@@ -15,14 +15,14 @@ example_library_init :: proc "c" (
     initialization: ^gd.Initialization,
 ) -> bool {
     gd.library = library
+    // gdextension procs MUST be initialized before using the binding!
     gd.initialize_procs(get_proc_address)
-    context = gd.godot_context()
 
-    // TODO: we need to init all types, e.g.:
-    var.__StringName_init()
-    var.__String_init()
-
+    // MUST be called before using any global scope utility functions in core
     core.init_utility_functions()
+
+    // MUST be called before using any variant types
+    var.init()
 
     initialization.initialize = initialize_example_module
     initialization.deinitialize = uninitialize_example_module

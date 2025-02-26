@@ -11,6 +11,14 @@ ProcessVirtualStringName := var.StringName{}
 TimePassedSignalStringName := var.StringName{}
 EmitSignalMethodStringName := var.StringName{}
 
+GetAmplitudeStringName := var.StringName{}
+SetAmplitudeStringName := var.StringName{}
+AmplitudeStringName := var.StringName{}
+GetSpeedStringName := var.StringName{}
+SetSpeedStringName := var.StringName{}
+SpeedStringName := var.StringName{}
+TimePassedStringName := var.StringName{}
+
 ExampleClass :: struct {
     amplitude: gd.float,
     speed:     gd.float,
@@ -87,15 +95,15 @@ example_class_call_virtual_with_data :: proc "c" (instance: gd.ExtensionClassIns
 }
 
 example_class_bind_methods :: proc() {
-    bind_method_return("ExampleClass", "get_amplitude", cast(rawptr)example_class_get_amplitude, .Float, call_getter_float, ptrcall_getter_float)
-    bind_method_no_return("ExampleClass", "set_amplitude", cast(rawptr)example_class_set_amplitude, call_setter_float, ptrcall_setter_float, MethodBindArgument{ name = "amplitude", type = .Float })
-    bind_property("ExampleClass", "amplitude", .Float, "get_amplitude", "set_amplitude")
+    bind_method_return(&ExampleClassStringName, &GetAmplitudeStringName, cast(rawptr)example_class_get_amplitude, .Float, call_getter_float, ptrcall_getter_float)
+    bind_method_no_return(&ExampleClassStringName, &SetAmplitudeStringName, cast(rawptr)example_class_set_amplitude, call_setter_float, ptrcall_setter_float, MethodBindArgument{ name = &AmplitudeStringName, type = .Float })
+    bind_property(&ExampleClassStringName, &AmplitudeStringName, .Float, &GetAmplitudeStringName, &SetAmplitudeStringName)
 
-    bind_method_return("ExampleClass", "get_speed", cast(rawptr)example_class_get_speed, .Float, call_getter_float, ptrcall_getter_float)
-    bind_method_no_return("ExampleClass", "set_speed", cast(rawptr)example_class_set_speed, call_setter_float, ptrcall_setter_float, MethodBindArgument{ name = "speed", type = .Float })
-    bind_property("ExampleClass", "speed", .Float, "get_speed", "set_speed")
+    bind_method_return(&ExampleClassStringName, &GetSpeedStringName, cast(rawptr)example_class_get_speed, .Float, call_getter_float, ptrcall_getter_float)
+    bind_method_no_return(&ExampleClassStringName, &SetSpeedStringName, cast(rawptr)example_class_set_speed, call_setter_float, ptrcall_setter_float, MethodBindArgument{ name = &SpeedStringName, type = .Float })
+    bind_property(&ExampleClassStringName, &SpeedStringName, .Float, &GetSpeedStringName, &SetSpeedStringName)
 
-    bind_signal("ExampleClass", "time_passed", MethodBindArgument { name = "time_passed", type = .Float })
+    bind_signal(&ExampleClassStringName, &TimePassedSignalStringName, MethodBindArgument { name = &TimePassedStringName, type = .Float })
 }
 
 example_class_binding_callbacks := gd.InstanceBindingCallbacks{
@@ -141,6 +149,14 @@ example_class_register :: proc "c" () {
     gd.string_name_new_with_latin1_chars(&ProcessVirtualStringName, "_process", true)
     gd.string_name_new_with_latin1_chars(&TimePassedSignalStringName, "time_passed", true)
     gd.string_name_new_with_latin1_chars(&EmitSignalMethodStringName, "emit_signal", true)
+    
+    gd.string_name_new_with_latin1_chars(&GetAmplitudeStringName, "get_amplitude", true)
+    gd.string_name_new_with_latin1_chars(&SetAmplitudeStringName, "set_amplitude", true)
+    gd.string_name_new_with_latin1_chars(&AmplitudeStringName, "amplitude", true)
+    gd.string_name_new_with_latin1_chars(&GetSpeedStringName, "get_speed", true)
+    gd.string_name_new_with_latin1_chars(&SetSpeedStringName, "set_speed", true)
+    gd.string_name_new_with_latin1_chars(&SpeedStringName, "speed", true)
+    gd.string_name_new_with_latin1_chars(&TimePassedStringName, "time_passed", true)
     
     class_info := gd.ExtensionClassCreationInfo2{
         is_virtual = false,
