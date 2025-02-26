@@ -1,7 +1,15 @@
 package example
 
+import core "../../../core"
 import gd "../../../gdextension"
 import var "../../../variant"
+
+ExampleClassStringName := var.StringName{}
+ObjectClassStringName := var.StringName{}
+Sprite2DClassStringName := var.StringName{}
+ProcessVirtualStringName := var.StringName{}
+TimePassedSignalStringName := var.StringName{}
+EmitSignalMethodStringName := var.StringName{}
 
 ExampleClass :: struct {
     amplitude: gd.float,
@@ -9,8 +17,6 @@ ExampleClass :: struct {
 
     time_emit:   gd.float,
     time_passed: gd.float,
-    
-    time_passed_signal: var.StringName,
 
     object: gd.ObjectPtr,
 }
@@ -20,12 +26,10 @@ example_class_constructor :: proc "c" (self: ^ExampleClass) {
     self.speed = 1.0
     self.time_passed = 0.0
     self.time_emit = 5.0
-
-    gd.string_name_new_with_latin1_chars(cast(gd.StringNamePtr)&self.time_passed_signal, "time_passed", false)
 }
 
 example_class_destructor :: proc "c" (self: ^ExampleClass) {
-    var.free_string_name(self.time_passed_signal)
+
 }
 
 example_class_set_amplitude :: proc "c" (self: ^ExampleClass, amplitude: gd.float) {
@@ -54,43 +58,22 @@ example_class_process :: proc "c" (self: ^ExampleClass, delta: gd.float) {
 }
 
 example_class_emit_time_passed :: proc "contextless" (self: ^ExampleClass, time_passed: gd.float) {
-    object_name := var.StringName{}
-    gd.string_name_new_with_latin1_chars(cast(gd.StringNamePtr)&object_name, "Object", false)
-    defer var.free_string_name(object_name)
 
-    method_name := var.StringName{}
-    gd.string_name_new_with_latin1_chars(cast(gd.StringNamePtr)&method_name, "emit_signal", false)
-    defer var.free_string_name(method_name)
+    object_emit_signal := gd.classdb_get_method_bind(&ObjectClassStringName, &EmitSignalMethodStringName, 4047867050)
 
-    object_emit_signal := gd.classdb_get_method_bind(cast(gd.StringNamePtr)&object_name, cast(gd.StringNamePtr)&method_name, 4047867050)
+    signal_name_argument := var.variant_from(&TimePassedSignalStringName)
+    time_passed_argument := var.variant_from(&self.time_passed)
 
-    variant_from_string_name := gd.get_variant_from_type_constructor(.StringName)
-    signal_name_argument := var.Variant{}
-    variant_from_string_name(cast(gd.UninitializedVariantPtr)&signal_name_argument, cast(gd.TypePtr)&self.time_passed_signal)
-    
-    variant_from_float := gd.get_variant_from_type_constructor(.Float)
-    time_passed_argument := var.Variant{}
-    variant_from_float(cast(gd.UninitializedVariantPtr)&time_passed_argument, cast(gd.TypePtr)&self.time_passed)
-
-    args := [2]gd.VariantPtr{
-        cast(gd.VariantPtr)&signal_name_argument,
-        cast(gd.VariantPtr)&time_passed_argument,
-    }
+    args := [2]gd.VariantPtr{ &signal_name_argument, &time_passed_argument }
 
     ret := var.Variant{}
-    gd.object_method_bind_call(object_emit_signal, self.object, &args[0], 2, cast(gd.VariantPtr)&ret, nil)
-    defer gd.variant_destroy(cast(gd.VariantPtr)&ret)
-
-    //gd.call_method_ptr_no_ret(object_emit_signal, self.object, cast(gd.TypePtr)&signal_name_argument, cast(gd.TypePtr)&time_passed_argument)
+    gd.object_method_bind_call(object_emit_signal, self.object, &args[0], len(args), &ret, nil)
+    defer gd.variant_destroy(&ret)
 }
 
 example_class_get_virtual_with_data :: proc "c" (class_user_data: rawptr, name: gd.StringNamePtr) -> rawptr {
-    process_string_name := var.StringName{}
-    gd.string_name_new_with_latin1_chars(cast(gd.StringNamePtr)&process_string_name, "_process", false)
-    defer var.free_string_name(process_string_name)
-
-    name_string_name := cast(^var.StringName)name
-    if var.string_name_equal(name_string_name^, process_string_name) {
+    name := cast(^var.StringName)name
+    if var.string_name_equal(name^, ProcessVirtualStringName) {
         return cast(rawptr)example_class_process
     }
 
@@ -124,19 +107,14 @@ example_class_binding_callbacks := gd.InstanceBindingCallbacks{
 example_class_create_instance :: proc "c" (class_user_data: rawptr) -> gd.ObjectPtr {
     context = gd.godot_context()
 
-    class_name := var.StringName{}
-    gd.string_name_new_with_latin1_chars(cast(gd.StringNamePtr)&class_name, "Sprite2D", false)
-    object := gd.classdb_construct_object(cast(gd.StringNamePtr)&class_name)
-    var.free_string_name(class_name)
+    object := gd.classdb_construct_object(&Sprite2DClassStringName)
     
     self := new(ExampleClass)
     example_class_constructor(self)
     self.object = object
 
-    gd.string_name_new_with_latin1_chars(cast(gd.StringNamePtr)&class_name, "ExampleClass", false)
-    gd.object_set_instance(object, cast(gd.StringNamePtr)&class_name, cast(gd.ExtensionClassInstancePtr)self)
+    gd.object_set_instance(object, &ExampleClassStringName, self)
     gd.object_set_instance_binding(object, gd.library, self, &example_class_binding_callbacks)
-    var.free_string_name(class_name)
 
     return object
 }
@@ -156,10 +134,13 @@ example_class_free_instance :: proc "c" (class_user_data: rawptr, instance: gd.E
 example_class_register :: proc "c" () {
     context = gd.godot_context()
 
-    class_name := var.StringName{}
-    gd.string_name_new_with_latin1_chars(cast(gd.StringNamePtr)&class_name, "ExampleClass", false)
-    parent_class_name := var.StringName{}
-    gd.string_name_new_with_latin1_chars(cast(gd.StringNamePtr)&parent_class_name, "Sprite2D", false)
+    // we use string_name_new_with_latin1_chars because we know the lifetime of the string literal to be static
+    gd.string_name_new_with_latin1_chars(&ExampleClassStringName, "ExampleClass", true)
+    gd.string_name_new_with_latin1_chars(&ObjectClassStringName, "Object", true)
+    gd.string_name_new_with_latin1_chars(&Sprite2DClassStringName, "Sprite2D", true)
+    gd.string_name_new_with_latin1_chars(&ProcessVirtualStringName, "_process", true)
+    gd.string_name_new_with_latin1_chars(&TimePassedSignalStringName, "time_passed", true)
+    gd.string_name_new_with_latin1_chars(&EmitSignalMethodStringName, "emit_signal", true)
     
     class_info := gd.ExtensionClassCreationInfo2{
         is_virtual = false,
@@ -186,14 +167,7 @@ example_class_register :: proc "c" () {
         class_userdata = nil,
     }
 
-    gd.classdb_register_extension_class2(
-        gd.library,
-        cast(gd.StringNamePtr)&class_name,
-        cast(gd.StringNamePtr)&parent_class_name,
-        &class_info)
-    
-    example_class_bind_methods()
+    gd.classdb_register_extension_class2(gd.library, &ExampleClassStringName, &Sprite2DClassStringName, &class_info)
 
-    var.free_string_name(class_name)
-    var.free_string_name(parent_class_name)
+    example_class_bind_methods()
 }
