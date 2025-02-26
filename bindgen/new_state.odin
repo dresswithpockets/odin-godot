@@ -679,7 +679,10 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
 
         state_type.derived = state_class
 
-        state.all_types[api_class.name] = state_type
+        // HACK: since we already added a builtin Object type to all_types, we dont want to override here
+        if odin_name != "Object" {
+            state.all_types[api_class.name] = state_type
+        }
         state.classes[api_class_index] = state_type
 
         for api_enum, enum_index in api_class.enums {
@@ -751,6 +754,10 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
 
     // second engine class pass
     for api_class in api.classes {
+        if api_class.name == "Object" {
+            continue
+        }
+
         state_type := state.all_types[api_class.name]
         _, is_class := state_type.derived.(NewStateClass)
         if !is_class {
