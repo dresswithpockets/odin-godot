@@ -20,8 +20,18 @@ bindgen_class_reference_type :: proc(type: ^NewStateType) -> string {
         return "__bindgen_gde.VariantOperator"
     }
 
-    if class, is_class := type.derived.(NewStateClass); is_class && class.is_builtin {
-        return fmt.tprintf("__bindgen_var.%s", type.odin_type)
+    if class, is_class := type.derived.(NewStateClass); is_class && class.is_builtin {    
+        caret_index := strings.last_index(type.odin_type, "^")
+        if caret_index == -1 {
+            return fmt.tprintf("__bindgen_var.%s", type.odin_type)
+        }
+
+        carets, carets_ok := strings.substring_to(type.odin_type, caret_index + 1)
+        assert(carets_ok)
+        odin_name, odin_name_ok := strings.substring_from(type.odin_type, caret_index + 1)
+        assert(odin_name_ok)
+
+        return fmt.tprintf("%s__bindgen_var.%s", carets, odin_name)
     }
 
     if enum_type, is_enum_type := type.derived.(NewStateEnum); is_enum_type && enum_type.parent_class != nil {
@@ -29,20 +39,6 @@ bindgen_class_reference_type :: proc(type: ^NewStateType) -> string {
         if parent_class.is_builtin {
             return fmt.tprintf("__bindgen_var.%s", type.odin_type)
         }
-    }
-
-    if struct_type, is_struct_type := type.derived.(NewStateNativeStructure); is_struct_type {
-        caret_index := strings.last_index(struct_type.odin_name, "^")
-        if caret_index == -1 {
-            return fmt.tprintf("__bindgen_var.%s", struct_type.odin_name)
-        }
-
-        carets, carets_ok := strings.substring_to(struct_type.odin_name, caret_index + 1)
-        assert(carets_ok)
-        odin_name, odin_name_ok := strings.substring_from(struct_type.odin_name, caret_index + 1)
-        assert(odin_name_ok)
-        
-        return fmt.tprintf("%s__bindgen_var.%s", carets, odin_name)
     }
 
     return type.odin_type

@@ -59,9 +59,9 @@ generate_utility_functions :: proc(state: ^NewState) {
 
 @private
 generate_native_structs :: proc(state: ^NewState) {
-    fhandle, ferr := os.open("variant/native.gen.odin", os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
+    fhandle, ferr := os.open("core/native.gen.odin", os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
     if ferr != 0 {
-        fmt.eprintln("Error opening variant/native.gen.odin")
+        fmt.eprintln("Error opening core/native.gen.odin")
         return
     }
     defer os.close(fhandle)

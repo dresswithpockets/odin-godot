@@ -57,6 +57,15 @@ NewStatePodType :: struct {
 NewStateNativeStructure :: struct {
     // the name of the struct in generated odin code
     odin_name: string,
+    fields: []NewStateNativeStructureField,
+    has_defaults: bool,
+}
+
+NewStateNativeStructureField :: struct {
+    name: string,
+    type: ^NewStateType,
+    array_specifier: string,
+    default: string,
 }
 
 // represents an API (core, editor) class or a builtin (variant) class
@@ -428,6 +437,53 @@ _class_constructor_name :: proc(base_constructor_name: string, arguments: []NewS
     return strings.clone(strings.to_string(sb))
 }
 
+_native_struct_fields :: proc(state: ^NewState, format: string) -> []NewStateNativeStructureField {
+    // HACK: its really gross to allocate this much when i could be using split_iterator...
+    //       but i was having some unusual issues with split_iterator, it didnt behave as expected.
+    field_strings := strings.split(format, ";")
+    fields := make([]NewStateNativeStructureField, len(field_strings))
+    for field_string, field_idx in field_strings {
+        parts := strings.split(field_string, " ")
+        type_string := parts[0]
+        name_string := parts[1]
+
+        type_string, _ = strings.replace(type_string, "::", ".", 1)
+
+        if strings.has_prefix(name_string, "*") {
+            type_string = fmt.tprintf("%s*", type_string)
+            name_string = name_string[1:]
+        }
+
+        array_specifier := ""
+        if array_spec_idx := strings.index_rune(name_string, '['); array_spec_idx >= 0 {
+            array_specifier = name_string[array_spec_idx:]
+            name_string = name_string[:array_spec_idx]
+        }
+
+        odin_type, odin_type_ok := state.all_types[type_string]
+        assert(odin_type_ok)
+
+        // the field has a default!
+        default := ""
+        if len(parts) > 2 {
+            default = parts[len(parts) - 1]
+            // odin fields are 0 by default
+            if default == "0.f" || default == "0" {
+                default = ""
+            }
+        }
+
+        fields[field_idx] = NewStateNativeStructureField {
+            name = name_string,
+            type = odin_type,
+            array_specifier = array_specifier,
+            default = default,
+        }
+    }
+
+    return fields
+}
+
 create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
     state = new(NewState)
     state.options = options
@@ -436,7 +492,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
     state.all_types = make(map[string]^NewStateType)
     state.global_enums = make([]^NewStateType, len(api.enums))
     // we add an additional 2 items to the builtin classes array for the special Variant and Object types
-    state.builtin_classes = make([]^NewStateType, len(api.builtin_classes) + 2)
+    state.builtin_classes = make([]^NewStateType, len(api.builtin_classes) + 3)
     state.classes = make([]^NewStateType, len(api.classes))
     state.native_structs = make([]^NewStateType, len(api.native_structs))
 
@@ -628,9 +684,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         state_type.odin_skip = true
         state_type.derived = NewStateClass {
             odin_name = "Object",
-
             api_type = "variant",
-
             is_builtin = true,
             builtin_info = NewStateClassBuiltin {
                 float_32_size = builtin_sizes["float_32"]["Object"],
@@ -642,6 +696,28 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
 
         state.all_types["Object"] = state_type
         state.builtin_classes[len(state.builtin_classes) - 2] = state_type
+    }
+
+    // and Object pointer
+    {
+        state_type := new(NewStateType)
+        state_type.odin_type = "^Object"
+        // we skip this one since it is already covered by the manually written variant/Object.odin
+        state_type.odin_skip = true
+        state_type.derived = NewStateClass {
+            odin_name = "^Object",
+            api_type = "variant",
+            is_builtin = true,
+            builtin_info = NewStateClassBuiltin {
+                float_32_size = builtin_sizes["float_32"]["Object"],
+                float_64_size = builtin_sizes["float_64"]["Object"],
+                double_32_size = builtin_sizes["double_32"]["Object"],
+                double_64_size = builtin_sizes["double_64"]["Object"],
+            },
+        }
+
+        state.all_types["Object*"] = state_type
+        state.builtin_classes[len(state.builtin_classes) - 3] = state_type
     }
 
     // and Nil, which is only used for VariantType.Nil
@@ -694,12 +770,23 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
     // adding all native struct types and their pointer equivalents to the all types map
     for api_native_struct, api_native_struct_index in api.native_structs {
         odin_name := godot_to_odin_case(api_native_struct.name)
+        native_struct := NewStateNativeStructure {
+            odin_name = odin_name,
+            fields = _native_struct_fields(state, api_native_struct.format),
+        }
+
+        for field in native_struct.fields {
+            if field.default != "" {
+                native_struct.has_defaults = true
+                break
+            }
+        }
+
         {
             state_type := new(NewStateType)
             state_type.odin_type = odin_name
-            state_type.derived = NewStateNativeStructure {
-                odin_name = odin_name,
-            }
+            state_type.snake_type = odin_to_snake_case(odin_name)
+            state_type.derived = native_struct
             state.all_types[api_native_struct.name] = state_type
             state.native_structs[api_native_struct_index] = state_type
         }
@@ -710,9 +797,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
             real_odin_type := fmt.aprintf("^%v", odin_name)
             state_type := new(NewStateType)
             state_type.odin_type = real_odin_type
-            state_type.derived = NewStateNativeStructure {
-                odin_name = odin_name,
-            }
+            state_type.derived = native_struct
             state.all_types[godot_name] = state_type
         }
 
@@ -722,9 +807,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
             real_odin_type := fmt.aprintf("^%v", odin_name)
             state_type := new(NewStateType)
             state_type.odin_type = real_odin_type
-            state_type.derived = NewStateNativeStructure {
-                odin_name = odin_name,
-            }
+            state_type.derived = native_struct
             state.all_types[godot_name] = state_type
         }
     }
