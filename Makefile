@@ -26,9 +26,9 @@ debug_bindings: $(debug_bindgen_out) $(gdextension_api)
 
 ### temple
 $(temple_cli_out): $(temple_cli_deps)
-	odin build $(temple_cli_dir) -out:$(temple_cli_out) -o:speed -show-timings
+	odin build $(temple_cli_dir) -out:$(temple_cli_out) -o:minimal -show-timings
 temple: $(temple_cli_deps)
-	odin build $(temple_cli_dir) -out:$(temple_cli_out) -o:speed -show-timings
+	odin build $(temple_cli_dir) -out:$(temple_cli_out) -o:minimal -show-timings
 ###
 
 ### templates
@@ -40,9 +40,9 @@ templates: $(temple_cli_out) $(temple_deps)
 
 ### bindgen
 $(bindgen_out): $(bindgen_deps)
-	odin build $(bindgen_dir) -out:$(bindgen_out) -o:speed -show-timings
+	odin build $(bindgen_dir) -out:$(bindgen_out) -o:minimal -show-timings
 bindgen: $(bindgen_deps)
-	odin build $(bindgen_dir) -out:$(bindgen_out) -o:speed -show-timings
+	odin build $(bindgen_dir) -out:$(bindgen_out) -o:minimal -show-timings
 
 $(debug_bindgen_out): $(bindgen_deps)
 	odin build $(bindgen_dir) -out:$(debug_bindgen_out) -show-timings -debug
