@@ -3,6 +3,9 @@ package {{ this.derived.(NewStateClass).api_type }}
 
 import __bindgen_gde "../gdextension"
 import __bindgen_var "../variant"
+{% if this.depends_on_core_math %}
+import __bindgen_math "core:math"
+{% end %}
 
 {{ this.odin_type }} :: struct {
 {% if this.derived.(NewStateClass).inherits.odin_type == "Object" %}
@@ -19,6 +22,17 @@ import __bindgen_var "../variant"
 {% embed "bindgen_enum.temple.twig" with state_enum.derived.(NewStateEnum) %}
 {% end %}
 
+{% end %}
+
+// constants
+{% for constant in this.derived.(NewStateClass).constants %}
+{% if !constant.odin_skip %}
+{% if constant.type != nil %}
+{{ constant.name }}: {{ constant.type.odin_type }} = {% if int_value, is_int := constant.value.(int); is_int %}{{ int(int_value) }}{% else %}{{ constant.value.(string) }}{% end %}
+{% else %}
+{{ constant.name }} :: {% if int_value, is_int := constant.value.(int); is_int %}{{ int(int_value) }}{% else %}{{ constant.value.(string) }}{% end %}
+{% end %}
+{% end %}
 {% end %}
 
 // method frontends

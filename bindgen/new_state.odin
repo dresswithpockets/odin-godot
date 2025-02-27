@@ -854,6 +854,53 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         assert(is_class)
         (&state_type.derived.(NewStateClass))^.inherits = inherits_type
 
+        for api_constant, i in api_class.constants {
+            constant_type: ^NewStateType = nil
+            if api_constant.type != nil {
+                constant_type = state.all_types[api_constant.type.(string)]
+            }
+
+            state_constant := NewStateConstant {
+                name = fmt.aprintf("%s_%s", odin_to_const_case(state_type.odin_type), api_constant.name),
+                type = constant_type,
+                value = api_constant.value,
+            }
+
+            // we already have enums for the Axis constants
+            if strings.has_prefix(state_type.odin_type, "Vector") && strings.has_prefix(api_constant.name, "AXIS") {
+                state_constant.odin_skip = true
+            }
+
+            // extension_api.json for 4.2.1 uses an invalid constructor form for some reason,
+            // I think its shorthand for 4 Vector3s though. For now im just going to pretend
+            // it doesnt exist and deal with it later (:
+            // TODO: deal with Transform, Projection, Basis constants
+            if value_string, is_string := api_constant.value.(string); is_string &&
+                (strings.has_prefix(value_string, "Transform3D(") ||
+                strings.has_prefix(value_string, "Transform2D(") ||
+                strings.has_prefix(value_string, "Projection(") ||
+                strings.has_prefix(value_string, "Basis(")) {
+
+                state_constant.odin_skip = true
+            }
+
+            // TODO: properly parse out the value into a function call?
+            if value_string, is_string := api_constant.value.(string); is_string &&
+               strings.contains_rune(value_string, '(') &&
+               strings.contains_rune(value_string, ')') {
+
+                split_value := strings.split_n(value_string, "(", 2)
+                constructor_type, ok := state.all_types[split_value[0]]
+                assert(ok)
+
+                value_string = fmt.aprintf("%v(%v", constructor_type.derived.(NewStateClass).builtin_info.(NewStateClassBuiltin).base_constructor_name, split_value[1])
+                // TODO: verify that inf is always passed as f64?
+                state_constant.value, _ = strings.replace_all(value_string, "inf", "__bindgen_math.INF_F64")
+                state_type.depends_on_core_math = true
+            }
+            state_type.derived.(NewStateClass).constants[i] = state_constant
+        }
+
         // we process methods way at the end so that all dependent types have been mapped in all_types by this point
         for api_method, method_index in api_class.methods {
             class_method := NewStateFunction {
@@ -920,9 +967,9 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         }
 
         for api_constant, i in api_builtin_class.constants {
-            constant_type := state.all_types[api_constant.type]
+            constant_type := state.all_types[api_constant.type.(string)]
             state_constant := NewStateConstant {
-                name = fmt.aprintf("%v_%v", odin_to_const_case(constant_type.odin_type), api_constant.name),
+                name = fmt.aprintf("%v_%v", odin_to_const_case(state_type.odin_type), api_constant.name),
                 type = constant_type,
                 value = api_constant.value,
             }
