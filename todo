@@ -1,5 +1,5 @@
 # bindgen
-TODO generate special constructors for String, StringName, and Variant (see gdextension/interface.odin)
+TODO refactor multi-passes to do less work
 TODO generate Variant constructors that convert from another type (see get_variant_from_type_constructor)
 TODO generate Object in core instead of in variant/
 TODO generate class methods
@@ -10,6 +10,8 @@ TODO add support for vararg utility functions
 TODO add generation for built-in singletons
 TODO add generation for native structures (?)
 TODO add option to generate classes and methods in a class-per-package hierarchy (each class gets its own package)
+
+DONE generate special constructors for String, StringName, and Variant (see gdextension/interface.odin)
 
 DONE rewrite codegen to use temple templating engine
 DONE add support for utility functions with default arg values
