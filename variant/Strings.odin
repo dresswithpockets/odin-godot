@@ -1,8 +1,8 @@
 package variant
 
-import "core:strings"
-import "core:mem"
 import gd "../gdextension"
+import "core:mem"
+import "core:strings"
 
 @(private)
 EmptyString := String{}

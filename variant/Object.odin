@@ -4,12 +4,14 @@ package variant
 import __bindgen_gde "../gdextension"
 
 Object :: struct {
-    _opaque: __bindgen_gde.ObjectPtr
+    _opaque: __bindgen_gde.ObjectPtr,
 }
 
 new_object :: proc() -> ^Object {
     instance := new(Object)
-    instance._opaque = __bindgen_gde.classdb_construct_object(cast(__bindgen_gde.StringNamePtr)&__Object__class_name._opaque)
+    instance._opaque = __bindgen_gde.classdb_construct_object(
+        cast(__bindgen_gde.StringNamePtr)&__Object__class_name._opaque,
+    )
     return instance
 }
 
@@ -19,39 +21,48 @@ new_object_from_godot_ptr :: proc(object: __bindgen_gde.ObjectPtr) -> ^Object {
     return instance
 }
 
-@(private="file")
+@(private = "file")
 __Object_gde_binding_create_callback :: proc "c" (token: rawptr, instance: rawptr) -> rawptr {
     context = __bindgen_gde.godot_context()
     return new_object_from_godot_ptr(cast(__bindgen_gde.ObjectPtr)instance)
 }
 
-@(private="file")
+@(private = "file")
 __Object_gde_binding_free_callback :: proc "c" (token: rawptr, instance: rawptr, binding: rawptr) {
     context = __bindgen_gde.godot_context()
     free(binding)
 }
 
-@(private="file")
+@(private = "file")
 __Object_gde_binding_refrence_callback :: proc "c" (token: rawptr, binding: rawptr, reference: bool) -> bool {
     return true
 }
 
-@(private="file")
+@(private = "file")
 __Object_binding_callbacks := __bindgen_gde.InstanceBindingCallbacks {
-    create = __Object_gde_binding_create_callback,
-    free = __Object_gde_binding_free_callback,
-    reference =__Object_gde_binding_refrence_callback,
+    create    = __Object_gde_binding_create_callback,
+    free      = __Object_gde_binding_free_callback,
+    reference = __Object_gde_binding_refrence_callback,
 }
 
-@(private="file")
+@(private = "file")
 __Object_postinit :: proc(self: ^Object) {
-    __bindgen_gde.object_set_instance_binding(self._opaque, rawptr(__bindgen_gde.library), rawptr(self), &__Object_binding_callbacks)
+    __bindgen_gde.object_set_instance_binding(
+        self._opaque,
+        rawptr(__bindgen_gde.library),
+        rawptr(self),
+        &__Object_binding_callbacks,
+    )
 }
 
 @(private)
 __Object_init :: proc "contextless" () {
-    __bindgen_gde.string_name_new_with_latin1_chars(cast(__bindgen_gde.StringNamePtr)&__Object__class_name._opaque, "Object", true)
+    __bindgen_gde.string_name_new_with_latin1_chars(
+        cast(__bindgen_gde.StringNamePtr)&__Object__class_name._opaque,
+        "Object",
+        true,
+    )
 }
 
-@(private="file")
+@(private = "file")
 __Object__class_name: StringName
