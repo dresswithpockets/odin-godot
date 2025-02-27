@@ -49,7 +49,13 @@ ExtensionInterfaceMemFree :: #type proc "c" (p_ptr: rawptr)
  * @param p_line The line where the error occurred.
  * @param p_editor_notify Whether or not to notify the editor.
  */
-ExtensionInterfacePrintError :: #type proc "c" (p_description: cstring, p_function: cstring, p_file: cstring, p_line: i32, p_editor_notify: bool)
+ExtensionInterfacePrintError :: #type proc "c" (
+    p_description: cstring,
+    p_function: cstring,
+    p_file: cstring,
+    p_line: i32,
+    p_editor_notify: bool,
+)
 
 /**
  * @name print_error_with_message
@@ -64,7 +70,14 @@ ExtensionInterfacePrintError :: #type proc "c" (p_description: cstring, p_functi
  * @param p_line The line where the error occurred.
  * @param p_editor_notify Whether or not to notify the editor.
  */
-ExtensionInterfacePrintErrorWithMessage :: #type proc "c" (p_description: cstring, p_message: cstring, p_function: cstring, p_file: cstring, p_line: i32, p_editor_notify: bool)
+ExtensionInterfacePrintErrorWithMessage :: #type proc "c" (
+    p_description: cstring,
+    p_message: cstring,
+    p_function: cstring,
+    p_file: cstring,
+    p_line: i32,
+    p_editor_notify: bool,
+)
 
 /**
  * @name print_warning
@@ -78,7 +91,13 @@ ExtensionInterfacePrintErrorWithMessage :: #type proc "c" (p_description: cstrin
  * @param p_line The line where the warning occurred.
  * @param p_editor_notify Whether or not to notify the editor.
  */
-ExtensionInterfacePrintWarning :: #type proc "c" (p_description: cstring, p_function: cstring, p_file: cstring, p_line: i32, p_editor_notify: bool)
+ExtensionInterfacePrintWarning :: #type proc "c" (
+    p_description: cstring,
+    p_function: cstring,
+    p_file: cstring,
+    p_line: i32,
+    p_editor_notify: bool,
+)
 
 /**
  * @name print_warning_with_message
@@ -93,7 +112,14 @@ ExtensionInterfacePrintWarning :: #type proc "c" (p_description: cstring, p_func
  * @param p_line The line where the warning occurred.
  * @param p_editor_notify Whether or not to notify the editor.
  */
-ExtensionInterfacePrintWarningWithMessage :: #type proc "c" (p_description: cstring, p_message: cstring, p_function: cstring, p_file: cstring, p_line: i32, p_editor_notify: bool)
+ExtensionInterfacePrintWarningWithMessage :: #type proc "c" (
+    p_description: cstring,
+    p_message: cstring,
+    p_function: cstring,
+    p_file: cstring,
+    p_line: i32,
+    p_editor_notify: bool,
+)
 
 /**
  * @name print_script_error
@@ -107,7 +133,13 @@ ExtensionInterfacePrintWarningWithMessage :: #type proc "c" (p_description: cstr
  * @param p_line The line where the error occurred.
  * @param p_editor_notify Whether or not to notify the editor.
  */
-ExtensionInterfacePrintScriptError :: #type proc "c" (p_description: cstring, p_function: cstring, p_file: cstring, p_line: i32, p_editor_notify: bool)
+ExtensionInterfacePrintScriptError :: #type proc "c" (
+    p_description: cstring,
+    p_function: cstring,
+    p_file: cstring,
+    p_line: i32,
+    p_editor_notify: bool,
+)
 
 /**
  * @name print_script_error_with_message
@@ -122,7 +154,14 @@ ExtensionInterfacePrintScriptError :: #type proc "c" (p_description: cstring, p_
  * @param p_line The line where the error occurred.
  * @param p_editor_notify Whether or not to notify the editor.
  */
-ExtensionInterfacePrintScriptErrorWithMessage :: #type proc "c" (p_description: cstring, p_message: cstring, p_function: cstring, p_file: cstring, p_line: i32, p_editor_notify: bool)
+ExtensionInterfacePrintScriptErrorWithMessage :: #type proc "c" (
+    p_description: cstring,
+    p_message: cstring,
+    p_function: cstring,
+    p_file: cstring,
+    p_line: i32,
+    p_editor_notify: bool,
+)
 
 /**
  * @name get_native_struct_size
@@ -182,7 +221,14 @@ ExtensionInterfaceVariantDestroy :: #type proc "c" (p_self: VariantPtr)
  *
  * @see Variant::callp()
  */
-ExtensionInterfaceVariantCall :: #type proc "c" (p_self: VariantPtr, p_method: StringNamePtr, p_args: ^VariantPtr, p_argument_count: i64, r_return: VariantPtr, r_error: ^CallError)
+ExtensionInterfaceVariantCall :: #type proc "c" (
+    p_self: VariantPtr,
+    p_method: StringNamePtr,
+    p_args: ^VariantPtr,
+    p_argument_count: i64,
+    r_return: VariantPtr,
+    r_error: ^CallError,
+)
 
 /**
  * @name variant_call_static
@@ -199,7 +245,14 @@ ExtensionInterfaceVariantCall :: #type proc "c" (p_self: VariantPtr, p_method: S
  *
  * @see Variant::call_static()
  */
-ExtensionInterfaceVariantCallStatic :: #type proc "c" (p_type: VariantType, p_method: StringNamePtr, p_args: ^VariantPtr, p_argument_count: i64, r_return: VariantPtr, r_error: ^CallError)
+ExtensionInterfaceVariantCallStatic :: #type proc "c" (
+    p_type: VariantType,
+    p_method: StringNamePtr,
+    p_args: ^VariantPtr,
+    p_argument_count: i64,
+    r_return: VariantPtr,
+    r_error: ^CallError,
+)
 
 /**
  * @name variant_evaluate
@@ -215,7 +268,13 @@ ExtensionInterfaceVariantCallStatic :: #type proc "c" (p_type: VariantType, p_me
  *
  * @see Variant::evaluate()
  */
-ExtensionInterfaceVariantEvaluate :: #type proc "c" (p_op: VariantOperator, p_a: VariantPtr, p_b: VariantPtr, r_return: VariantPtr, r_valid: ^bool)
+ExtensionInterfaceVariantEvaluate :: #type proc "c" (
+    p_op: VariantOperator,
+    p_a: VariantPtr,
+    p_b: VariantPtr,
+    r_return: VariantPtr,
+    r_valid: ^bool,
+)
 
 /**
  * @name variant_set
@@ -230,7 +289,12 @@ ExtensionInterfaceVariantEvaluate :: #type proc "c" (p_op: VariantOperator, p_a:
  *
  * @see Variant::set()
  */
-ExtensionInterfaceVariantSet :: #type proc "c" (p_self: VariantPtr, p_key: VariantPtr, p_value: VariantPtr, r_valid: ^bool)
+ExtensionInterfaceVariantSet :: #type proc "c" (
+    p_self: VariantPtr,
+    p_key: VariantPtr,
+    p_value: VariantPtr,
+    r_valid: ^bool,
+)
 
 /**
  * @name variant_set_named
@@ -245,7 +309,12 @@ ExtensionInterfaceVariantSet :: #type proc "c" (p_self: VariantPtr, p_key: Varia
  *
  * @see Variant::set_named()
  */
-ExtensionInterfaceVariantSetNamed :: #type proc "c" (p_self: VariantPtr, p_key: StringNamePtr, p_value: VariantPtr, r_valid: ^bool)
+ExtensionInterfaceVariantSetNamed :: #type proc "c" (
+    p_self: VariantPtr,
+    p_key: StringNamePtr,
+    p_value: VariantPtr,
+    r_valid: ^bool,
+)
 
 /**
  * @name variant_set_keyed
@@ -260,7 +329,12 @@ ExtensionInterfaceVariantSetNamed :: #type proc "c" (p_self: VariantPtr, p_key: 
  *
  * @see Variant::set_keyed()
  */
-ExtensionInterfaceVariantSetKeyed :: #type proc "c" (p_self: VariantPtr, p_key: VariantPtr, p_value: VariantPtr, r_valid: ^bool)
+ExtensionInterfaceVariantSetKeyed :: #type proc "c" (
+    p_self: VariantPtr,
+    p_key: VariantPtr,
+    p_value: VariantPtr,
+    r_valid: ^bool,
+)
 
 /**
  * @name variant_set_indexed
@@ -274,7 +348,13 @@ ExtensionInterfaceVariantSetKeyed :: #type proc "c" (p_self: VariantPtr, p_key: 
  * @param r_valid A pointer to a boolean which will be set to false if the operation is invalid.
  * @param r_oob A pointer to a boolean which will be set to true if the index is out of bounds.
  */
-ExtensionInterfaceVariantSetIndexed :: #type proc "c" (p_self: VariantPtr, p_index: i64, p_value: VariantPtr, r_valid: ^bool, r_oob: ^bool)
+ExtensionInterfaceVariantSetIndexed :: #type proc "c" (
+    p_self: VariantPtr,
+    p_index: i64,
+    p_value: VariantPtr,
+    r_valid: ^bool,
+    r_oob: ^bool,
+)
 
 /**
  * @name variant_get
@@ -287,7 +367,12 @@ ExtensionInterfaceVariantSetIndexed :: #type proc "c" (p_self: VariantPtr, p_ind
  * @param r_ret A pointer to a Variant which will be assigned the value.
  * @param r_valid A pointer to a boolean which will be set to false if the operation is invalid.
  */
-ExtensionInterfaceVariantGet :: #type proc "c" (p_self: VariantPtr, p_key: VariantPtr, r_ret: VariantPtr, r_valid: ^bool)
+ExtensionInterfaceVariantGet :: #type proc "c" (
+    p_self: VariantPtr,
+    p_key: VariantPtr,
+    r_ret: VariantPtr,
+    r_valid: ^bool,
+)
 
 /**
  * @name variant_get_named
@@ -300,7 +385,12 @@ ExtensionInterfaceVariantGet :: #type proc "c" (p_self: VariantPtr, p_key: Varia
  * @param r_ret A pointer to a Variant which will be assigned the value.
  * @param r_valid A pointer to a boolean which will be set to false if the operation is invalid.
  */
-ExtensionInterfaceVariantGetNamed :: #type proc "c" (p_self: VariantPtr, p_key: StringNamePtr, r_ret: VariantPtr, r_valid: ^bool)
+ExtensionInterfaceVariantGetNamed :: #type proc "c" (
+    p_self: VariantPtr,
+    p_key: StringNamePtr,
+    r_ret: VariantPtr,
+    r_valid: ^bool,
+)
 
 /**
  * @name variant_get_keyed
@@ -313,7 +403,12 @@ ExtensionInterfaceVariantGetNamed :: #type proc "c" (p_self: VariantPtr, p_key: 
  * @param r_ret A pointer to a Variant which will be assigned the value.
  * @param r_valid A pointer to a boolean which will be set to false if the operation is invalid.
  */
-ExtensionInterfaceVariantGetKeyed :: #type proc "c" (p_self: VariantPtr, p_key: VariantPtr, r_ret: VariantPtr, r_valid: ^bool)
+ExtensionInterfaceVariantGetKeyed :: #type proc "c" (
+    p_self: VariantPtr,
+    p_key: VariantPtr,
+    r_ret: VariantPtr,
+    r_valid: ^bool,
+)
 
 /**
  * @name variant_get_indexed
@@ -327,7 +422,13 @@ ExtensionInterfaceVariantGetKeyed :: #type proc "c" (p_self: VariantPtr, p_key: 
  * @param r_valid A pointer to a boolean which will be set to false if the operation is invalid.
  * @param r_oob A pointer to a boolean which will be set to true if the index is out of bounds.
  */
-ExtensionInterfaceVariantGetIndexed :: #type proc "c" (p_self: VariantPtr, p_index: i64, r_ret: VariantPtr, r_valid: ^bool, r_oob: ^bool)
+ExtensionInterfaceVariantGetIndexed :: #type proc "c" (
+    p_self: VariantPtr,
+    p_index: i64,
+    r_ret: VariantPtr,
+    r_valid: ^bool,
+    r_oob: ^bool,
+)
 
 /**
  * @name variant_iter_init
@@ -374,7 +475,12 @@ ExtensionInterfaceVariantIterNext :: #type proc "c" (p_self: VariantPtr, r_iter:
  *
  * @see Variant::iter_get()
  */
-ExtensionInterfaceVariantIterGet :: #type proc "c" (p_self: VariantPtr, r_iter: VariantPtr, r_ret: VariantPtr, r_valid: ^bool)
+ExtensionInterfaceVariantIterGet :: #type proc "c" (
+    p_self: VariantPtr,
+    r_iter: VariantPtr,
+    r_ret: VariantPtr,
+    r_valid: ^bool,
+)
 
 /**
  * @name variant_hash
@@ -554,7 +660,9 @@ ExtensionInterfaceVariantCanConvertStrict :: #type proc "c" (p_from: VariantType
  *
  * @return A pointer to a function that can create a Variant of the given type from a raw value.
  */
-ExtensionInterfaceGetVariantFromTypeConstructor :: #type proc "c" (p_type: VariantType) -> VariantFromTypeConstructorProc
+ExtensionInterfaceGetVariantFromTypeConstructor :: #type proc "c" (
+    p_type: VariantType,
+) -> VariantFromTypeConstructorProc
 
 /**
  * @name get_variant_to_type_constructor
@@ -580,7 +688,11 @@ ExtensionInterfaceGetVariantToTypeConstructor :: #type proc "c" (p_type: Variant
  *
  * @return A pointer to a function that can evaluate the given Variant operator on the given Variant types.
  */
-ExtensionInterfaceVariantGetPtrOperatorEvaluator :: #type proc "c" (p_operator: VariantOperator, p_type_a: VariantType, p_type_b: VariantType) -> PtrOperatorEvaluator
+ExtensionInterfaceVariantGetPtrOperatorEvaluator :: #type proc "c" (
+    p_operator: VariantOperator,
+    p_type_a: VariantType,
+    p_type_b: VariantType,
+) -> PtrOperatorEvaluator
 
 /**
  * @name variant_get_ptr_builtin_method
@@ -594,7 +706,11 @@ ExtensionInterfaceVariantGetPtrOperatorEvaluator :: #type proc "c" (p_operator: 
  *
  * @return A pointer to a function that can call a builtin method on a type of Variant.
  */
-ExtensionInterfaceVariantGetPtrBuiltinMethod :: #type proc "c" (p_type: VariantType, p_method: StringNamePtr, p_hash: i64) -> PtrBuiltInMethod
+ExtensionInterfaceVariantGetPtrBuiltinMethod :: #type proc "c" (
+    p_type: VariantType,
+    p_method: StringNamePtr,
+    p_hash: i64,
+) -> PtrBuiltInMethod
 
 /**
  * @name variant_get_ptr_constructor
@@ -607,7 +723,10 @@ ExtensionInterfaceVariantGetPtrBuiltinMethod :: #type proc "c" (p_type: VariantT
  *
  * @return A pointer to a function that can call one of the constructors for a type of Variant.
  */
-ExtensionInterfaceVariantGetPtrConstructor :: #type proc "c" (p_type: VariantType, p_constructor: i32) -> PtrConstructor
+ExtensionInterfaceVariantGetPtrConstructor :: #type proc "c" (
+    p_type: VariantType,
+    p_constructor: i32,
+) -> PtrConstructor
 
 /**
  * @name variant_get_ptr_destructor
@@ -633,7 +752,13 @@ ExtensionInterfaceVariantGetPtrDestructor :: #type proc "c" (p_type: VariantType
  * @param p_argument_count The number of arguments to pass to the constructor.
  * @param r_error A pointer the structure which will be updated with error information.
  */
-ExtensionInterfaceVariantConstruct :: #type proc "c" (p_type: VariantType, r_base: VariantPtr, p_args: ^VariantPtr, p_argument_count: i32, r_error: ^CallError)
+ExtensionInterfaceVariantConstruct :: #type proc "c" (
+    p_type: VariantType,
+    r_base: VariantPtr,
+    p_args: ^VariantPtr,
+    p_argument_count: i32,
+    r_error: ^CallError,
+)
 
 /**
  * @name variant_get_ptr_setter
@@ -731,7 +856,11 @@ ExtensionInterfaceVariantGetPtrKeyedChecker :: #type proc "c" (p_type: VariantTy
  * @param p_constant A pointer to a StringName with the constant name.
  * @param r_ret A pointer to a Variant to store the value.
  */
-ExtensionInterfaceVariantGetConstantValue :: #type proc "c" (p_type: VariantType, p_constant: StringNamePtr, r_ret: VariantPtr)
+ExtensionInterfaceVariantGetConstantValue :: #type proc "c" (
+    p_type: VariantType,
+    p_constant: StringNamePtr,
+    r_ret: VariantPtr,
+)
 
 /**
  * @name variant_get_ptr_utility_function
@@ -744,7 +873,10 @@ ExtensionInterfaceVariantGetConstantValue :: #type proc "c" (p_type: VariantType
  *
  * @return A pointer to a function that can call a Variant utility function.
  */
-ExtensionInterfaceVariantGetPtrUtilityFunction :: #type proc "c" (p_function: StringNamePtr, p_hash: i64) -> PtrUtilityFunction
+ExtensionInterfaceVariantGetPtrUtilityFunction :: #type proc "c" (
+    p_function: StringNamePtr,
+    p_hash: i64,
+) -> PtrUtilityFunction
 
 /**
  * @name string_new_with_latin1_chars
@@ -811,7 +943,11 @@ ExtensionInterfaceStringNewWithWideChars :: #type proc "c" (r_dest: StringPtr, p
  * @param p_contents A pointer to a Latin-1 encoded C string.
  * @param p_size The number of characters (= number of bytes).
  */
-ExtensionInterfaceStringNewWithLatin1CharsAndLen :: #type proc "c" (r_dest: StringPtr, p_contents: cstring, p_size: i64)
+ExtensionInterfaceStringNewWithLatin1CharsAndLen :: #type proc "c" (
+    r_dest: StringPtr,
+    p_contents: cstring,
+    p_size: i64,
+)
 
 /**
  * @name string_new_with_utf8_chars_and_len
@@ -838,7 +974,11 @@ ExtensionInterfaceStringNewWithUtf8CharsAndLen :: #type proc "c" (r_dest: String
  *
  * @return Error code signifying if the operation successful.
  */
-ExtensionInterfaceStringNewWithUtf8CharsAndLen2 :: #type proc "c" (r_dest: StringPtr, p_contents: cstring, p_size: i64) -> i64
+ExtensionInterfaceStringNewWithUtf8CharsAndLen2 :: #type proc "c" (
+    r_dest: StringPtr,
+    p_contents: cstring,
+    p_size: i64,
+) -> i64
 
 /**
  * @name string_new_with_utf16_chars_and_len
@@ -851,7 +991,11 @@ ExtensionInterfaceStringNewWithUtf8CharsAndLen2 :: #type proc "c" (r_dest: Strin
  * @param p_contents A pointer to a UTF-16 encoded C string.
  * @param p_size The number of characters (not bytes).
  */
-ExtensionInterfaceStringNewWithUtf16CharsAndLen :: #type proc "c" (r_dest: StringPtr, p_contents: ^u16, p_char_count: i64)
+ExtensionInterfaceStringNewWithUtf16CharsAndLen :: #type proc "c" (
+    r_dest: StringPtr,
+    p_contents: ^u16,
+    p_char_count: i64,
+)
 
 /**
  * @name string_new_with_utf16_chars_and_len2
@@ -866,7 +1010,12 @@ ExtensionInterfaceStringNewWithUtf16CharsAndLen :: #type proc "c" (r_dest: Strin
  *
  * @return Error code signifying if the operation successful.
  */
-ExtensionInterfaceStringNewWithUtf16CharsAndLen2 :: #type proc "c" (r_dest: StringPtr, p_contents: ^u16, p_char_count: i64, p_default_little_endian: bool) -> i64
+ExtensionInterfaceStringNewWithUtf16CharsAndLen2 :: #type proc "c" (
+    r_dest: StringPtr,
+    p_contents: ^u16,
+    p_char_count: i64,
+    p_default_little_endian: bool,
+) -> i64
 
 /**
  * @name string_new_with_utf32_chars_and_len
@@ -878,7 +1027,11 @@ ExtensionInterfaceStringNewWithUtf16CharsAndLen2 :: #type proc "c" (r_dest: Stri
  * @param p_contents A pointer to a UTF-32 encoded C string.
  * @param p_size The number of characters (not bytes).
  */
-ExtensionInterfaceStringNewWithUtf32CharsAndLen :: #type proc "c" (r_dest: StringPtr, p_contents: ^u32, p_char_count: i64)
+ExtensionInterfaceStringNewWithUtf32CharsAndLen :: #type proc "c" (
+    r_dest: StringPtr,
+    p_contents: ^u32,
+    p_char_count: i64,
+)
 
 /**
  * @name string_new_with_wide_chars_and_len
@@ -890,7 +1043,11 @@ ExtensionInterfaceStringNewWithUtf32CharsAndLen :: #type proc "c" (r_dest: Strin
  * @param p_contents A pointer to a wide C string.
  * @param p_size The number of characters (not bytes).
  */
-ExtensionInterfaceStringNewWithWideCharsAndLen :: #type proc "c" (r_dest: StringPtr, p_contents: ^c.wchar_t, p_char_count: i64)
+ExtensionInterfaceStringNewWithWideCharsAndLen :: #type proc "c" (
+    r_dest: StringPtr,
+    p_contents: ^c.wchar_t,
+    p_char_count: i64,
+)
 
 /**
  * @name string_to_latin1_chars
@@ -906,7 +1063,11 @@ ExtensionInterfaceStringNewWithWideCharsAndLen :: #type proc "c" (r_dest: String
  *
  * @return The resulting encoded string length in characters (not bytes), not including a null terminator.
  */
-ExtensionInterfaceStringToLatin1Chars :: #type proc "c" (p_self: StringPtr, r_text: cstring, p_max_write_length: i64) -> i64
+ExtensionInterfaceStringToLatin1Chars :: #type proc "c" (
+    p_self: StringPtr,
+    r_text: cstring,
+    p_max_write_length: i64,
+) -> i64
 
 /**
  * @name string_to_utf8_chars
@@ -922,7 +1083,11 @@ ExtensionInterfaceStringToLatin1Chars :: #type proc "c" (p_self: StringPtr, r_te
  *
  * @return The resulting encoded string length in characters (not bytes), not including a null terminator.
  */
-ExtensionInterfaceStringToUtf8Chars :: #type proc "c" (p_self: StringPtr, r_text: cstring, p_max_write_length: i64) -> i64
+ExtensionInterfaceStringToUtf8Chars :: #type proc "c" (
+    p_self: StringPtr,
+    r_text: cstring,
+    p_max_write_length: i64,
+) -> i64
 
 /**
  * @name string_to_utf16_chars
@@ -938,7 +1103,11 @@ ExtensionInterfaceStringToUtf8Chars :: #type proc "c" (p_self: StringPtr, r_text
  *
  * @return The resulting encoded string length in characters (not bytes), not including a null terminator.
  */
-ExtensionInterfaceStringToUtf16Chars :: #type proc "c" (p_self: StringPtr, r_text: ^u16, p_max_write_length: i64) -> i64
+ExtensionInterfaceStringToUtf16Chars :: #type proc "c" (
+    p_self: StringPtr,
+    r_text: ^u16,
+    p_max_write_length: i64,
+) -> i64
 
 /**
  * @name string_to_utf32_chars
@@ -954,7 +1123,11 @@ ExtensionInterfaceStringToUtf16Chars :: #type proc "c" (p_self: StringPtr, r_tex
  *
  * @return The resulting encoded string length in characters (not bytes), not including a null terminator.
  */
-ExtensionInterfaceStringToUtf32Chars :: #type proc "c" (p_self: StringPtr, r_text: ^u32, p_max_write_length: i64) -> i64
+ExtensionInterfaceStringToUtf32Chars :: #type proc "c" (
+    p_self: StringPtr,
+    r_text: ^u32,
+    p_max_write_length: i64,
+) -> i64
 
 /**
  * @name string_to_wide_chars
@@ -970,7 +1143,11 @@ ExtensionInterfaceStringToUtf32Chars :: #type proc "c" (p_self: StringPtr, r_tex
  *
  * @return The resulting encoded string length in characters (not bytes), not including a null terminator.
  */
-ExtensionInterfaceStringToWideChars :: #type proc "c" (p_self: StringPtr, r_text: ^c.wchar_t, p_max_write_length: i64) -> i64
+ExtensionInterfaceStringToWideChars :: #type proc "c" (
+    p_self: StringPtr,
+    r_text: ^c.wchar_t,
+    p_max_write_length: i64,
+) -> i64
 
 /**
  * @name string_operator_index
@@ -1089,7 +1266,11 @@ ExtensionInterfaceStringResize :: #type proc "c" (p_self: StringPtr, p_resize: i
  * @param p_contents A pointer to a C string (null terminated and Latin-1 or ASCII encoded).
  * @param p_is_static Whether the StringName reuses the buffer directly (see above).
  */
-ExtensionInterfaceStringNameNewWithLatin1Chars :: #type proc "c" (r_dest: StringNamePtr, p_contents: cstring, p_is_static: bool)
+ExtensionInterfaceStringNameNewWithLatin1Chars :: #type proc "c" (
+    r_dest: StringNamePtr,
+    p_contents: cstring,
+    p_is_static: bool,
+)
 
 /**
  * @name string_name_new_with_utf8_chars
@@ -1112,7 +1293,11 @@ ExtensionInterfaceStringNameNewWithUtf8Chars :: #type proc "c" (r_dest: StringNa
  * @param p_contents A pointer to a C string (null terminated and UTF-8 encoded).
  * @param p_size The number of bytes (not UTF-8 code points).
  */
-ExtensionInterfaceStringNameNewWithUtf8CharsAndLen :: #type proc "c" (r_dest: StringNamePtr, p_contents: cstring, p_size: i64)
+ExtensionInterfaceStringNameNewWithUtf8CharsAndLen :: #type proc "c" (
+    r_dest: StringNamePtr,
+    p_contents: cstring,
+    p_size: i64,
+)
 
 /**
  * @name xml_parser_open_buffer
@@ -1203,7 +1388,15 @@ ExtensionInterfaceImagePtr :: #type proc "c" (p_instance: ObjectPtr) -> ^u8
  *
  * @see WorkerThreadPool::add_group_task()
  */
-ExtensionInterfaceWorkerThreadPoolAddNativeGroupTask :: #type proc "c" (p_instance: ObjectPtr, p_func: proc "c" (rawptr, c.uint32_t), p_userdata: rawptr, p_elements: int, p_tasks: int, p_high_priority: bool, p_description: StringPtr) -> i64
+ExtensionInterfaceWorkerThreadPoolAddNativeGroupTask :: #type proc "c" (
+    p_instance: ObjectPtr,
+    p_func: proc "c" (_: rawptr, _: c.uint32_t),
+    p_userdata: rawptr,
+    p_elements: int,
+    p_tasks: int,
+    p_high_priority: bool,
+    p_description: StringPtr,
+) -> i64
 
 /**
  * @name worker_thread_pool_add_native_task
@@ -1219,7 +1412,13 @@ ExtensionInterfaceWorkerThreadPoolAddNativeGroupTask :: #type proc "c" (p_instan
  *
  * @return The task ID.
  */
-ExtensionInterfaceWorkerThreadPoolAddNativeTask :: #type proc "c" (p_instance: ObjectPtr, p_func: proc "c" (rawptr), p_userdata: rawptr, p_high_priority: bool, p_description: StringPtr) -> i64
+ExtensionInterfaceWorkerThreadPoolAddNativeTask :: #type proc "c" (
+    p_instance: ObjectPtr,
+    p_func: proc "c" (_: rawptr),
+    p_userdata: rawptr,
+    p_high_priority: bool,
+    p_description: StringPtr,
+) -> i64
 
 /**
  * @name packed_byte_array_operator_index
@@ -1529,7 +1728,12 @@ ExtensionInterfaceArrayRef :: #type proc "c" (p_self: TypePtr, p_from: TypePtr)
  * @param p_class_name A pointer to a StringName with the name of the object (if p_type is GDEXTENSION_VARIANT_TYPE_OBJECT).
  * @param p_script A pointer to a Script object (if p_type is GDEXTENSION_VARIANT_TYPE_OBJECT and the base class is extended by a script).
  */
-ExtensionInterfaceArraySetTyped :: #type proc "c" (p_self: TypePtr, p_type: VariantType, p_class_name: StringNamePtr, p_script: VariantPtr)
+ExtensionInterfaceArraySetTyped :: #type proc "c" (
+    p_self: TypePtr,
+    p_type: VariantType,
+    p_class_name: StringNamePtr,
+    p_script: VariantPtr,
+)
 
 /**
  * @name dictionary_operator_index
@@ -1570,7 +1774,14 @@ ExtensionInterfaceDictionaryOperatorIndexConst :: #type proc "c" (p_self: TypePt
  * @param r_ret A pointer to Variant which will receive the return value.
  * @param r_error A pointer to a GDExtensionCallError struct that will receive error information.
  */
-ExtensionInterfaceObjectMethodBindCall :: #type proc "c" (p_method_bind: MethodBindPtr, p_instance: ObjectPtr, p_args: [^]VariantPtr, p_arg_count: i64, r_ret: VariantPtr, r_error: ^CallError)
+ExtensionInterfaceObjectMethodBindCall :: #type proc "c" (
+    p_method_bind: MethodBindPtr,
+    p_instance: ObjectPtr,
+    p_args: [^]VariantPtr,
+    p_arg_count: i64,
+    r_ret: VariantPtr,
+    r_error: ^CallError,
+)
 
 /**
  * @name object_method_bind_ptrcall
@@ -1583,7 +1794,12 @@ ExtensionInterfaceObjectMethodBindCall :: #type proc "c" (p_method_bind: MethodB
  * @param p_args A pointer to a C array representing the arguments.
  * @param r_ret A pointer to the Object that will receive the return value.
  */
-ExtensionInterfaceObjectMethodBindPtrcall :: #type proc "c" (p_method_bind: MethodBindPtr, p_instance: ObjectPtr, p_args: ^TypePtr, r_ret: TypePtr)
+ExtensionInterfaceObjectMethodBindPtrcall :: #type proc "c" (
+    p_method_bind: MethodBindPtr,
+    p_instance: ObjectPtr,
+    p_args: ^TypePtr,
+    r_ret: TypePtr,
+)
 
 /**
  * @name object_destroy
@@ -1619,7 +1835,11 @@ ExtensionInterfaceGlobalGetSingleton :: #type proc "c" (p_name: StringNamePtr) -
  *
  * @return
  */
-ExtensionInterfaceObjectGetInstanceBinding :: #type proc "c" (p_o: ObjectPtr, p_token: rawptr, p_callbacks: ^InstanceBindingCallbacks) -> rawptr
+ExtensionInterfaceObjectGetInstanceBinding :: #type proc "c" (
+    p_o: ObjectPtr,
+    p_token: rawptr,
+    p_callbacks: ^InstanceBindingCallbacks,
+) -> rawptr
 
 /**
  * @name object_set_instance_binding
@@ -1632,7 +1852,12 @@ ExtensionInterfaceObjectGetInstanceBinding :: #type proc "c" (p_o: ObjectPtr, p_
  * @param p_binding A pointer to the instance binding.
  * @param p_callbacks A pointer to a InstanceBindingCallbacks struct.
  */
-ExtensionInterfaceObjectSetInstanceBinding :: #type proc "c" (p_o: ObjectPtr, p_token: rawptr, p_binding: rawptr, p_callbacks: ^InstanceBindingCallbacks)
+ExtensionInterfaceObjectSetInstanceBinding :: #type proc "c" (
+    p_o: ObjectPtr,
+    p_token: rawptr,
+    p_binding: rawptr,
+    p_callbacks: ^InstanceBindingCallbacks,
+)
 
 /**
  * @name object_free_instance_binding
@@ -1655,7 +1880,11 @@ ExtensionInterfaceObjectFreeInstanceBinding :: #type proc "c" (p_o: ObjectPtr, p
  * @param p_classname A pointer to a StringName with the registered extension class's name.
  * @param p_instance A pointer to the extension class instance.
  */
-ExtensionInterfaceObjectSetInstance :: #type proc "c" (p_o: ObjectPtr, p_classname: StringNamePtr, p_instance: ExtensionClassInstancePtr)
+ExtensionInterfaceObjectSetInstance :: #type proc "c" (
+    p_o: ObjectPtr,
+    p_classname: StringNamePtr,
+    p_instance: ExtensionClassInstancePtr,
+)
 
 /**
  * @name object_get_class_name
@@ -1672,7 +1901,11 @@ ExtensionInterfaceObjectSetInstance :: #type proc "c" (p_o: ObjectPtr, p_classna
  *
  * @return true if successful in getting the class name; otherwise false.
  */
-ExtensionInterfaceObjectGetClassName :: #type proc "c" (p_object: ObjectPtr, p_library: ExtensionClassLibraryPtr, r_class_name: StringNamePtr) -> bool
+ExtensionInterfaceObjectGetClassName :: #type proc "c" (
+    p_object: ObjectPtr,
+    p_library: ExtensionClassLibraryPtr,
+    r_class_name: StringNamePtr,
+) -> bool
 
 /**
  * @name object_cast_to
@@ -1737,7 +1970,14 @@ ExtensionInterfaceObjectHasScriptMethod :: #type proc "c" (p_object: ObjectPtr, 
  * @param r_return A pointer a Variant which will be assigned the return value.
  * @param r_error A pointer the structure which will hold error information.
  */
-ExtensionInterfaceObjectCallScriptMethod :: #type proc "c" (p_object: ObjectPtr, p_method: StringNamePtr, p_args: ^VariantPtr, p_argument_count: i64, r_return: VariantPtr, r_error: ^CallError)
+ExtensionInterfaceObjectCallScriptMethod :: #type proc "c" (
+    p_object: ObjectPtr,
+    p_method: StringNamePtr,
+    p_args: ^VariantPtr,
+    p_argument_count: i64,
+    r_return: VariantPtr,
+    r_error: ^CallError,
+)
 
 /**
  * @name ref_get_object
@@ -1774,7 +2014,10 @@ ExtensionInterfaceRefSetObject :: #type proc "c" (p_ref: RefPtr, p_object: Objec
  *
  * @return A pointer to a ScriptInstanceExtension object.
  */
-ExtensionInterfaceScriptInstanceCreate :: #type proc "c" (p_info: ^ExtensionScriptInstanceInfo, p_instance_data: ExtensionScriptInstanceDataPtr) -> ScriptInstancePtr
+ExtensionInterfaceScriptInstanceCreate :: #type proc "c" (
+    p_info: ^ExtensionScriptInstanceInfo,
+    p_instance_data: ExtensionScriptInstanceDataPtr,
+) -> ScriptInstancePtr
 
 /**
  * @name script_instance_create2
@@ -1788,7 +2031,10 @@ ExtensionInterfaceScriptInstanceCreate :: #type proc "c" (p_info: ^ExtensionScri
  *
  * @return A pointer to a ScriptInstanceExtension object.
  */
-ExtensionInterfaceScriptInstanceCreate2 :: #type proc "c" (p_info: ^ExtensionScriptInstanceInfo2, p_instance_data: ExtensionScriptInstanceDataPtr) -> ScriptInstancePtr
+ExtensionInterfaceScriptInstanceCreate2 :: #type proc "c" (
+    p_info: ^ExtensionScriptInstanceInfo2,
+    p_instance_data: ExtensionScriptInstanceDataPtr,
+) -> ScriptInstancePtr
 
 /**
  * @name script_instance_create3
@@ -1801,7 +2047,10 @@ ExtensionInterfaceScriptInstanceCreate2 :: #type proc "c" (p_info: ^ExtensionScr
  *
  * @return A pointer to a ScriptInstanceExtension object.
  */
-ExtensionInterfaceScriptInstanceCreate3 :: #type proc "c" (p_info: ^ExtensionScriptInstanceInfo3, p_instance_data: ExtensionScriptInstanceDataPtr) -> ScriptInstancePtr
+ExtensionInterfaceScriptInstanceCreate3 :: #type proc "c" (
+    p_info: ^ExtensionScriptInstanceInfo3,
+    p_instance_data: ExtensionScriptInstanceDataPtr,
+) -> ScriptInstancePtr
 
 /**
  * @name placeholder_script_instance_create
@@ -1817,7 +2066,11 @@ ExtensionInterfaceScriptInstanceCreate3 :: #type proc "c" (p_info: ^ExtensionScr
  *
  * @return A pointer to a PlaceHolderScriptInstance object.
  */
-ExtensionInterfacePlaceHolderScriptInstanceCreate :: #type proc "c" (p_language: ObjectPtr, p_script: ObjectPtr, p_owner: ObjectPtr) -> ScriptInstancePtr
+ExtensionInterfacePlaceHolderScriptInstanceCreate :: #type proc "c" (
+    p_language: ObjectPtr,
+    p_script: ObjectPtr,
+    p_owner: ObjectPtr,
+) -> ScriptInstancePtr
 
 /**
  * @name placeholder_script_instance_update
@@ -1832,7 +2085,11 @@ ExtensionInterfacePlaceHolderScriptInstanceCreate :: #type proc "c" (p_language:
  * @param p_properties A pointer to an Array of Dictionary representing PropertyInfo.
  * @param p_values A pointer to a Dictionary mapping StringName to Variant values.
  */
-ExtensionInterfacePlaceHolderScriptInstanceUpdate :: #type proc "c" (p_placeholder: ScriptInstancePtr, p_properties: TypePtr, p_values: TypePtr)
+ExtensionInterfacePlaceHolderScriptInstanceUpdate :: #type proc "c" (
+    p_placeholder: ScriptInstancePtr,
+    p_properties: TypePtr,
+    p_values: TypePtr,
+)
 
 /**
  * @name object_get_script_instance
@@ -1845,7 +2102,10 @@ ExtensionInterfacePlaceHolderScriptInstanceUpdate :: #type proc "c" (p_placehold
  *
  * @return A GDExtensionScriptInstanceDataPtr that was attached to this object as part of script_instance_create.
  */
-ExtensionInterfaceObjectGetScriptInstance :: #type proc "c" (p_object: ObjectPtr, p_language: ObjectPtr) -> ExtensionScriptInstanceDataPtr
+ExtensionInterfaceObjectGetScriptInstance :: #type proc "c" (
+    p_object: ObjectPtr,
+    p_language: ObjectPtr,
+) -> ExtensionScriptInstanceDataPtr
 
 /**
  * @name callable_custom_create
@@ -1859,7 +2119,10 @@ ExtensionInterfaceObjectGetScriptInstance :: #type proc "c" (p_object: ObjectPtr
  * @param r_callable A pointer that will receive the new Callable.
  * @param p_callable_custom_info The info required to construct a Callable.
  */
-ExtensionInterfaceCallableCustomCreate :: #type proc "c" (r_callable: TypePtr, p_callable_custom_info: ^ExtensionCallableCustomInfo)
+ExtensionInterfaceCallableCustomCreate :: #type proc "c" (
+    r_callable: TypePtr,
+    p_callable_custom_info: ^ExtensionCallableCustomInfo,
+)
 
 /**
  * @name callable_custom_create2
@@ -1872,7 +2135,10 @@ ExtensionInterfaceCallableCustomCreate :: #type proc "c" (r_callable: TypePtr, p
  * @param r_callable A pointer that will receive the new Callable.
  * @param p_callable_custom_info The info required to construct a Callable.
  */
-ExtensionInterfaceCallableCustomCreate2 :: #type proc "c" (r_callable: TypePtr, p_callable_custom_info: ^ExtensionCallableCustomInfo2)
+ExtensionInterfaceCallableCustomCreate2 :: #type proc "c" (
+    r_callable: TypePtr,
+    p_callable_custom_info: ^ExtensionCallableCustomInfo2,
+)
 
 /**
  * @name callable_custom_get_userdata
@@ -1913,7 +2179,11 @@ ExtensionInterfaceClassdbConstructObject :: #type proc "c" (p_classname: StringN
  *
  * @return A pointer to the MethodBind from ClassDB.
  */
-ExtensionInterfaceClassdbGetMethodBind :: #type proc "c" (p_classname: StringNamePtr, p_methodname: StringNamePtr, p_hash: i64) -> MethodBindPtr
+ExtensionInterfaceClassdbGetMethodBind :: #type proc "c" (
+    p_classname: StringNamePtr,
+    p_methodname: StringNamePtr,
+    p_hash: i64,
+) -> MethodBindPtr
 
 /**
  * @name classdb_get_class_tag
@@ -1941,7 +2211,12 @@ ExtensionInterfaceClassdbGetClassTag :: #type proc "c" (p_classname: StringNameP
  * @param p_parent_class_name A pointer to a StringName with the parent class name.
  * @param p_extension_funcs A pointer to a GDExtensionClassCreationInfo struct.
  */
-ExtensionInterfaceClassdbRegisterExtensionClass :: #type proc "c" (p_library: ExtensionClassLibraryPtr, p_class_name: StringNamePtr, p_parent_class_name: StringNamePtr, p_extension_funcs: ^ExtensionClassCreationInfo)
+ExtensionInterfaceClassdbRegisterExtensionClass :: #type proc "c" (
+    p_library: ExtensionClassLibraryPtr,
+    p_class_name: StringNamePtr,
+    p_parent_class_name: StringNamePtr,
+    p_extension_funcs: ^ExtensionClassCreationInfo,
+)
 
 /**
  * @name classdb_register_extension_class2
@@ -1957,7 +2232,12 @@ ExtensionInterfaceClassdbRegisterExtensionClass :: #type proc "c" (p_library: Ex
  * @param p_parent_class_name A pointer to a StringName with the parent class name.
  * @param p_extension_funcs A pointer to a GDExtensionClassCreationInfo2 struct.
  */
-ExtensionInterfaceClassdbRegisterExtensionClass2 :: #type proc "c" (p_library: ExtensionClassLibraryPtr, p_class_name: StringNamePtr, p_parent_class_name: StringNamePtr, p_extension_funcs: ^ExtensionClassCreationInfo2)
+ExtensionInterfaceClassdbRegisterExtensionClass2 :: #type proc "c" (
+    p_library: ExtensionClassLibraryPtr,
+    p_class_name: StringNamePtr,
+    p_parent_class_name: StringNamePtr,
+    p_extension_funcs: ^ExtensionClassCreationInfo2,
+)
 
 /**
  * @name classdb_register_extension_class3
@@ -1972,7 +2252,12 @@ ExtensionInterfaceClassdbRegisterExtensionClass2 :: #type proc "c" (p_library: E
  * @param p_parent_class_name A pointer to a StringName with the parent class name.
  * @param p_extension_funcs A pointer to a GDExtensionClassCreationInfo2 struct.
  */
-ExtensionInterfaceClassdbRegisterExtensionClass3 :: #type proc "c" (p_library: ExtensionClassLibraryPtr, p_class_name: StringNamePtr, p_parent_class_name: StringNamePtr, p_extension_funcs: ^ExtensionClassCreationInfo3)
+ExtensionInterfaceClassdbRegisterExtensionClass3 :: #type proc "c" (
+    p_library: ExtensionClassLibraryPtr,
+    p_class_name: StringNamePtr,
+    p_parent_class_name: StringNamePtr,
+    p_extension_funcs: ^ExtensionClassCreationInfo3,
+)
 
 /**
  * @name classdb_register_extension_class_method
@@ -1986,7 +2271,11 @@ ExtensionInterfaceClassdbRegisterExtensionClass3 :: #type proc "c" (p_library: E
  * @param p_class_name A pointer to a StringName with the class name.
  * @param p_method_info A pointer to a GDExtensionClassMethodInfo struct.
  */
-ExtensionInterfaceClassdbRegisterExtensionClassMethod :: #type proc "c" (p_library: ExtensionClassLibraryPtr, p_class_name: StringNamePtr, p_method_info: ^ExtensionClassMethodInfo)
+ExtensionInterfaceClassdbRegisterExtensionClassMethod :: #type proc "c" (
+    p_library: ExtensionClassLibraryPtr,
+    p_class_name: StringNamePtr,
+    p_method_info: ^ExtensionClassMethodInfo,
+)
 
 /**
  * @name classdb_register_extension_class_virtual_method
@@ -2000,7 +2289,11 @@ ExtensionInterfaceClassdbRegisterExtensionClassMethod :: #type proc "c" (p_libra
  * @param p_class_name A pointer to a StringName with the class name.
  * @param p_method_info A pointer to a GDExtensionClassMethodInfo struct.
  */
-ExtensionInterfaceClassdbRegisterExtensionClassVirtualMethod :: #type proc "c" (p_library: ExtensionClassLibraryPtr, p_class_name: StringNamePtr, p_method_info: ^ExtensionClassVirtualMethodInfo)
+ExtensionInterfaceClassdbRegisterExtensionClassVirtualMethod :: #type proc "c" (
+    p_library: ExtensionClassLibraryPtr,
+    p_class_name: StringNamePtr,
+    p_method_info: ^ExtensionClassVirtualMethodInfo,
+)
 
 /**
  * @name classdb_register_extension_class_integer_constant
@@ -2019,7 +2312,14 @@ ExtensionInterfaceClassdbRegisterExtensionClassVirtualMethod :: #type proc "c" (
  * @param p_constant_value The constant value.
  * @param p_is_bitfield Whether or not this constant is part of a bitfield.
  */
-ExtensionInterfaceClassdbRegisterExtensionClassIntegerConstant :: #type proc "c" (p_library: ExtensionClassLibraryPtr, p_class_name: StringNamePtr, p_enum_name: StringNamePtr, p_constant_name: StringNamePtr, p_constant_value: i64, p_is_bitfield: bool)
+ExtensionInterfaceClassdbRegisterExtensionClassIntegerConstant :: #type proc "c" (
+    p_library: ExtensionClassLibraryPtr,
+    p_class_name: StringNamePtr,
+    p_enum_name: StringNamePtr,
+    p_constant_name: StringNamePtr,
+    p_constant_value: i64,
+    p_is_bitfield: bool,
+)
 
 /**
  * @name classdb_register_extension_class_property
@@ -2035,7 +2335,13 @@ ExtensionInterfaceClassdbRegisterExtensionClassIntegerConstant :: #type proc "c"
  * @param p_setter A pointer to a StringName with the name of the setter method.
  * @param p_getter A pointer to a StringName with the name of the getter method.
  */
-ExtensionInterfaceClassdbRegisterExtensionClassProperty :: #type proc "c" (p_library: ExtensionClassLibraryPtr, p_class_name: StringNamePtr, p_info: ^PropertyInfo, p_setter: StringNamePtr, p_getter: StringNamePtr)
+ExtensionInterfaceClassdbRegisterExtensionClassProperty :: #type proc "c" (
+    p_library: ExtensionClassLibraryPtr,
+    p_class_name: StringNamePtr,
+    p_info: ^PropertyInfo,
+    p_setter: StringNamePtr,
+    p_getter: StringNamePtr,
+)
 
 /**
  * @name classdb_register_extension_class_property_indexed
@@ -2052,7 +2358,14 @@ ExtensionInterfaceClassdbRegisterExtensionClassProperty :: #type proc "c" (p_lib
  * @param p_getter A pointer to a StringName with the name of the getter method.
  * @param p_index The index to pass as the first argument to the getter and setter methods.
  */
-ExtensionInterfaceClassdbRegisterExtensionClassPropertyIndexed :: #type proc "c" (p_library: ExtensionClassLibraryPtr, p_class_name: StringNamePtr, p_info: ^PropertyInfo, p_setter: StringNamePtr, p_getter: StringNamePtr, p_index: i64)
+ExtensionInterfaceClassdbRegisterExtensionClassPropertyIndexed :: #type proc "c" (
+    p_library: ExtensionClassLibraryPtr,
+    p_class_name: StringNamePtr,
+    p_info: ^PropertyInfo,
+    p_setter: StringNamePtr,
+    p_getter: StringNamePtr,
+    p_index: i64,
+)
 
 /**
  * @name classdb_register_extension_class_property_group
@@ -2065,7 +2378,12 @@ ExtensionInterfaceClassdbRegisterExtensionClassPropertyIndexed :: #type proc "c"
  * @param p_group_name A pointer to a String with the group name.
  * @param p_prefix A pointer to a String with the prefix used by properties in this group.
  */
-ExtensionInterfaceClassdbRegisterExtensionClassPropertyGroup :: #type proc "c" (p_library: ExtensionClassLibraryPtr, p_class_name: StringNamePtr, p_group_name: StringPtr, p_prefix: StringPtr)
+ExtensionInterfaceClassdbRegisterExtensionClassPropertyGroup :: #type proc "c" (
+    p_library: ExtensionClassLibraryPtr,
+    p_class_name: StringNamePtr,
+    p_group_name: StringPtr,
+    p_prefix: StringPtr,
+)
 
 /**
  * @name classdb_register_extension_class_property_subgroup
@@ -2078,7 +2396,12 @@ ExtensionInterfaceClassdbRegisterExtensionClassPropertyGroup :: #type proc "c" (
  * @param p_subgroup_name A pointer to a String with the subgroup name.
  * @param p_prefix A pointer to a String with the prefix used by properties in this subgroup.
  */
-ExtensionInterfaceClassdbRegisterExtensionClassPropertySubgroup :: #type proc "c" (p_library: ExtensionClassLibraryPtr, p_class_name: StringNamePtr, p_subgroup_name: StringPtr, p_prefix: StringPtr)
+ExtensionInterfaceClassdbRegisterExtensionClassPropertySubgroup :: #type proc "c" (
+    p_library: ExtensionClassLibraryPtr,
+    p_class_name: StringNamePtr,
+    p_subgroup_name: StringPtr,
+    p_prefix: StringPtr,
+)
 
 /**
  * @name classdb_register_extension_class_signal
@@ -2094,7 +2417,13 @@ ExtensionInterfaceClassdbRegisterExtensionClassPropertySubgroup :: #type proc "c
  * @param p_argument_info A pointer to a GDExtensionPropertyInfo struct.
  * @param p_argument_count The number of arguments the signal receives.
  */
-ExtensionInterfaceClassdbRegisterExtensionClassSignal :: #type proc "c" (p_library: ExtensionClassLibraryPtr, p_class_name: StringNamePtr, p_signal_name: StringNamePtr, p_argument_info: ^PropertyInfo, p_argument_count: i64)
+ExtensionInterfaceClassdbRegisterExtensionClassSignal :: #type proc "c" (
+    p_library: ExtensionClassLibraryPtr,
+    p_class_name: StringNamePtr,
+    p_signal_name: StringNamePtr,
+    p_argument_info: ^PropertyInfo,
+    p_argument_count: i64,
+)
 
 /**
  * @name classdb_unregister_extension_class
@@ -2105,7 +2434,10 @@ ExtensionInterfaceClassdbRegisterExtensionClassSignal :: #type proc "c" (p_libra
  * @param p_library A pointer the library received by the GDExtension's entry point function.
  * @param p_class_name A pointer to a StringName with the class name.
  */
-ExtensionInterfaceClassdbUnregisterExtensionClass :: #type proc "c" (p_library: ExtensionClassLibraryPtr, p_class_name: StringNamePtr)
+ExtensionInterfaceClassdbUnregisterExtensionClass :: #type proc "c" (
+    p_library: ExtensionClassLibraryPtr,
+    p_class_name: StringNamePtr,
+)
 
 /**
  * @name get_library_path
@@ -2164,4 +2496,3 @@ ExtensionsInterfaceEditorHelpLoadXmlFromUtf8Chars :: #type proc "c" (p_data: cst
  * @param p_size The number of bytes (not code units).
  */
 ExtensionsInterfaceEditorHelpLoadXmlFromUtf8CharsAndLen :: #type proc "c" (p_data: cstring, p_size: i64)
-

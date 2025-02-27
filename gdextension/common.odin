@@ -12,7 +12,11 @@ when BUILD_CONFIG == "float_32" {
     float :: f64
 }
 
-call_builtin_constructor :: proc "contextless" (constructor: PtrConstructor, base: UninitializedTypePtr, args: ..TypePtr) {
+call_builtin_constructor :: proc "contextless" (
+    constructor: PtrConstructor,
+    base: UninitializedTypePtr,
+    args: ..TypePtr,
+) {
     constructor(base, raw_data(args))
 }
 
@@ -22,7 +26,12 @@ call_builtin_operator_ptr :: proc "contextless" (op: PtrOperatorEvaluator, a, b:
     return ret
 }
 
-call_builtin_method_ptr_ret :: proc "contextless" (method: PtrBuiltInMethod, base: TypePtr, $T: typeid, args: ..TypePtr) -> T {
+call_builtin_method_ptr_ret :: proc "contextless" (
+    method: PtrBuiltInMethod,
+    base: TypePtr,
+    $T: typeid,
+    args: ..TypePtr,
+) -> T {
     ret: T
     method(base, raw_data(args), cast(TypePtr)&ret, len(args))
     return ret
@@ -42,7 +51,13 @@ call_method_ptr_ret :: proc "contextless" (method: MethodBindPtr, $T: typeid, ba
     return ret
 }
 
-call_utility_function_ptr_ret :: proc "contextless" (func: PtrUtilityFunction, $T: typeid, args: ..TypePtr) -> (ret: T) {
+call_utility_function_ptr_ret :: proc "contextless" (
+    func: PtrUtilityFunction,
+    $T: typeid,
+    args: ..TypePtr,
+) -> (
+    ret: T,
+) {
     func(cast(TypePtr)&ret, raw_data(args), len(args))
     return
 }
