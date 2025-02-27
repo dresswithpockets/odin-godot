@@ -1,12 +1,12 @@
 #+private
 package bindgen
 
+import "base:runtime"
 import "core:fmt"
 import "core:os"
 import "core:thread"
-import "base:runtime"
 
-@(private="file")
+@(private = "file")
 UNIX_ALLOW_READ_WRITE_ALL :: 0o666
 
 constructor_type :: "gdextension.PtrConstructor"
@@ -14,25 +14,12 @@ destructor_type :: "gdextension.PtrDestructor"
 operator_evaluator_type :: "gdextension.PtrOperatorEvaluator"
 builtin_method_type :: "gdextension.PtrBuiltInMethod"
 
-native_odin_types :: []string {
-    "bool",
-    "f32",
-    "f64",
-    "int",
-    "i8",
-    "i16",
-    "i32",
-    "i64",
-    "u8",
-    "u16",
-    "u32",
-    "u64",
-}
+native_odin_types :: []string{"bool", "f32", "f64", "int", "i8", "i16", "i32", "i64", "u8", "u16", "u32", "u64"}
 
 types_with_odin_string_constructors :: []string{"String", "StringName"}
 
 generate_variant_init_task :: proc(task: thread.Task) {
-    
+
     fhandle, ferr := os.open("variant/init.gen.odin", os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
     if ferr != 0 {
         fmt.eprintln("Error opening variant/init.gen.odin")
@@ -48,7 +35,7 @@ generate_variant_init_task :: proc(task: thread.Task) {
 }
 
 generate_core_init_task :: proc(task: thread.Task) {
-    
+
     fhandle, ferr := os.open("core/init.gen.odin", os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
     if ferr != 0 {
         fmt.eprintln("Error opening core/init.gen.odin")
@@ -64,7 +51,7 @@ generate_core_init_task :: proc(task: thread.Task) {
 }
 
 generate_editor_init_task :: proc(task: thread.Task) {
-    
+
     fhandle, ferr := os.open("editor/init.gen.odin", os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
     if ferr != 0 {
         fmt.eprintln("Error opening editor/init.gen.odin")

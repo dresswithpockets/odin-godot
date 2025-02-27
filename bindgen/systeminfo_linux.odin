@@ -9,16 +9,16 @@ CPU_BITTYPE :: c.ulong
 CPU_BITS :: size_of(CPU_BITTYPE)
 
 Cpu_Set :: struct {
-    bits: [CPU_SETSIZE / CPU_BITS]CPU_BITTYPE
+    bits: [CPU_SETSIZE / CPU_BITS]CPU_BITTYPE,
 }
 
 errno_unwrap2 :: #force_inline proc "contextless" (ret: $P, $T: typeid) -> (T, linux.Errno) {
-	if ret < 0 {
-		default_value: T
-		return default_value, linux.Errno(-ret)
-	} else {
-		return cast(T) ret, linux.Errno(.NONE)
-	}
+    if ret < 0 {
+        default_value: T
+        return default_value, linux.Errno(-ret)
+    } else {
+        return cast(T)ret, linux.Errno(.NONE)
+    }
 }
 
 sched_getaffinity :: proc(pid: linux.Pid, cpusetsize: c.size_t, mask: ^Cpu_Set) -> (int, linux.Errno) {
@@ -26,7 +26,7 @@ sched_getaffinity :: proc(pid: linux.Pid, cpusetsize: c.size_t, mask: ^Cpu_Set) 
     return errno_unwrap2(ret, int)
 }
 
-@private
+@(private)
 countbits :: proc(v: CPU_BITTYPE) -> int {
     s := 0
     v := v
@@ -37,10 +37,10 @@ countbits :: proc(v: CPU_BITTYPE) -> int {
     return s
 }
 
-@private
+@(private)
 sched_cpucount :: proc(setsize: c.size_t, set: ^Cpu_Set) -> int {
     s := 0
-    for i in 0..<(setsize / CPU_BITS) {
+    for i in 0 ..< (setsize / CPU_BITS) {
         s += countbits(set.bits[i])
     }
     return s

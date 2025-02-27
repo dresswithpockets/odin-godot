@@ -2,8 +2,8 @@
 package bindgen
 
 import "core:fmt"
-import "core:strings"
 import "core:slice"
+import "core:strings"
 
 /*
 State is all of the information transformed from the Api input
@@ -15,30 +15,28 @@ State calculates the following:
 
 @(private)
 NewState :: struct {
-    options:             Options,
-    api:                 ^Api,
+    options:           Options,
+    api:               ^Api,
 
     // a type map to resolve types from full type names
-    all_types: map[string]^NewStateType,
-
-    global_enums:    []^NewStateType,
-    builtin_classes: []^NewStateType,
-    classes:         []^NewStateType,
-    native_structs:  []^NewStateType,
-
+    all_types:         map[string]^NewStateType,
+    global_enums:      []^NewStateType,
+    builtin_classes:   []^NewStateType,
+    classes:           []^NewStateType,
+    native_structs:    []^NewStateType,
     core_singletons:   [dynamic]NewStateSingleton,
     editor_singletons: [dynamic]NewStateSingleton,
     utility_functions: []NewStateFunction,
 }
 
 NewStateSingleton :: struct {
-    name: string,
+    name:       string,
     snake_name: string,
-    odin_type: string,
+    odin_type:  string,
 }
 
 NewStateType :: struct {
-    derived: union {
+    derived:              union {
         NewStateClass,
         NewStateEnum,
         NewStatePodType,
@@ -46,15 +44,13 @@ NewStateType :: struct {
     },
 
     // the name to use when specifying the type in the generated odin code
-    odin_type: string,
-    godot_type: string,
-    snake_type: string,
+    odin_type:            string,
+    godot_type:           string,
+    snake_type:           string,
 
     // the name to use when the VariantType is required
-    variant_type: Maybe(string),
-
-    odin_skip: bool,
-
+    variant_type:         Maybe(string),
+    odin_skip:            bool,
     depends_on_core_math: bool,
 }
 
@@ -64,32 +60,29 @@ NewStatePodType :: struct {
 
 NewStateNativeStructure :: struct {
     // the name of the struct in generated odin code
-    odin_name: string,
-    fields: []NewStateNativeStructureField,
+    odin_name:    string,
+    fields:       []NewStateNativeStructureField,
     has_defaults: bool,
 }
 
 NewStateNativeStructureField :: struct {
-    name: string,
-    type: ^NewStateType,
+    name:            string,
+    type:            ^NewStateType,
     array_specifier: string,
-    default: string,
+    default:         string,
 }
 
 // represents an API (core, editor) class or a builtin (variant) class
 NewStateClass :: struct {
     // the name of the struct in generated odin code
-    odin_name: string,
-
-    enums: []^NewStateType,
-    methods: []NewStateFunction,
-    operators: []NewStateOperator,
-    constants: []NewStateConstant,
-
-    api_type: string,
-    inherits: ^NewStateType,
-
-    is_builtin: bool,
+    odin_name:    string,
+    enums:        []^NewStateType,
+    methods:      []NewStateFunction,
+    operators:    []NewStateOperator,
+    constants:    []NewStateConstant,
+    api_type:     string,
+    inherits:     ^NewStateType,
+    is_builtin:   bool,
     builtin_info: Maybe(NewStateClassBuiltin),
 }
 
@@ -99,43 +92,42 @@ NewStateClassConstructor :: struct {
 }
 
 NewStateFunction :: struct {
-    odin_skip: bool,
-
-    odin_name: string,
-    godot_name: string,
-    hash: i64,
-
-    arguments: []NewStateFunctionArgument,
+    odin_skip:   bool,
+    odin_name:   string,
+    godot_name:  string,
+    hash:        i64,
+    arguments:   []NewStateFunctionArgument,
     return_type: Maybe(^NewStateType),
 }
 
 NewStateOperator :: struct {
     // proc group name
-    odin_name: string,
+    odin_name:    string,
 
     // VariantOperator name
     variant_name: string,
-
-    overloads: []NewStateOperatorOverload,
+    overloads:    []NewStateOperatorOverload,
 }
 
 NewStateConstant :: struct {
-    name: string,
-    type: ^NewStateType,
-    value: union { int, string },
-
+    name:      string,
+    type:      ^NewStateType,
+    value:     union {
+        int,
+        string,
+    },
     odin_skip: bool,
 }
 
 NewStateOperatorOverload :: struct {
     // proc name
-    odin_name: string,
+    odin_name:   string,
 
     // should never be nil
     return_type: ^NewStateType,
 
     // may be nil
-    right_type: ^NewStateType,
+    right_type:  ^NewStateType,
 }
 
 NewStateFunctionArgument :: struct {
@@ -144,51 +136,48 @@ NewStateFunctionArgument :: struct {
 }
 
 NewStateClassBuiltin :: struct {
-    float_32_size: uint,
-    float_64_size: uint,
-    double_32_size: uint,
-    double_64_size: uint,
-
+    float_32_size:         uint,
+    float_64_size:         uint,
+    double_32_size:        uint,
+    double_64_size:        uint,
     base_constructor_name: string,
-    constructors: []NewStateClassConstructor,
-    destructor_name: Maybe(string),
-
-    members: []NewStateClassBuiltinMember,
+    constructors:          []NewStateClassConstructor,
+    destructor_name:       Maybe(string),
+    members:               []NewStateClassBuiltinMember,
 }
 
 NewStateClassBuiltinMember :: struct {
     odin_prefix: string,
-    name: string,
-    type: ^NewStateType,
+    name:        string,
+    type:        ^NewStateType,
 }
 
 NewStateEnum :: struct {
     // the name of the enum in generated odin code
-    odin_name: string,
+    odin_name:    string,
 
     // the ordered key-value pairs of all enum values
-    odin_values: []NewStateEnumValue,
-
+    odin_values:  []NewStateEnumValue,
     parent_class: Maybe(^NewStateType),
 }
 
 NewStateEnumValue :: struct {
-    name: string,
+    name:  string,
     value: int,
 }
 
 // some enums are pre-implemented in the gdextension package, and should be skipped
 // during generation
-@private
+@(private)
 skip_enums_by_name :: []string{"Variant.Operator", "Variant.Type"}
 
-@private
+@(private)
 enum_prefix_alias := map[string]string {
     "Error" = "Err",
 }
 
-@private
-skip_builtin_types_by_name :: []string{
+@(private)
+skip_builtin_types_by_name :: []string {
     "Nil",
     "void",
     "bool",
@@ -206,15 +195,14 @@ skip_builtin_types_by_name :: []string{
     "uint64_t",
 }
 
-@private
-new_pod_type_map := map[string]string{
+@(private)
+new_pod_type_map := map[string]string {
     "bool"     = "bool",
 
     // TODO: these should map to gd.float, not f64
     "real_t"   = "f64",
     "float"    = "f64",
     "double"   = "f64",
-
     "int"      = "int",
     "int8_t"   = "i8",
     "int16_t"  = "i16",
@@ -306,8 +294,8 @@ _state_enum :: proc(state: ^NewState, api_enum: ApiEnum, class: Maybe(^NewStateT
     state_type.godot_type = api_enum.name
     state_type.snake_type = godot_to_snake_case(api_enum.name)
     state_enum := NewStateEnum {
-        odin_name = odin_name,
-        odin_values = make([]NewStateEnumValue, len(api_enum.values)),
+        odin_name    = odin_name,
+        odin_values  = make([]NewStateEnumValue, len(api_enum.values)),
         parent_class = class,
     }
     state_type.derived = state_enum
@@ -375,7 +363,7 @@ _state_enum :: proc(state: ^NewState, api_enum: ApiEnum, class: Maybe(^NewStateT
         }
         name = const_to_odin_case(name)
         state_enum.odin_values[i] = NewStateEnumValue {
-            name = name,
+            name  = name,
             value = value.value,
         }
     }
@@ -408,7 +396,11 @@ _class_operator_name :: proc(class_name: string, variant_name: string) -> string
     return fmt.aprintf("%v_%v", snake_case_class, snake_case_name)
 }
 
-_class_operator_overload_name :: proc(class_name: string, variant_name: string, right_type_variant_name: string) -> string {
+_class_operator_overload_name :: proc(
+    class_name: string,
+    variant_name: string,
+    right_type_variant_name: string,
+) -> string {
     snake_case_right := "self" if right_type_variant_name == "Nil" else odin_to_snake_case(right_type_variant_name)
     defer if right_type_variant_name != "Nil" {
         delete(snake_case_right)
@@ -482,10 +474,10 @@ _native_struct_fields :: proc(state: ^NewState, format: string) -> []NewStateNat
         }
 
         fields[field_idx] = NewStateNativeStructureField {
-            name = name_string,
-            type = odin_type,
+            name            = name_string,
+            type            = odin_type,
             array_specifier = array_specifier,
-            default = default,
+            default         = default,
         }
     }
 
@@ -627,25 +619,20 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         state_type.odin_skip = slice.contains(skip_builtin_types_by_name, api_builtin_class.name)
         state_class := NewStateClass {
             odin_name = odin_name,
-
             enums = make([]^NewStateType, len(api_builtin_class.enums)),
             methods = make([]NewStateFunction, len(api_builtin_class.methods)),
             operators = make([]NewStateOperator, _unique_operators_count(api_builtin_class.operators)),
             constants = make([]NewStateConstant, len(api_builtin_class.constants)),
-
             api_type = "variant",
-
             is_builtin = true,
             builtin_info = NewStateClassBuiltin {
                 float_32_size = builtin_sizes["float_32"][api_builtin_class.name],
                 float_64_size = builtin_sizes["float_64"][api_builtin_class.name],
                 double_32_size = builtin_sizes["double_32"][api_builtin_class.name],
                 double_64_size = builtin_sizes["double_64"][api_builtin_class.name],
-
                 base_constructor_name = fmt.aprintf("new_%v", snake_name),
                 constructors = make([]NewStateClassConstructor, len(api_builtin_class.constructors)),
                 destructor_name = fmt.aprintf("free_%v", snake_name) if api_builtin_class.has_destructor else nil,
-
                 members = make([]NewStateClassBuiltinMember, len(api_builtin_class.members)),
             },
         }
@@ -670,9 +657,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         state_type.odin_type = "Variant"
         state_type.derived = NewStateClass {
             odin_name = "Variant",
-
             api_type = "variant",
-
             is_builtin = true,
             builtin_info = NewStateClassBuiltin {
                 float_32_size = builtin_sizes["float_32"]["Variant"],
@@ -755,12 +740,11 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         state_type.odin_skip = odin_name == "Object"
         state_class := NewStateClass {
             odin_name = odin_name,
-            api_type = api_class.api_type,
-            
-            methods = make([]NewStateFunction, len(api_class.methods)),
+            api_type  = api_class.api_type,
+            methods   = make([]NewStateFunction, len(api_class.methods)),
             constants = make([]NewStateConstant, len(api_class.constants)),
-            enums = make([]^NewStateType, len(api_class.enums)),
-            operators = make([]NewStateOperator, len(api_class.operators))
+            enums     = make([]^NewStateType, len(api_class.enums)),
+            operators = make([]NewStateOperator, len(api_class.operators)),
         }
 
         state_type.derived = state_class
@@ -782,7 +766,7 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         odin_name := godot_to_odin_case(api_native_struct.name)
         native_struct := NewStateNativeStructure {
             odin_name = odin_name,
-            fields = _native_struct_fields(state, api_native_struct.format),
+            fields    = _native_struct_fields(state, api_native_struct.format),
         }
 
         for field in native_struct.fields {
@@ -827,9 +811,9 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         assert(singleton_is_state_class)
 
         state_singleton := NewStateSingleton {
-            name = api_singleton.name,
+            name       = api_singleton.name,
             snake_name = godot_to_snake_case(api_singleton.name),
-            odin_type = godot_to_odin_case(api_singleton.type),
+            odin_type  = godot_to_odin_case(api_singleton.type),
         }
 
         if state_class.api_type == "core" {
@@ -841,10 +825,10 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
 
     for api_function, i in api.util_functions {
         state_function := NewStateFunction {
-            odin_name = fmt.aprintf("gd_%v", api_function.name),
+            odin_name  = fmt.aprintf("gd_%v", api_function.name),
             godot_name = api_function.name,
-            hash = api_function.hash,
-            arguments = make([]NewStateFunctionArgument, len(api_function.arguments)),
+            hash       = api_function.hash,
+            arguments  = make([]NewStateFunctionArgument, len(api_function.arguments)),
         }
 
         if return_type_str, has_return_type := api_function.return_type.(string); has_return_type {
@@ -888,8 +872,8 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
             }
 
             state_constant := NewStateConstant {
-                name = fmt.aprintf("%s_%s", odin_to_const_case(state_type.odin_type), api_constant.name),
-                type = constant_type,
+                name  = fmt.aprintf("%s_%s", odin_to_const_case(state_type.odin_type), api_constant.name),
+                type  = constant_type,
                 value = api_constant.value,
             }
 
@@ -902,25 +886,29 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
             // I think its shorthand for 4 Vector3s though. For now im just going to pretend
             // it doesnt exist and deal with it later (:
             // TODO: deal with Transform, Projection, Basis constants
-            if value_string, is_string := api_constant.value.(string); is_string &&
-                (strings.has_prefix(value_string, "Transform3D(") ||
-                strings.has_prefix(value_string, "Transform2D(") ||
-                strings.has_prefix(value_string, "Projection(") ||
-                strings.has_prefix(value_string, "Basis(")) {
+            if value_string, is_string := api_constant.value.(string);
+               is_string &&
+               (strings.has_prefix(value_string, "Transform3D(") ||
+                       strings.has_prefix(value_string, "Transform2D(") ||
+                       strings.has_prefix(value_string, "Projection(") ||
+                       strings.has_prefix(value_string, "Basis(")) {
 
                 state_constant.odin_skip = true
             }
 
             // TODO: properly parse out the value into a function call?
-            if value_string, is_string := api_constant.value.(string); is_string &&
-               strings.contains_rune(value_string, '(') &&
-               strings.contains_rune(value_string, ')') {
+            if value_string, is_string := api_constant.value.(string);
+               is_string && strings.contains_rune(value_string, '(') && strings.contains_rune(value_string, ')') {
 
                 split_value := strings.split_n(value_string, "(", 2)
                 constructor_type, ok := state.all_types[split_value[0]]
                 assert(ok)
 
-                value_string = fmt.aprintf("%v(%v", constructor_type.derived.(NewStateClass).builtin_info.(NewStateClassBuiltin).base_constructor_name, split_value[1])
+                value_string = fmt.aprintf(
+                    "%v(%v",
+                    constructor_type.derived.(NewStateClass).builtin_info.(NewStateClassBuiltin).base_constructor_name,
+                    split_value[1],
+                )
                 // TODO: verify that inf is always passed as f64?
                 state_constant.value, _ = strings.replace_all(value_string, "inf", "__bindgen_math.INF_F64")
                 state_type.depends_on_core_math = true
@@ -931,17 +919,17 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         // we process methods way at the end so that all dependent types have been mapped in all_types by this point
         for api_method, method_index in api_class.methods {
             class_method := NewStateFunction {
-                odin_name = _class_method_name(state_type.odin_type, api_method.name),
+                odin_name  = _class_method_name(state_type.odin_type, api_method.name),
                 godot_name = api_method.name,
-                hash = api_method.hash,
+                hash       = api_method.hash,
 
                 // HACK: for some ungodly reason the gdextension duplicates the getter for origin as a builtin method? Resulting in a redelcaration of the get_origin proc.
-                odin_skip = state_type.odin_type == "Transform2d" && api_method.name == "get_origin",
-
-                arguments = make([]NewStateFunctionArgument, len(api_method.arguments)),
+                odin_skip  = state_type.odin_type == "Transform2d" && api_method.name == "get_origin",
+                arguments  = make([]NewStateFunctionArgument, len(api_method.arguments)),
             }
 
-            if return_value, has_return_value := api_method.return_value.(ApiClassMethodReturnValue); has_return_value {
+            if return_value, has_return_value := api_method.return_value.(ApiClassMethodReturnValue);
+               has_return_value {
                 return_type := return_value.meta.(string) or_else return_value.type
                 if strings.has_prefix(return_type, "typedarray::") {
                     return_type = "Array"
@@ -987,8 +975,8 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
             member_type := state.all_types[api_member.type]
             state_member := NewStateClassBuiltinMember {
                 odin_prefix = odin_to_snake_case(state_type.odin_type),
-                name = api_member.name,
-                type = member_type,
+                name        = api_member.name,
+                type        = member_type,
             }
             state_type.derived.(NewStateClass).builtin_info.(NewStateClassBuiltin).members[i] = state_member
         }
@@ -996,8 +984,8 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         for api_constant, i in api_builtin_class.constants {
             constant_type := state.all_types[api_constant.type.(string)]
             state_constant := NewStateConstant {
-                name = fmt.aprintf("%v_%v", odin_to_const_case(state_type.odin_type), api_constant.name),
-                type = constant_type,
+                name  = fmt.aprintf("%v_%v", odin_to_const_case(state_type.odin_type), api_constant.name),
+                type  = constant_type,
                 value = api_constant.value,
             }
 
@@ -1010,25 +998,29 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
             // I think its shorthand for 4 Vector3s though. For now im just going to pretend
             // it doesnt exist and deal with it later (:
             // TODO: deal with Transform, Projection, Basis constants
-            if value_string, is_string := api_constant.value.(string); is_string &&
-                (strings.has_prefix(value_string, "Transform3D(") ||
-                strings.has_prefix(value_string, "Transform2D(") ||
-                strings.has_prefix(value_string, "Projection(") ||
-                strings.has_prefix(value_string, "Basis(")) {
+            if value_string, is_string := api_constant.value.(string);
+               is_string &&
+               (strings.has_prefix(value_string, "Transform3D(") ||
+                       strings.has_prefix(value_string, "Transform2D(") ||
+                       strings.has_prefix(value_string, "Projection(") ||
+                       strings.has_prefix(value_string, "Basis(")) {
 
                 state_constant.odin_skip = true
             }
 
             // TODO: properly parse out the value into a function call?
-            if value_string, is_string := api_constant.value.(string); is_string &&
-               strings.contains_rune(value_string, '(') &&
-               strings.contains_rune(value_string, ')') {
+            if value_string, is_string := api_constant.value.(string);
+               is_string && strings.contains_rune(value_string, '(') && strings.contains_rune(value_string, ')') {
 
                 split_value := strings.split_n(value_string, "(", 2)
                 constructor_type, ok := state.all_types[split_value[0]]
                 assert(ok)
 
-                value_string = fmt.aprintf("%v(%v", constructor_type.derived.(NewStateClass).builtin_info.(NewStateClassBuiltin).base_constructor_name, split_value[1])
+                value_string = fmt.aprintf(
+                    "%v(%v",
+                    constructor_type.derived.(NewStateClass).builtin_info.(NewStateClassBuiltin).base_constructor_name,
+                    split_value[1],
+                )
                 // TODO: verify that inf is always passed as f64?
                 state_constant.value, _ = strings.replace_all(value_string, "inf", "__bindgen_math.INF_F64")
                 state_type.depends_on_core_math = true
@@ -1056,7 +1048,8 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
                 state_type.derived.(NewStateClass).builtin_info.(NewStateClassBuiltin).base_constructor_name,
                 state_constructor.arguments,
             )
-            state_type.derived.(NewStateClass).builtin_info.(NewStateClassBuiltin).constructors[api_constructor.index] = state_constructor
+            state_type.derived.(NewStateClass).builtin_info.(NewStateClassBuiltin).constructors[api_constructor.index] =
+                state_constructor
         }
 
         operator_overloads := make(map[string][dynamic]ApiClassOperator)
@@ -1072,9 +1065,9 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         op_index := 0
         for variant_name, api_operators in operator_overloads {
             operator := NewStateOperator {
-                odin_name = _class_operator_name(state_type.odin_type, variant_name),
+                odin_name    = _class_operator_name(state_type.odin_type, variant_name),
                 variant_name = variant_name,
-                overloads = make([]NewStateOperatorOverload, len(api_operators)),
+                overloads    = make([]NewStateOperatorOverload, len(api_operators)),
             }
 
             for api_operator, i in api_operators {
@@ -1088,9 +1081,13 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
                 right_type := state.all_types[right_type_str]
                 return_type := state.all_types[api_operator.return_type]
                 operator.overloads[i] = NewStateOperatorOverload {
-                    odin_name = _class_operator_overload_name(state_type.odin_type, variant_name, right_type.odin_type),
+                    odin_name   = _class_operator_overload_name(
+                        state_type.odin_type,
+                        variant_name,
+                        right_type.odin_type,
+                    ),
                     return_type = return_type,
-                    right_type = right_type,
+                    right_type  = right_type,
                 }
             }
 
@@ -1101,14 +1098,13 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
         // we process methods way at the end so that all dependent types have been mapped in all_types by this point
         for api_method, method_index in api_builtin_class.methods {
             class_method := NewStateFunction {
-                odin_name = _class_method_name(state_type.odin_type, api_method.name),
+                odin_name  = _class_method_name(state_type.odin_type, api_method.name),
                 godot_name = api_method.name,
-                hash = api_method.hash,
+                hash       = api_method.hash,
 
                 // HACK: for some ungodly reason the gdextension duplicates the getter for origin as a builtin method? Resulting in a redelcaration of the get_origin proc.
-                odin_skip = state_type.odin_type == "Transform2d" && api_method.name == "get_origin",
-
-                arguments = make([]NewStateFunctionArgument, len(api_method.arguments)),
+                odin_skip  = state_type.odin_type == "Transform2d" && api_method.name == "get_origin",
+                arguments  = make([]NewStateFunctionArgument, len(api_method.arguments)),
             }
 
             if return_type, has_return_type := api_method.return_type.(string); has_return_type {

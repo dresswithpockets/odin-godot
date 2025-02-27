@@ -1,8 +1,8 @@
 package bindgen
 
 import "core:fmt"
-import "core:strings"
 import "core:slice"
+import "core:strings"
 
 global_enums_template := temple_compiled("../templates/bindgen_global_enums.temple.twig", ^NewState)
 builtin_class_template := temple_compiled("../templates/bindgen_builtin_class.temple.twig", ^NewStateType)
@@ -23,7 +23,7 @@ bindgen_class_reference_type :: proc(type: ^NewStateType) -> string {
         return "__bindgen_gde.VariantOperator"
     }
 
-    if class, is_class := type.derived.(NewStateClass); is_class && class.is_builtin {    
+    if class, is_class := type.derived.(NewStateClass); is_class && class.is_builtin {
         caret_index := strings.last_index(type.odin_type, "^")
         if caret_index == -1 {
             return fmt.tprintf("__bindgen_var.%s", type.odin_type)

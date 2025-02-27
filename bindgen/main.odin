@@ -8,7 +8,7 @@ import "core:strings"
 import "core:time"
 
 Options :: struct {
-    api_file: string,
+    api_file:  string,
     job_count: int,
 }
 

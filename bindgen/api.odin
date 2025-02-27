@@ -129,11 +129,14 @@ ApiClass :: struct {
 ApiConstant :: struct {
     name:  string `json:"name"`,
     type:  Maybe(string) `json:"type"`,
-    value: union { int, string } `json:"value"`,
+    value: union {
+        int,
+        string,
+    } `json:"value"`,
 }
 
 ApiClassSignal :: struct {
-    name: string `json:"name"`,
+    name:      string `json:"name"`,
     arguments: []ApiClassSignalArgument `json:"arguments"`,
 }
 
