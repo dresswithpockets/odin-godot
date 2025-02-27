@@ -1,12 +1,10 @@
 # bindgen
 TODO generate class signal bindings; N.B. so the user can e.g. connect or emit a signal
-TODO generate class properties? N.B. this is probably not necessary since getters and setters are just methods
 TODO create a basic demo game using just the gdextension/, core/, and variant/ packages
 
 TODO refactor multi-passes to do less work
 TODO generate Variant constructors that convert from another type (see get_variant_from_type_constructor)
 TODO generate Object in core instead of in variant/
-TODO merge core/, variant/, into godot/ package?
 
 TODO rewrite state code to pre-calculate all fields used by templates
 TODO add support for vararg utility functions
