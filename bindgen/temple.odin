@@ -11,6 +11,7 @@ engine_class_template := temple_compiled("../templates/bindgen_class.temple.twig
 native_struct_template := temple_compiled("../templates/bindgen_native_structs.temple.twig", ^NewState)
 variant_init_template := temple_compiled("../templates/bindgen_variant_init.temple.twig", ^NewState)
 core_init_template := temple_compiled("../templates/bindgen_init_core.temple.twig", ^NewState)
+editor_init_template := temple_compiled("../templates/bindgen_init_editor.temple.twig", ^NewState)
 
 bindgen_class_reference_type :: proc(type: ^NewStateType) -> string {
     // HACK: Variant.Type and Variant.Operator are provided by the gdextension interface

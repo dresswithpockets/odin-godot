@@ -1,6 +1,4 @@
 # bindgen
-TODO add init proc in editor/
-TODO add generation for editor singletons
 TODO generate class signal bindings; N.B. so the user can e.g. connect or emit a signal
 TODO generate class properties? N.B. this is probably not necessary since getters and setters are just methods
 TODO create a basic demo game using just the gdextension/, core/, and variant/ packages
@@ -14,6 +12,8 @@ TODO rewrite state code to pre-calculate all fields used by templates
 TODO add support for vararg utility functions
 TODO add option to generate classes and methods in a class-per-package hierarchy (each class gets its own package)
 
+DONE add init proc in editor/
+DONE add generation for editor singletons
 DONE add init proc in core/
 DONE add generation for core singletons
 DONE generate special constructors for String, StringName, and Variant (see gdextension/interface.odin)
