@@ -50,14 +50,14 @@ import __bindgen_math "core:math"
     return __bindgen_gde.call_method_ptr_ret(
         __{{ method.odin_name }}__backing_ptr,
         {{ bindgen_class_reference_type(return_type) }},
-        cast(__bindgen_gde.ObjectPtr)&self,
+        &self,
 {% else %}
     __bindgen_gde.call_method_ptr_no_ret(
         __{{ method.odin_name }}__backing_ptr,
-        cast(__bindgen_gde.ObjectPtr)&self,
+        &self,
 {% end %}
 {% for argument in method.arguments %}
-        cast(__bindgen_gde.TypePtr)&{{ argument.name }}_,
+        &{{ argument.name }}_,
 {% end %}
     )
 }
@@ -65,21 +65,21 @@ import __bindgen_math "core:math"
 {% end %}
 {% end %}
 
-init_{{ this.snake_type }} :: proc() {
-    __bindgen_gde.string_name_new_with_latin1_chars(cast(__bindgen_gde.StringNamePtr)&__{{ this.odin_type }}__class_name._opaque, "{{ this.godot_type }}", true)
+__{{ this.snake_type }}_init :: proc() {
+    __bindgen_gde.string_name_new_with_latin1_chars(&__{{ this.odin_type }}__class_name, "{{ this.godot_type }}", true)
     _gde_name: __bindgen_var.StringName
 
 {% for method in this.derived.(NewStateClass).methods %}
 {% if !method.odin_skip %}
-    __bindgen_gde.string_name_new_with_latin1_chars(cast(__bindgen_gde.StringNamePtr)&_gde_name, "{{ method.godot_name }}", true)
-    __{{ method.odin_name }}__backing_ptr = __bindgen_gde.classdb_get_method_bind(cast(__bindgen_gde.StringNamePtr)&__{{ this.odin_type }}__class_name, cast(__bindgen_gde.StringNamePtr)&_gde_name, {{ i64(method.hash) }})
+    __bindgen_gde.string_name_new_with_latin1_chars(&_gde_name, "{{ method.godot_name }}", true)
+    __{{ method.odin_name }}__backing_ptr = __bindgen_gde.classdb_get_method_bind(&__{{ this.odin_type }}__class_name, &_gde_name, {{ i64(method.hash) }})
 {% end %}
 {% end %}
 }
 
 new_{{ this.snake_type }} :: proc() -> ^{{ this.odin_type }} {
     instance := new({{ this.odin_type }})
-    instance._opaque = __bindgen_gde.classdb_construct_object(cast(__bindgen_gde.StringNamePtr)&__{{ this.odin_type }}__class_name._opaque)
+    instance._opaque = __bindgen_gde.classdb_construct_object(&__{{ this.odin_type }}__class_name)
     return instance
 }
 
