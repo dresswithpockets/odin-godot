@@ -26,7 +26,15 @@ NewState :: struct {
     classes:         []^NewStateType,
     native_structs:  []^NewStateType,
 
+    core_singletons:   [dynamic]NewStateSingleton,
+    editor_singletons: [dynamic]NewStateSingleton,
     utility_functions: []NewStateFunction,
+}
+
+NewStateSingleton :: struct {
+    name: string,
+    snake_name: string,
+    odin_type: string,
 }
 
 NewStateType :: struct {
@@ -496,6 +504,8 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
     state.classes = make([]^NewStateType, len(api.classes))
     state.native_structs = make([]^NewStateType, len(api.native_structs))
 
+    state.core_singletons = make([dynamic]NewStateSingleton)
+    state.editor_singletons = make([dynamic]NewStateSingleton)
     state.utility_functions = make([]NewStateFunction, len(api.util_functions))
 
     builtin_sizes := make(map[string]map[string]uint, allocator = context.temp_allocator)
@@ -809,6 +819,23 @@ create_new_state :: proc(options: Options, api: ^Api) -> (state: ^NewState) {
             state_type.odin_type = real_odin_type
             state_type.derived = native_struct
             state.all_types[godot_name] = state_type
+        }
+    }
+
+    for api_singleton, api_singleton_idx in api.singletons {
+        state_class, singleton_is_state_class := state.all_types[api_singleton.type].derived.(NewStateClass)
+        assert(singleton_is_state_class)
+
+        state_singleton := NewStateSingleton {
+            name = api_singleton.name,
+            snake_name = godot_to_snake_case(api_singleton.name),
+            odin_type = godot_to_odin_case(api_singleton.type),
+        }
+
+        if state_class.api_type == "core" {
+            append(&state.core_singletons, state_singleton)
+        } else {
+            append(&state.editor_singletons, state_singleton)
         }
     }
 

@@ -1,6 +1,6 @@
 # bindgen
-TODO add init_all proc in core/ and editor/
-TODO generate class methods
+TODO add init proc in editor/
+TODO add generation for editor singletons
 TODO generate class signal bindings; N.B. so the user can e.g. connect or emit a signal
 TODO generate class properties? N.B. this is probably not necessary since getters and setters are just methods
 TODO create a basic demo game using just the gdextension/, core/, and variant/ packages
@@ -12,11 +12,13 @@ TODO merge core/, variant/, into godot/ package?
 
 TODO rewrite state code to pre-calculate all fields used by templates
 TODO add support for vararg utility functions
-TODO add generation for built-in singletons
-TODO add generation for native structures (?)
 TODO add option to generate classes and methods in a class-per-package hierarchy (each class gets its own package)
 
+DONE add init proc in core/
+DONE add generation for core singletons
 DONE generate special constructors for String, StringName, and Variant (see gdextension/interface.odin)
+DONE generate class methods
+DONE add generation for native structures
 
 DONE rewrite codegen to use temple templating engine
 DONE add support for utility functions with default arg values

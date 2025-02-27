@@ -1,0 +1,28 @@
+package core
+
+import __bindgen_gde "../gdextension"
+import __bindgen_var "../variant"
+
+init :: proc "contextless" () {
+    __init_util_functions()
+{% for class in this.classes %}{% if !class.odin_skip && class.derived.(NewStateClass).api_type == "core" %}
+    __{{ class.odin_type }}_init()
+{% end %}{% end %}
+
+{% for singleton in this.core_singletons %}
+    __bindgen_gde.string_name_new_with_latin1_chars(&__{{ singleton.name }}__singleton_name, "{{ singleton.name }}", true)
+{% end %}
+}
+
+// singletons
+{% for singleton in this.core_singletons %}
+singleton_{{ singleton.snake_name }} :: proc "contextless" () -> ^{{ singleton.odin_type }} {
+    return cast(^{{ singleton.odin_type }})__bindgen_gde.global_get_singleton(&__{{ singleton.name }}__singleton_name)
+}
+{% end %}
+
+// singleton names
+{% for singleton in this.core_singletons %}
+@(private="file")
+__{{ singleton.name }}__singleton_name: __bindgen_var.StringName
+{% end %}

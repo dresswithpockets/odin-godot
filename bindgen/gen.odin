@@ -44,6 +44,19 @@ generate_variant_init_task :: proc(task: thread.Task) {
     variant_init_template.with(fstream, cast(^NewState)task.data)
 }
 
+generate_core_init_task :: proc(task: thread.Task) {
+    
+    fhandle, ferr := os.open("core/init.gen.odin", os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
+    if ferr != 0 {
+        fmt.eprintln("Error opening core/init.gen.odin")
+        return
+    }
+    defer os.close(fhandle)
+
+    fstream := os.stream_from_handle(fhandle)
+    core_init_template.with(fstream, cast(^NewState)task.data)
+}
+
 generate_global_enums_task :: proc(task: thread.Task) {
     fhandle, ferr := os.open("core/enums.gen.odin", os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
     if ferr != 0 {
@@ -121,6 +134,7 @@ generate_bindings :: proc(state: ^NewState) {
     thread.pool_add_task(&thread_pool, context.allocator, generate_utility_functions_task, state)
     thread.pool_add_task(&thread_pool, context.allocator, generate_native_structs_task, state)
     thread.pool_add_task(&thread_pool, context.allocator, generate_variant_init_task, state)
+    thread.pool_add_task(&thread_pool, context.allocator, generate_core_init_task, state)
 
     for builtin_class in state.builtin_classes do if !builtin_class.odin_skip {
         _, ok := builtin_class.derived.(NewStateClass)

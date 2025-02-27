@@ -65,7 +65,7 @@ import __bindgen_math "core:math"
 {% end %}
 {% end %}
 
-__{{ this.snake_type }}_init :: proc() {
+__{{ this.odin_type }}_init :: proc "contextless" () {
     __bindgen_gde.string_name_new_with_latin1_chars(&__{{ this.odin_type }}__class_name, "{{ this.godot_type }}", true)
     _gde_name: __bindgen_var.StringName
 
@@ -89,7 +89,7 @@ new_{{ this.snake_type }}_from_object :: proc(object: __bindgen_gde.ObjectPtr) -
     return instance
 }
 
-@(private="file")
+@(private)
 __{{ this.odin_type }}__class_name: __bindgen_var.StringName
 
 // method backing ptrs

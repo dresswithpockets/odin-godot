@@ -22,7 +22,8 @@ import __bindgen_variant  "../variant"
 
 {% end %}
 
-init_utility_functions :: proc "contextless" () {
+@(private)
+__init_util_functions :: proc "contextless" () {
     _gde_name: __bindgen_variant.StringName
 {% for function in this.utility_functions %}
     __bindgen_gde.string_name_new_with_latin1_chars(cast(__bindgen_gde.StringNamePtr)&_gde_name._opaque, "{{ function.godot_name }}", true)
