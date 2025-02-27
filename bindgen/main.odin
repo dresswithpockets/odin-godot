@@ -5,6 +5,7 @@ import "core:fmt"
 import "core:os"
 import "core:strconv"
 import "core:strings"
+import "core:time"
 
 Options :: struct {
     api_file: string,
@@ -90,6 +91,9 @@ main :: proc() {
         os.exit(1)
     }
 
+    stopwatch := time.Stopwatch{}
+    time.stopwatch_start(&stopwatch)
+
     fmt.printf("Parsing API Spec from %v.\n", options.api_file)
     api, ok := load_api(options)
     if !ok {
@@ -97,10 +101,30 @@ main :: proc() {
         os.exit(1)
     }
 
-    fmt.printf("Generating API for %v, with up to %v threads.\n", api.version.full_name, options.job_count)
+    api_parse_duration := time.stopwatch_duration(stopwatch)
+    time.stopwatch_reset(&stopwatch)
+    time.stopwatch_start(&stopwatch)
 
+    fmt.printf("Generating API for %v, with up to %v threads.\n", api.version.full_name, options.job_count)
     state := create_new_state(options, api)
+
+    state_duration := time.stopwatch_duration(stopwatch)
+    time.stopwatch_reset(&stopwatch)
+    time.stopwatch_start(&stopwatch)
+
     generate_bindings(state)
+
+    gen_duration := time.stopwatch_duration(stopwatch)
+
+    api_parse_ms := time.duration_milliseconds(api_parse_duration)
+    state_ms := time.duration_milliseconds(state_duration)
+    gen_ms := time.duration_milliseconds(gen_duration)
+    total_ms := api_parse_ms + state_ms + gen_ms
+
+    fmt.printfln("Total Time   - %.3f ms", total_ms)
+    fmt.printfln("Parse API    - %.3f ms", api_parse_ms)
+    fmt.printfln("Create State - %.3f ms", state_ms)
+    fmt.printfln("Code Gen     - %.3f ms", gen_ms)
 
     // since we wanna keep state around until the end of the program's lifetime,
     // no need to be particular about freeing the bits and pieces of the struct (:
