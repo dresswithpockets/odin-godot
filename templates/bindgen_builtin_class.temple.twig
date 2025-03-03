@@ -155,6 +155,7 @@ __{{ this.odin_type }}_init :: proc "contextless" () {
     __bindgen_gde.string_name_new_with_latin1_chars(&_gde_name, "{{ member.name }}", true)
     __{{ this.odin_type }}__member__{{ member.name }}_setter = __bindgen_gde.variant_get_ptr_setter(__bindgen_gde.VariantType.{{ this.variant_type.(string) or_else this.odin_type }}, &_gde_name)
     __{{ this.odin_type }}__member__{{ member.name }}_getter = __bindgen_gde.variant_get_ptr_getter(__bindgen_gde.VariantType.{{ this.variant_type.(string) or_else this.odin_type }}, &_gde_name)
+    _gde_name = StringName{}
 {% end %}
 
 {% for operator in this.derived.(NewStateClass).operators %}
@@ -167,6 +168,7 @@ __{{ this.odin_type }}_init :: proc "contextless" () {
 {% if !method.odin_skip %}
     __bindgen_gde.string_name_new_with_latin1_chars(&_gde_name, "{{ method.godot_name }}", true)
     __{{ method.odin_name }}__backing_ptr = __bindgen_gde.variant_get_ptr_builtin_method(__bindgen_gde.VariantType.{{ this.odin_type }}, &_gde_name, {{ i64(method.hash) }})
+    _gde_name = StringName{}
 {% end %}
 {% end %}
 }
