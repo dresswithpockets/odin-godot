@@ -50,7 +50,7 @@ import __bindgen_math "core:math"
     return __bindgen_gde.call_method_ptr_ret(
         __{{ method.odin_name }}__backing_ptr,
         {{ bindgen_class_reference_type(return_type) }},
-        &self,
+        self,
 {% else %}
     __bindgen_gde.call_method_ptr_no_ret(
         __{{ method.odin_name }}__backing_ptr,
