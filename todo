@@ -1,6 +1,7 @@
 # bindgen
 TODO generate class signal bindings; N.B. so the user can e.g. connect or emit a signal
 TODO create a basic demo game using just the gdextension/, core/, and variant/ packages
+TODO generate common global/static StringNames like _process and _ready
 
 TODO refactor multi-passes to do less work
 TODO generate Variant constructors that convert from another type (see get_variant_from_type_constructor)
