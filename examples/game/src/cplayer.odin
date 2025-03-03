@@ -38,7 +38,9 @@ player_ready :: proc "contextless" (self: ^Player) {
 
 @(private = "file")
 player_create_instance :: proc "c" (class_user_data: rawptr) -> gd.ObjectPtr {
-    self := cast(^Player)gd.mem_alloc(size_of(Player))
+    context = gd.godot_context()
+
+    self := new(Player)
     self.object = gd.classdb_construct_object(&CharacterBody3D_ClassName)
 
     gd.object_set_instance(self.object, &Player_ClassName, self)
@@ -49,6 +51,8 @@ player_create_instance :: proc "c" (class_user_data: rawptr) -> gd.ObjectPtr {
 
 @(private = "file")
 player_free_instance :: proc "c" (class_user_data: rawptr, instance: gd.ExtensionClassInstancePtr) {
+    context = gd.godot_context()
+
     if instance == nil {
         return
     }
