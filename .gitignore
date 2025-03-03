@@ -21,5 +21,6 @@ tools/
 # remedybg session
 *.rdbg
 
-# local godot clone used for development
+# local tools used for dev and debugging
 vendor_godot/
+vendor_remedy/
