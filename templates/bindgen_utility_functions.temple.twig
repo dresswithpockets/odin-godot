@@ -5,7 +5,7 @@ import __bindgen_gde "../gdextension"
 import __bindgen_variant  "../variant"
 
 {% for function in this.utility_functions %}
-{{ function.odin_name }} :: proc(
+{{ function.odin_name }} :: proc "contextless" (
 {% for argument, i in function.arguments %}
 {% if i > 0 %}, {% end %}{{argument.name}}: {% if _, is_class := argument.type.derived.(NewStateClass); is_class %}__bindgen_variant.{% end %}{{ argument.type.odin_type }}
 {% end %}) {% if return_type, has_return_type := function.return_type.(^NewStateType); has_return_type %} -> {% if _, is_class := return_type.derived.(NewStateClass); is_class %}__bindgen_variant.{% end %}{{ return_type.odin_type }}{% end %} {
