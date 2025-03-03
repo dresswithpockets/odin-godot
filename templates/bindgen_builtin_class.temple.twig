@@ -6,19 +6,15 @@ import __bindgen_gde "../gdextension"
 import __bindgen_math "core:math"
 {% end %}
 
-{{ this.odin_type }} :: struct {
-    _opaque: __{{ this.odin_type }}OpaqueType
-}
-
 {% if builtin_type, is_builtin := this.derived.(NewStateClass).builtin_info.(NewStateClassBuiltin); is_builtin %}
 when __bindgen_gde.BUILD_CONFIG == "float_32" {
-    __{{ this.odin_type }}OpaqueType :: [{{int(builtin_type.float_32_size)}}]u8
+{{ this.odin_type }} :: distinct [{{int(builtin_type.float_32_size)}}]u8
 } else when __bindgen_gde.BUILD_CONFIG == "float_64" {
-    __{{ this.odin_type }}OpaqueType :: [{{int(builtin_type.float_64_size)}}]u8
+{{ this.odin_type }} :: distinct [{{int(builtin_type.float_64_size)}}]u8
 } else when __bindgen_gde.BUILD_CONFIG == "double_32" {
-    __{{ this.odin_type }}OpaqueType :: [{{int(builtin_type.double_32_size)}}]u8
+{{ this.odin_type }} :: distinct [{{int(builtin_type.double_32_size)}}]u8
 } else when __bindgen_gde.BUILD_CONFIG == "double_64" {
-    __{{ this.odin_type }}OpaqueType :: [{{int(builtin_type.double_64_size)}}]u8
+{{ this.odin_type }} :: distinct [{{int(builtin_type.double_64_size)}}]u8
 }
 
 // enums
@@ -144,7 +140,7 @@ when __bindgen_gde.BUILD_CONFIG == "float_32" {
 
 // init function
 __{{ this.odin_type }}_init :: proc "contextless" () {
-    _gde_name: __StringNameOpaqueType
+    _gde_name := StringName{}
 
 {% if builtin_info, is_builtin := this.derived.(NewStateClass).builtin_info.(NewStateClassBuiltin); is_builtin %}
 {% for constructor, con_index in builtin_info.constructors %}
