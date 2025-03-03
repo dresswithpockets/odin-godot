@@ -2163,8 +2163,8 @@ editor_help_load_xml_from_utf8_chars: ExtensionsInterfaceEditorHelpLoadXmlFromUt
  */
 editor_help_load_xml_from_utf8_chars_and_len: ExtensionsInterfaceEditorHelpLoadXmlFromUtf8CharsAndLen
 
-
-initialize_procs :: proc "contextless" (get_proc_address: ExtensionInterfaceGetProcAddress) {
+init :: proc "contextless" (library_ptr: ExtensionClassLibraryPtr, get_proc_address: ExtensionInterfaceGetProcAddress) {
+    library = library_ptr
     mem_alloc = cast(ExtensionInterfaceMemAlloc)get_proc_address("mem_alloc")
     mem_realloc = cast(ExtensionInterfaceMemRealloc)get_proc_address("mem_realloc")
     mem_free = cast(ExtensionInterfaceMemFree)get_proc_address("mem_free")
