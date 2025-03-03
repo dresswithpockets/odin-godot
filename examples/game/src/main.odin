@@ -15,7 +15,7 @@ game_init :: proc "c" (
     initialization: ^gd.Initialization,
 ) -> bool {
     gd.init(library, get_proc_address)
-    // var.init()
+    var.init()
 
     initialization.initialize = initialize_game_module
     initialization.deinitialize = uninitialize_game_module
@@ -33,20 +33,17 @@ initialize_game_module :: proc "c" (user_data: rawptr, level: gd.InitializationL
     }
 
     {
-        node_classname: StringName
+        node_classname: var.StringName
         gd.string_name_new_with_latin1_chars(&node_classname, "Node", true);
 
-        get_node_methodname: StringName
+        get_node_methodname: var.StringName
         gd.string_name_new_with_latin1_chars(&get_node_methodname, "get_node", true);
 
         get_node_method_bind = gd.classdb_get_method_bind(&node_classname, &get_node_methodname, get_node_hash);
     }
 
-    StringName_eq_StringName_op = gd.variant_get_ptr_operator_evaluator(.Equal, .StringName, .StringName);
-    node_path_from_string = gd.variant_get_ptr_constructor(.NodePath, 2);
-
     {
-        print_name: StringName
+        print_name: var.StringName
         gd.string_name_new_with_latin1_chars(&print_name, "print", true);
 
         print_ptr = gd.variant_get_ptr_utility_function(&print_name, 2648703342);
@@ -72,7 +69,7 @@ call_builtin_op_bool :: proc "c" (op: gd.PtrOperatorEvaluator, a: gd.TypePtr, b:
 
 print_object :: proc "c" (object: gd.TypePtr) {
     var_from_obj := gd.get_variant_from_type_constructor(.Object)
-    as_var: Variant
+    as_var: var.Variant
     var_from_obj(&as_var, object)
 
     args := [1]gd.TypePtr{ &as_var }
@@ -82,12 +79,6 @@ print_object :: proc "c" (object: gd.TypePtr) {
 // utils
 print_ptr: gd.PtrUtilityFunction
 
-// constructors
-node_path_from_string: gd.PtrConstructor
-
 // hashes & method binds
 get_node_hash :: 2734337346
 get_node_method_bind: gd.MethodBindPtr
-
-// operators
-StringName_eq_StringName_op: gd.PtrOperatorEvaluator

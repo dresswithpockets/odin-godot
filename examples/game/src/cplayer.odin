@@ -1,11 +1,7 @@
 package game
 
 import gd "../../../gdextension"
-
-String :: [8]u8
-StringName :: [8]u8
-NodePath :: [8]u8
-Variant :: [8]u8
+import var "../../../variant"
 
 Node :: rawptr
 Node3d :: rawptr
@@ -14,10 +10,10 @@ CharacterBody3D :: rawptr
 CollisionShape3d :: rawptr
 Shape3d :: rawptr
 
-CameraYaw_Name: String
-CharacterBody3D_ClassName: StringName
-Player_ClassName: StringName
-Ready_VirtualName: StringName
+CameraYaw_Name: var.String
+CharacterBody3D_ClassName: var.StringName
+Player_ClassName: var.StringName
+Ready_VirtualName: var.StringName
 
 player_binding_callbacks := gd.InstanceBindingCallbacks{}
 
@@ -30,11 +26,7 @@ Player :: struct {
 player_ready :: proc "contextless" (self: ^Player) {
     self_node := cast(Node)self.object
     
-    camera_yaw_path: NodePath
-    {
-        args := [1]gd.TypePtr{ &CameraYaw_Name }
-        node_path_from_string(&camera_yaw_path, &args[0])
-    }
+    camera_yaw_path := var.new_node_path_string(CameraYaw_Name)
 
     {
         args := [1]gd.TypePtr { &camera_yaw_path }
@@ -66,7 +58,8 @@ player_free_instance :: proc "c" (class_user_data: rawptr, instance: gd.Extensio
 
 @(private = "file")
 player_get_virtual_call_data :: proc "c" (class_user_data: rawptr, name: gd.StringNamePtr) -> rawptr {
-    if call_builtin_op_bool(StringName_eq_StringName_op, &Ready_VirtualName, name) {
+    name_str := cast(^var.StringName)name
+    if var.string_name_equal_string_name(Ready_VirtualName, name_str^) {
         return cast(rawptr)player_ready
     }
 
