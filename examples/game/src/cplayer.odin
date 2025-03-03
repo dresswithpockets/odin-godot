@@ -38,7 +38,7 @@ player_ready :: proc "contextless" (self: ^Player) {
 
     {
         args := [1]gd.TypePtr { &camera_yaw_path }
-        object_method_bind_ptrcall(get_node_method_bind, self.object, &args[0], &self.camera_yaw)
+        gd.object_method_bind_ptrcall(get_node_method_bind, self.object, &args[0], &self.camera_yaw)
     }
 
     print_object(&self.camera_yaw)
@@ -46,11 +46,11 @@ player_ready :: proc "contextless" (self: ^Player) {
 
 @(private = "file")
 player_create_instance :: proc "c" (class_user_data: rawptr) -> gd.ObjectPtr {
-    self := cast(^Player)gd_alloc(size_of(Player))
-    self.object = classdb_construct_object(&CharacterBody3D_ClassName)
+    self := cast(^Player)gd.mem_alloc(size_of(Player))
+    self.object = gd.classdb_construct_object(&CharacterBody3D_ClassName)
 
-    object_set_instance(self.object, &Player_ClassName, self)
-    object_set_instance_binding(self.object, ext_library, self, &player_binding_callbacks)
+    gd.object_set_instance(self.object, &Player_ClassName, self)
+    gd.object_set_instance_binding(self.object, gd.library, self, &player_binding_callbacks)
 
     return self.object
 }
@@ -61,7 +61,7 @@ player_free_instance :: proc "c" (class_user_data: rawptr, instance: gd.Extensio
         return
     }
 
-    gd_free(instance)
+    gd.mem_free(instance)
 }
 
 @(private = "file")
@@ -88,10 +88,10 @@ player_call_virtual_with_data :: proc "c" (
 }
 
 player_class_register :: proc "contextless" () {
-    string_new_with_latin1_chars(&CameraYaw_Name, "CameraYaw")
-    string_name_new_with_latin1_chars(&CharacterBody3D_ClassName, "CharacterBody3D", true)
-    string_name_new_with_latin1_chars(&Player_ClassName, "Player", true)
-    string_name_new_with_latin1_chars(&Ready_VirtualName, "_ready", true)
+    gd.string_new_with_latin1_chars(&CameraYaw_Name, "CameraYaw")
+    gd.string_name_new_with_latin1_chars(&CharacterBody3D_ClassName, "CharacterBody3D", true)
+    gd.string_name_new_with_latin1_chars(&Player_ClassName, "Player", true)
+    gd.string_name_new_with_latin1_chars(&Ready_VirtualName, "_ready", true)
 
     class_info := gd.ExtensionClassCreationInfo3 {
         is_virtual                  = false,
@@ -119,5 +119,5 @@ player_class_register :: proc "contextless" () {
         class_userdata              = nil,
     }
 
-    classdb_register_extension_class3(ext_library, &Player_ClassName, &CharacterBody3D_ClassName, &class_info)
+    gd.classdb_register_extension_class3(gd.library, &Player_ClassName, &CharacterBody3D_ClassName, &class_info)
 }
