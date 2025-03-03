@@ -14,9 +14,8 @@ example_library_init :: proc "c" (
     library: gd.ExtensionClassLibraryPtr,
     initialization: ^gd.Initialization,
 ) -> bool {
-    gd.library = library
     // gdextension procs MUST be initialized before using the binding!
-    gd.initialize_procs(get_proc_address)
+    gd.init(library, get_proc_address)
 
     // MUST be called before using any core classes, singletons, or utility functions
     core.init()

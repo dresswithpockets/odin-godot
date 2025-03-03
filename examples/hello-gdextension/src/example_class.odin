@@ -139,9 +139,7 @@ example_class_free_instance :: proc "c" (class_user_data: rawptr, instance: gd.E
     free(self)
 }
 
-example_class_register :: proc "c" () {
-    context = gd.godot_context()
-
+example_class_register :: proc() {
     // we use string_name_new_with_latin1_chars because we know the lifetime of the string literal to be static
     gd.string_name_new_with_latin1_chars(&ExampleClassStringName, "ExampleClass", true)
     gd.string_name_new_with_latin1_chars(&ObjectClassStringName, "Object", true)
