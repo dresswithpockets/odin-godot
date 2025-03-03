@@ -1,57 +1,112 @@
 package game
 
-import gd "../../../gdextension"
-import var "../../../variant"
 import core "../../../core"
+import gde "../../../gdextension"
+import "../../../libgd"
+import var "../../../variant"
 
-CameraYaw_Name: var.String
 CharacterBody3D_ClassName: var.StringName
 Player_ClassName: var.StringName
-Ready_VirtualName: var.StringName
 
-player_binding_callbacks := gd.InstanceBindingCallbacks{}
+// virtual funcs from Node
+Ready_VirtualName: var.StringName
+Input_VirtualName: var.StringName
+PhysicsProcess_VirtualName: var.StringName
+
+// signals
+Player_SteppedUp_SignalName: var.StringName
+Player_SteppedDown_SignalName: var.StringName
+
+// other strings
+CameraYaw_Name: var.String
+CameraYawMouse_Name: var.String
+Camera_Name: var.String
+PlayerShape_Name: var.String
+
+player_binding_callbacks := gde.InstanceBindingCallbacks{}
 
 Player :: struct {
-    object:     core.CharacterBody3d,
-    camera_yaw: core.Node3d,
+    object:                       core.CharacterBody3d,
+
+    // Group: Movement. Subgroup: On Ground
+    ground_friction:              gde.float,
+    ground_accel:                 gde.float,
+    ground_max_speed:             gde.float,
+    max_step_height:              gde.float,
+    max_step_up_slide_iterations: i64,
+
+    // Group: Movement. Subgroup: In Air
+    gravity_up_scale:             gde.float,
+    gravity_down_scale:           gde.float,
+    air_friction:                 gde.float,
+    air_accel:                    gde.float,
+    air_max_speed:                gde.float,
+    max_vertical_speed:           gde.float,
+
+    // onready
+    camera_yaw:                   core.Node3d,
+    camera:                       core.Camera3d,
+    player_shape:                 core.Shape3d,
 }
 
 @(private = "file")
 player_ready :: proc "contextless" (self: ^Player) {
     self_node := cast(core.Node)self.object
 
-    camera_yaw_path := var.new_node_path_string(CameraYaw_Name)
+    camera_yaw_path := var.new_node_path_cstring("CameraYaw")
+    defer var.free_node_path(camera_yaw_path)
+
     self.camera_yaw = cast(core.Node3d)core.node_get_node(self_node, camera_yaw_path)
 
-    core.gd_print(var.variant_from_object(&self.camera_yaw))
+    camera_path := var.new_node_path_cstring("CameraYaw/Camera")
+    defer var.free_node_path(camera_path)
+    self.camera = cast(core.Camera3d)core.node_get_node(self_node, camera_path)
+
+    player_shape_path := var.new_node_path_cstring("PlayerShape")
+    defer var.free_node_path(player_shape_path)
+    player_col_shape := cast(core.CollisionShape3d)core.node_get_node(self_node, player_shape_path)
+    self.player_shape = core.collision_shape3d_get_shape(player_col_shape)
 }
 
 @(private = "file")
-player_create_instance :: proc "c" (class_user_data: rawptr) -> gd.ObjectPtr {
-    context = gd.godot_context()
+player_create_instance :: proc "c" (class_user_data: rawptr) -> gde.ObjectPtr {
+    context = gde.godot_context()
 
     self := new(Player)
-    self.object = cast(core.CharacterBody3d)gd.classdb_construct_object(&CharacterBody3D_ClassName)
+    self.object = cast(core.CharacterBody3d)gde.classdb_construct_object(&CharacterBody3D_ClassName)
 
-    gd.object_set_instance(self.object, &Player_ClassName, self)
-    gd.object_set_instance_binding(self.object, gd.library, self, &player_binding_callbacks)
+    // defaults
+    self.ground_friction = 20
+    self.ground_accel = 100
+    self.ground_max_speed = 5.0
+    self.max_step_height = 0.6
+    self.max_step_up_slide_iterations = 4
+    self.gravity_up_scale = 1.0
+    self.gravity_down_scale = 1.0
+    self.air_friction = 10.0
+    self.air_accel = 50.0
+    self.air_max_speed = 3.0
+    self.max_vertical_speed = 15.0
 
-    return cast(gd.ObjectPtr)self.object
+    gde.object_set_instance(self.object, &Player_ClassName, self)
+    gde.object_set_instance_binding(self.object, gde.library, self, &player_binding_callbacks)
+
+    return cast(gde.ObjectPtr)self.object
 }
 
 @(private = "file")
-player_free_instance :: proc "c" (class_user_data: rawptr, instance: gd.ExtensionClassInstancePtr) {
-    context = gd.godot_context()
+player_free_instance :: proc "c" (class_user_data: rawptr, instance: gde.ExtensionClassInstancePtr) {
+    context = gde.godot_context()
 
     if instance == nil {
         return
     }
 
-    gd.mem_free(instance)
+    gde.mem_free(instance)
 }
 
 @(private = "file")
-player_get_virtual_call_data :: proc "c" (class_user_data: rawptr, name: gd.StringNamePtr) -> rawptr {
+player_get_virtual_call_data :: proc "c" (class_user_data: rawptr, name: gde.StringNamePtr) -> rawptr {
     name_str := cast(^var.StringName)name
     if var.string_name_equal_string_name(Ready_VirtualName, name_str^) {
         return cast(rawptr)player_ready
@@ -62,11 +117,11 @@ player_get_virtual_call_data :: proc "c" (class_user_data: rawptr, name: gd.Stri
 
 @(private = "file")
 player_call_virtual_with_data :: proc "c" (
-    instance: gd.ExtensionClassInstancePtr,
-    name: gd.StringNamePtr,
+    instance: gde.ExtensionClassInstancePtr,
+    name: gde.StringNamePtr,
     virtual_call_userdata: rawptr,
-    args: [^]gd.TypePtr,
-    ret: gd.TypePtr,
+    args: [^]gde.TypePtr,
+    ret: gde.TypePtr,
 ) {
     if virtual_call_userdata == cast(rawptr)player_ready {
         player_ready(cast(^Player)instance)
@@ -74,13 +129,128 @@ player_call_virtual_with_data :: proc "c" (
     }
 }
 
-player_class_register :: proc "contextless" () {
-    gd.string_new_with_latin1_chars(&CameraYaw_Name, "CameraYaw")
-    gd.string_name_new_with_latin1_chars(&CharacterBody3D_ClassName, "CharacterBody3D", true)
-    gd.string_name_new_with_latin1_chars(&Player_ClassName, "Player", true)
-    gd.string_name_new_with_latin1_chars(&Ready_VirtualName, "_ready", true)
+@export
+set_ground_friction :: proc(self: ^Player, value: gde.float) {
+    self.ground_friction = value
+}
 
-    class_info := gd.ExtensionClassCreationInfo3 {
+@export
+get_ground_friction :: proc(self: ^Player) -> gde.float {
+    return self.ground_friction
+}
+
+@(private = "file")
+set_ground_accel :: proc(self: ^Player, value: gde.float) {
+    self.ground_accel = value
+}
+
+@(private = "file")
+get_ground_accel :: proc(self: ^Player) -> gde.float {
+    return self.ground_accel
+}
+
+@(private = "file")
+set_ground_max_speed :: proc(self: ^Player, value: gde.float) {
+    self.ground_max_speed = value
+}
+
+@(private = "file")
+get_ground_max_speed :: proc(self: ^Player) -> gde.float {
+    return self.ground_max_speed
+}
+
+@(private = "file")
+set_max_step_height :: proc(self: ^Player, value: gde.float) {
+    self.max_step_height = value
+}
+
+@(private = "file")
+get_max_step_height :: proc(self: ^Player) -> gde.float {
+    return self.max_step_height
+}
+
+@(private = "file")
+set_max_step_up_slide_iterations :: proc(self: ^Player, value: i64) {
+    self.max_step_up_slide_iterations = value
+}
+
+@(private = "file")
+get_max_step_up_slide_iterations :: proc(self: ^Player) -> i64 {
+    return self.max_step_up_slide_iterations
+}
+
+@(private = "file")
+set_gravity_up_scale :: proc(self: ^Player, value: gde.float) {
+    self.gravity_up_scale = value
+}
+
+@(private = "file")
+get_gravity_up_scale :: proc(self: ^Player) -> gde.float {
+    return self.gravity_up_scale
+}
+
+@(private = "file")
+set_gravity_down_scale :: proc(self: ^Player, value: gde.float) {
+    self.gravity_down_scale = value
+}
+
+@(private = "file")
+get_gravity_down_scale :: proc(self: ^Player) -> gde.float {
+    return self.gravity_down_scale
+}
+
+@(private = "file")
+set_air_friction :: proc(self: ^Player, value: gde.float) {
+    self.air_friction = value
+}
+
+@(private = "file")
+get_air_friction :: proc(self: ^Player) -> gde.float {
+    return self.air_friction
+}
+
+@(private = "file")
+set_air_accel :: proc(self: ^Player, value: gde.float) {
+    self.air_accel = value
+}
+
+@(private = "file")
+get_air_accel :: proc(self: ^Player) -> gde.float {
+    return self.air_accel
+}
+
+@(private = "file")
+set_air_max_speed :: proc(self: ^Player, value: gde.float) {
+    self.air_max_speed = value
+}
+
+@(private = "file")
+get_air_max_speed :: proc(self: ^Player) -> gde.float {
+    return self.air_max_speed
+}
+
+@(private = "file")
+set_max_vertical_speed :: proc(self: ^Player, value: gde.float) {
+    self.max_vertical_speed = value
+}
+
+@(private = "file")
+get_max_vertical_speed :: proc(self: ^Player) -> gde.float {
+    return self.max_vertical_speed
+}
+
+player_class_register :: proc() {
+    gde.string_name_new_with_latin1_chars(&CharacterBody3D_ClassName, "CharacterBody3D", true)
+    gde.string_name_new_with_latin1_chars(&Player_ClassName, "Player", true)
+
+    gde.string_name_new_with_latin1_chars(&Ready_VirtualName, "_ready", true)
+    gde.string_name_new_with_latin1_chars(&Input_VirtualName, "_input", true)
+    gde.string_name_new_with_latin1_chars(&PhysicsProcess_VirtualName, "_physics_process", true)
+
+    gde.string_name_new_with_latin1_chars(&Player_SteppedUp_SignalName, "stepped_up", true)
+    gde.string_name_new_with_latin1_chars(&Player_SteppedDown_SignalName, "stepped_down", true)
+
+    class_info := gde.ExtensionClassCreationInfo3 {
         is_virtual                  = false,
         is_abstract                 = false,
         is_exposed                  = true,
@@ -106,5 +276,28 @@ player_class_register :: proc "contextless" () {
         class_userdata              = nil,
     }
 
-    gd.classdb_register_extension_class3(gd.library, &Player_ClassName, &CharacterBody3D_ClassName, &class_info)
+    gde.classdb_register_extension_class3(gde.library, &Player_ClassName, &CharacterBody3D_ClassName, &class_info)
+
+    libgd.bind_property_group(&Player_ClassName, "Movement", "")
+    libgd.bind_property_subgroup(&Player_ClassName, "On Ground", "")
+    libgd.bind_auto_property(&Player_ClassName, "ground_friction", "get_ground_friction", get_ground_friction, "set_ground_friction", set_ground_friction)
+    libgd.bind_auto_property(&Player_ClassName, "ground_accel", "get_ground_accel", get_ground_accel, "set_ground_accel", set_ground_accel)
+    libgd.bind_auto_property(&Player_ClassName, "ground_max_speed", "get_ground_max_speed", get_ground_max_speed, "set_ground_max_speed", set_ground_max_speed)
+    libgd.bind_auto_property(&Player_ClassName, "max_step_height", "get_max_step_height", get_max_step_height, "set_max_step_height", set_max_step_height)
+    libgd.bind_auto_property(&Player_ClassName, "max_step_up_slide_iterations", "get_max_step_up_slide_iterations", get_max_step_up_slide_iterations, "set_max_step_up_slide_iterations", set_max_step_up_slide_iterations)
+
+    libgd.bind_property_subgroup(&Player_ClassName, "In Air", "")
+    libgd.bind_auto_property(&Player_ClassName, "gravity_up_scale", "get_gravity_up_scale", get_gravity_up_scale, "set_gravity_up_scale", set_gravity_up_scale)
+    libgd.bind_auto_property(&Player_ClassName, "gravity_down_scale", "get_gravity_down_scale", get_gravity_down_scale, "set_gravity_down_scale", set_gravity_down_scale)
+    libgd.bind_auto_property(&Player_ClassName, "air_friction", "get_air_friction", get_air_friction, "set_air_friction", set_air_friction)
+    libgd.bind_auto_property(&Player_ClassName, "air_accel", "get_air_accel", get_air_accel, "set_air_accel", set_air_accel)
+    libgd.bind_auto_property(&Player_ClassName, "air_max_speed", "get_air_max_speed", get_air_max_speed, "set_air_max_speed", set_air_max_speed)
+    libgd.bind_auto_property(&Player_ClassName, "max_vertical_speed", "get_max_vertical_speed", get_max_vertical_speed, "set_max_vertical_speed", set_max_vertical_speed)
+
+    libgd.bind_signal(&Player_ClassName, "stepped_up", libgd.MethodBindArgument { name = "distance", type = .Float })
+    libgd.bind_signal(&Player_ClassName, "stepped_down", libgd.MethodBindArgument { name = "distance", type = .Float })
+}
+
+player_class_unregister :: proc "contextless" () {
+    gde.classdb_unregister_extension_class(gde.library, &Player_ClassName)
 }

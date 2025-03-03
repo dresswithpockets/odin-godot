@@ -29,6 +29,8 @@ initialize_game_module :: proc "c" (user_data: rawptr, level: gd.InitializationL
         return
     }
 
+    context = gd.godot_context()
+
     core.init()
     player_class_register()
 }
@@ -37,4 +39,6 @@ uninitialize_game_module :: proc "c" (user_data: rawptr, level: gd.Initializatio
     if level != .Scene {
         return
     }
+
+    player_class_unregister()
 }
