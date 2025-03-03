@@ -1,0 +1,8 @@
+[configuration]
+
+entry_symbol = "game_init"
+compatibility_minimum = "4.3"
+
+[libraries]
+
+windows.x86_64="res://bin/game.dll"

@@ -1,8 +1,10 @@
 ifeq ($(OS),Windows_NT)
 	exe_suffix := .exe
+	shared_suffix := .dll
 endif
 
 OUT_DIR := bin/
+GD_BUILD_CONFIG := float_64
 
 temple_cli_dir := temple/cli/
 temple_cli_deps := $(wildcard $(temple_cli_dir)*.odin)
@@ -18,7 +20,10 @@ temple_deps := $(wildcard templates/*.temple.twig) $(bindgen_dir)temple.odin
 
 gdextension_api := ./godot-cpp/gdextension/extension_api.json
 
-bindings: $(bindgen_out) $(gdextension_api)
+bindings: core/init.gen.odin
+
+# hack: we don't need to regenerate if core/init is up to date!
+core/init.gen.odin: $(bindgen_out) $(gdextension_api)
 	$(bindgen_out) $(gdextension_api)
 
 debug_bindings: $(debug_bindgen_out) $(gdextension_api)
@@ -50,6 +55,45 @@ debug_bindgen: $(bindgen_deps)
 	odin build $(bindgen_dir) -out:$(debug_bindgen_out) -show-timings -debug
 ###
 
+
+### examples
+examples_hello_dir := examples/hello-gdextension/
+examples_hello_deps := $(wildcard $(examples_hello_dir)src/*.odin)
+examples_hello_out := $(examples_hello_dir)bin/example$(shared_suffix)
+
+examples_game_dir := examples/game/
+examples_game_deps := $(wildcard $(examples_game_dir)src/*.odin)
+examples_game_out := $(examples_game_dir)bin/game$(shared_suffix)
+
+$(examples_hello_out): $(examples_hello_deps)
+	odin build $(examples_hello_dir)src/ \
+		-define:BUILD_CONFIG=$(GD_BUILD_CONFIG) \
+		-build-mode:shared \
+		-out:$(examples_hello_out) \
+		-warnings-as-errors \
+		-default-to-nil-allocator \
+		-target:windows_amd64 \
+		-debug
+
+$(examples_game_out): $(examples_game_deps)
+	odin build $(examples_game_dir)src/ \
+		-define:BUILD_CONFIG=$(GD_BUILD_CONFIG) \
+		-build-mode:shared \
+		-out:$(examples_game_out) \
+		-warnings-as-errors \
+		-default-to-nil-allocator \
+		-target:windows_amd64 \
+		-debug
+
+examples: core/init.gen.odin $(examples_hello_out) $(examples_game_out)
+
+examples/game/cbin/game.dll: $(wildcard examples/game/csrc/*)
+	cl.exe /std:clatest /ZI /D_USRDLL /D_WINDLL $(wildcard examples/game/csrc/*.c) /link /DLL /OUT:examples/game/cbin/game.dll
+
+cexamples: examples/game/cbin/game.dll
+###
+
+
 .PHONY: clean
 
 clean:
@@ -57,3 +101,5 @@ clean:
 	rm -f editor/*.gen.odin
 	rm -f core/*.gen.odin
 	rm -f variant/*.gen.odin
+	rm -f $(examples_hello_dir)bin/*
+	rm -f examples/game/cbin/*
