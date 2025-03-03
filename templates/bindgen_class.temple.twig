@@ -7,13 +7,7 @@ import __bindgen_var "../variant"
 import __bindgen_math "core:math"
 {% end %}
 
-{{ this.odin_type }} :: struct {
-{% if this.derived.(NewStateClass).inherits.odin_type == "Object" %}
-    using derived{{ this.derived.(NewStateClass).inherits.odin_type }}: __bindgen_var.Object
-{% else %}
-    using derived{{ this.derived.(NewStateClass).inherits.odin_type }}: {{ bindgen_class_reference_type(this.derived.(NewStateClass).inherits) }}
-{% end %}
-}
+{{ this.odin_type }} :: distinct __bindgen_gde.ObjectPtr
 
 // enums
 {% for state_enum in this.derived.(NewStateClass).enums %}
