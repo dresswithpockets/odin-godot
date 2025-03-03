@@ -65,14 +65,16 @@ import __bindgen_math "core:math"
 {% end %}
 {% end %}
 
+@(private)
 __{{ this.odin_type }}_init :: proc "contextless" () {
     __bindgen_gde.string_name_new_with_latin1_chars(&__{{ this.odin_type }}__class_name, "{{ this.godot_type }}", true)
-    _gde_name: __bindgen_var.StringName
+    _gde_name := __bindgen_var.StringName{}
 
 {% for method in this.derived.(NewStateClass).methods %}
 {% if !method.odin_skip %}
     __bindgen_gde.string_name_new_with_latin1_chars(&_gde_name, "{{ method.godot_name }}", true)
     __{{ method.odin_name }}__backing_ptr = __bindgen_gde.classdb_get_method_bind(&__{{ this.odin_type }}__class_name, &_gde_name, {{ i64(method.hash) }})
+    _gde_name = __bindgen_var.StringName{}
 {% end %}
 {% end %}
 }
