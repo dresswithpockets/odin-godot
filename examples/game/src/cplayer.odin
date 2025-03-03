@@ -2,13 +2,7 @@ package game
 
 import gd "../../../gdextension"
 import var "../../../variant"
-
-Node :: rawptr
-Node3d :: rawptr
-Camera3d :: rawptr
-CharacterBody3D :: rawptr
-CollisionShape3d :: rawptr
-Shape3d :: rawptr
+import core "../../../core"
 
 CameraYaw_Name: var.String
 CharacterBody3D_ClassName: var.StringName
@@ -18,22 +12,18 @@ Ready_VirtualName: var.StringName
 player_binding_callbacks := gd.InstanceBindingCallbacks{}
 
 Player :: struct {
-    object:     CharacterBody3D,
-    camera_yaw: Node3d,
+    object:     core.CharacterBody3d,
+    camera_yaw: core.Node3d,
 }
 
 @(private = "file")
 player_ready :: proc "contextless" (self: ^Player) {
-    self_node := cast(Node)self.object
-    
+    self_node := cast(core.Node)self.object
+
     camera_yaw_path := var.new_node_path_string(CameraYaw_Name)
+    self.camera_yaw = cast(core.Node3d)core.node_get_node(self_node, camera_yaw_path)
 
-    {
-        args := [1]gd.TypePtr { &camera_yaw_path }
-        gd.object_method_bind_ptrcall(get_node_method_bind, self.object, &args[0], &self.camera_yaw)
-    }
-
-    print_object(&self.camera_yaw)
+    core.gd_print(var.variant_from_object(&self.camera_yaw))
 }
 
 @(private = "file")
@@ -41,12 +31,12 @@ player_create_instance :: proc "c" (class_user_data: rawptr) -> gd.ObjectPtr {
     context = gd.godot_context()
 
     self := new(Player)
-    self.object = gd.classdb_construct_object(&CharacterBody3D_ClassName)
+    self.object = cast(core.CharacterBody3d)gd.classdb_construct_object(&CharacterBody3D_ClassName)
 
     gd.object_set_instance(self.object, &Player_ClassName, self)
     gd.object_set_instance_binding(self.object, gd.library, self, &player_binding_callbacks)
 
-    return self.object
+    return cast(gd.ObjectPtr)self.object
 }
 
 @(private = "file")
