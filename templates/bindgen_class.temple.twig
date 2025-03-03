@@ -77,16 +77,8 @@ __{{ this.odin_type }}_init :: proc "contextless" () {
 {% end %}
 }
 
-new_{{ this.snake_type }} :: proc() -> ^{{ this.odin_type }} {
-    instance := new({{ this.odin_type }})
-    instance._opaque = __bindgen_gde.classdb_construct_object(&__{{ this.odin_type }}__class_name)
-    return instance
-}
-
-new_{{ this.snake_type }}_from_object :: proc(object: __bindgen_gde.ObjectPtr) -> ^{{ this.odin_type }} {
-    instance := new({{ this.odin_type }})
-    instance._opaque = object
-    return instance
+new_{{ this.snake_type }} :: proc "contextless" () -> {{ this.odin_type }} {
+    return cast({{ this.odin_type }})__bindgen_gde.classdb_construct_object(&__{{ this.odin_type }}__class_name)
 }
 
 @(private)
