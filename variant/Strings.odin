@@ -95,3 +95,10 @@ new_string_name_cstring :: proc "contextless" (from: cstring, static: bool) -> (
     gd.string_name_new_with_utf8_chars(&ret, from)
     return
 }
+
+
+new_node_path_cstring :: proc "contextless" (from: cstring) -> NodePath {
+    str: String
+    gd.string_new_with_utf8_chars(&str, from)
+    return new_node_path_string(str)
+}
