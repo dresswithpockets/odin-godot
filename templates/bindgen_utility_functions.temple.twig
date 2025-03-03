@@ -17,7 +17,7 @@ import __bindgen_variant  "../variant"
 {% else %}
     __bindgen_gde.call_utility_function_ptr_no_ret(__{{function.godot_name}}__Ptr
 {% end %}
-{% for argument in function.arguments %}, cast(__bindgen_gde.TypePtr)&{{ argument.name }}{% if _, is_class := argument.type.derived.(NewStateClass); is_class %}._opaque{% end %}{% end %})
+{% for argument in function.arguments %}, cast(__bindgen_gde.TypePtr)&{{ argument.name }}{% end %})
 }
 
 {% end %}
@@ -26,8 +26,8 @@ import __bindgen_variant  "../variant"
 __init_util_functions :: proc "contextless" () {
     _gde_name: __bindgen_variant.StringName
 {% for function in this.utility_functions %}
-    __bindgen_gde.string_name_new_with_latin1_chars(cast(__bindgen_gde.StringNamePtr)&_gde_name._opaque, "{{ function.godot_name }}", true)
-    __{{ function.godot_name }}__Ptr = __bindgen_gde.variant_get_ptr_utility_function(cast(__bindgen_gde.StringNamePtr)&_gde_name._opaque, {{ i64(function.hash) }})
+    __bindgen_gde.string_name_new_with_latin1_chars(cast(__bindgen_gde.StringNamePtr)&_gde_name, "{{ function.godot_name }}", true)
+    __{{ function.godot_name }}__Ptr = __bindgen_gde.variant_get_ptr_utility_function(cast(__bindgen_gde.StringNamePtr)&_gde_name, {{ i64(function.hash) }})
 {% end %}
 }
 
