@@ -1,7 +1,37 @@
-[gd_scene load_steps=2 format=3 uid="uid://vetgijbipm8s"]
+[gd_scene load_steps=8 format=3 uid="uid://vetgijbipm8s"]
 
 [ext_resource type="PackedScene" uid="uid://c186aybk0cgr4" path="res://player/player.tscn" id="1_xhqjb"]
+[ext_resource type="Texture2D" uid="uid://cvjfr4aynhwj1" path="res://NightSkyHDRI004_1K-HDR.exr" id="2_bn8kw"]
+[ext_resource type="Texture2D" uid="uid://y8i2l66yfyjs" path="res://dark07.png" id="3_raqes"]
+
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_gny3t"]
+panorama = ExtResource("2_bn8kw")
+
+[sub_resource type="Sky" id="Sky_lmidm"]
+sky_material = SubResource("PanoramaSkyMaterial_gny3t")
+
+[sub_resource type="Environment" id="Environment_dww2n"]
+background_mode = 2
+background_energy_multiplier = 2.6
+sky = SubResource("Sky_lmidm")
+ambient_light_source = 3
+ambient_light_color = Color(1, 1, 1, 1)
+ambient_light_sky_contribution = 0.59
+ambient_light_energy = 2.4
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ht268"]
+albedo_texture = ExtResource("3_raqes")
 
 [node name="Game" type="Node3D"]
 
 [node name="Player" parent="." instance=ExtResource("1_xhqjb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.389408, 0)
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_dww2n")
+
+[node name="CSGBox3D" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
+material_override = SubResource("StandardMaterial3D_ht268")
+use_collision = true
+size = Vector3(25, 0.5, 25)

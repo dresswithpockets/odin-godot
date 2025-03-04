@@ -13,6 +13,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.875, 0)
 shape = SubResource("CylinderShape3D_42akx")
 
 [node name="CameraYaw" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.65, 0)
 
 [node name="Camera" type="Camera3D" parent="CameraYaw"]
 script = ExtResource("1_1ew6o")
