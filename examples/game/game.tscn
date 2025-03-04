@@ -25,6 +25,10 @@ albedo_texture = ExtResource("3_raqes")
 [node name="Game" type="Node3D"]
 
 [node name="Player" parent="." instance=ExtResource("1_xhqjb")]
+ground_max_speed = 7.5
+gravity_down_scale = 2.0
+air_accel = 20.0
+air_max_speed = 7.5
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.389408, 0)
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]

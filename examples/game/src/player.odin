@@ -7,6 +7,7 @@ import var "../../../variant"
 
 import "core:fmt"
 import "core:math"
+import "core:math/linalg"
 
 YawSpeed :: 0.022
 PitchSpeed :: 0.022
@@ -56,7 +57,7 @@ Player :: struct {
 
     // fields
     vertical_speed:               gde.float,
-    horizontal_velocity:          var.Vector3,
+    horizontal_velocity:          [3]gde.float,
 }
 
 @(private = "file")
@@ -115,27 +116,29 @@ player_physics_process :: proc "contextless" (self: ^Player, delta: gde.float) {
     }
 
     camera_yaw_basis := core.node3d_get_basis(cast(core.Node3d)self.camera_yaw)
-    wish_dir := var.basis_multiply(camera_yaw_basis, local_wish_dir)
+    wish_dir := var.array(var.basis_multiply(camera_yaw_basis, local_wish_dir))
 
     if core.character_body3d_is_on_floor(self.object) {
-        player_move_grounded(self, wish_dir, delta)
+        player_move(self, delta, wish_dir, self.ground_friction, self.ground_accel, self.ground_max_speed)
     } else {
-        player_move_air(self, wish_dir, delta)
+        player_move(self, delta, wish_dir, self.air_friction, self.air_accel, self.air_max_speed)
     }
 
     player_apply_gravity(self, delta)
 
     was_grounded := core.character_body3d_is_on_floor(self.object)
-    velocity := var.vector3_add(self.horizontal_velocity, var.new_vector3(0, self.vertical_speed, 0))
-    core.character_body3d_set_velocity(self.object, velocity)
+    core.character_body3d_set_velocity(
+        self.object,
+        var.new_vector3(self.horizontal_velocity.x, self.vertical_speed, self.horizontal_velocity.z),
+    )
 
     player_sweep_stairs_up(self, delta)
     core.character_body3d_move_and_slide(self.object)
     player_sweep_stairs_down(self, was_grounded)
 
-    self.horizontal_velocity = core.character_body3d_get_velocity(self.object)
-    self.vertical_speed = var.vector3_get_y(self.horizontal_velocity)
-    var.vector3_set_y(self.horizontal_velocity, 0)
+    self.horizontal_velocity = var.array(core.character_body3d_get_velocity(self.object))
+    self.vertical_speed = self.horizontal_velocity.y
+    self.horizontal_velocity.y = 0
 }
 
 player_move_camera :: proc "contextless" (self: ^Player, move: var.Vector2) {
@@ -147,16 +150,41 @@ player_move_camera :: proc "contextless" (self: ^Player, move: var.Vector2) {
     core.node3d_rotate_x(cast(core.Node3d)self.camera, pitch_rotation)
 }
 
-player_move_grounded :: proc "contextless" (self: ^Player, wish_dir: var.Vector3, delta: gde.float) {
+player_move :: proc "contextless" (
+    self: ^Player,
+    delta: gde.float,
+    wish_dir: [3]gde.float,
+    friction: gde.float,
+    accel: gde.float,
+    max_speed: gde.float,
+) {
+    if linalg.all(linalg.equal(wish_dir, [3]gde.float{0, 0, 0})) {
+        self.horizontal_velocity = exp_decay(self.horizontal_velocity, var.ARRAY_VEC3_ZERO, friction, delta)
+        if is_zero_approx(self.horizontal_velocity) {
+            self.horizontal_velocity = [3]gde.float{0, 0, 0}
+        }
+    } else {
+        self.horizontal_velocity += wish_dir * accel * delta
+    }
 
-}
-
-player_move_air :: proc "contextless" (self: ^Player, wish_dir: var.Vector3, delta: gde.float) {
-    
+    self.horizontal_velocity = limit_length(self.horizontal_velocity, max_speed)
 }
 
 player_apply_gravity :: proc "contextless" (self: ^Player, delta: gde.float) {
+    if self.vertical_speed > -self.max_vertical_speed {
+        gravity: gde.float = -10
+        if self.vertical_speed > 0 || core.character_body3d_is_on_floor(self.object) {
+            gravity *= self.gravity_up_scale
+        } else {
+            gravity *= self.gravity_down_scale
+        }
 
+        self.vertical_speed += gravity * delta
+
+        if self.vertical_speed < -self.max_vertical_speed {
+            self.vertical_speed = -self.max_vertical_speed
+        }
+    }
 }
 
 player_sweep_stairs_up :: proc "contextless" (self: ^Player, delta: gde.float) {
@@ -188,7 +216,7 @@ player_create_instance :: proc "c" (class_user_data: rawptr) -> gde.ObjectPtr {
     self.max_vertical_speed = 15.0
 
     self.vertical_speed = 0.0
-    self.horizontal_velocity = var.new_vector3(0, 0, 0)
+    self.horizontal_velocity = [3]gde.float{0, 0, 0}
 
     gde.object_set_instance(self.object, &Player_ClassName, self)
     gde.object_set_instance_binding(self.object, gde.library, self, &player_binding_callbacks)
