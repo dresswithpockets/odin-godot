@@ -144,6 +144,7 @@ CallError :: struct {
 
 VariantFromTypeConstructorProc :: #type proc "c" (variant: UninitializedVariantPtr, type: TypePtr)
 TypeFromVariantConstructorProc :: #type proc "c" (type: TypePtr, variant: VariantPtr)
+VariantGetInternalPtrFunc :: #type proc "c" (variant: VariantPtr) -> rawptr
 PtrOperatorEvaluator :: #type proc "c" (left: TypePtr, right: TypePtr, result: TypePtr)
 PtrBuiltInMethod :: #type proc "c" (base: TypePtr, args: ^TypePtr, returns: TypePtr, arg_count: int)
 PtrConstructor :: #type proc "c" (base: UninitializedTypePtr, args: ^TypePtr)
@@ -226,13 +227,16 @@ ExtensionClassReference :: #type proc "c" (instance: ExtensionClassInstancePtr)
 ExtensionClassUnreference :: #type proc "c" (instance: ExtensionClassInstancePtr)
 ExtensionClassCallVirtual :: #type proc "c" (instance: ExtensionClassInstancePtr, args: [^]TypePtr, ret: TypePtr)
 ExtensionClassCreateInstance :: #type proc "c" (class_user_data: rawptr) -> ObjectPtr
+ExtensionClassCreateInstance2 :: #type proc "c" (class_user_data: rawptr, notify_postinitialize: bool) -> ObjectPtr
 ExtensionClassFreeInstance :: #type proc "c" (class_user_data: rawptr, instance: ExtensionClassInstancePtr)
 ExtensionClassRecreateInstance :: #type proc "c" (
     class_user_data: rawptr,
     object: ObjectPtr,
 ) -> ExtensionClassInstancePtr
 ExtensionClassGetVirtual :: #type proc "c" (class_user_data: rawptr, name: StringNamePtr) -> ExtensionClassCallVirtual
+ExtensionClassGetVirtual2 :: #type proc "c" (class_user_data: rawptr, name: StringNamePtr, hash: rawptr) -> ExtensionClassCallVirtual
 ExtensionClassGetVirtualCallData :: #type proc "c" (class_user_data: rawptr, name: StringNamePtr) -> rawptr
+ExtensionClassGetVirtualCallData2 :: #type proc "c" (class_user_data: rawptr, name: StringNamePtr, hash: u32) -> rawptr
 ExtensionClassCallVirtualWithData :: #type proc "c" (
     instance: ExtensionClassInstancePtr,
     name: StringNamePtr,
@@ -241,7 +245,7 @@ ExtensionClassCallVirtualWithData :: #type proc "c" (
     ret: TypePtr,
 )
 
-// Deprecated. Use ExtensionClassCreationInfo3 instead.
+// Deprecated. Use ExtensionClassCreationInfo4 instead.
 ExtensionClassCreationInfo :: struct {
     is_virtual:               bool,
     is_abstract:              bool,
@@ -266,7 +270,7 @@ ExtensionClassCreationInfo :: struct {
     class_user_data:          rawptr,
 }
 
-// Deprecated. Use ExtensionClassCreationInfo3 instead.
+// Deprecated. Use ExtensionClassCreationInfo4 instead.
 ExtensionClassCreationInfo2 :: struct {
     is_virtual:                  bool,
     is_abstract:                 bool,
@@ -300,6 +304,7 @@ ExtensionClassCreationInfo2 :: struct {
     class_userdata:              rawptr, // Per-class user data, later accessible in instance bindings.
 }
 
+// Deprecated. Use ExtensionClassCreationInfo4 instead.
 ExtensionClassCreationInfo3 :: struct {
     is_virtual:                  bool,
     is_abstract:                 bool,
@@ -332,6 +337,40 @@ ExtensionClassCreationInfo3 :: struct {
     call_virtual_with_data_func: ExtensionClassCallVirtualWithData,
     get_rid_func:                ExtensionClassGetRid,
     class_userdata:              rawptr, // Per-class user data, later accessible in instance bindings.
+}
+
+ExtensionClassCreationInfo4 :: struct {
+    is_virtual: bool,
+    is_abstract: bool,
+    is_exposed: bool,
+    is_runtime: bool,
+    icon_path: StringPtr,
+    set_func: ExtensionClassSet,
+    get_func: ExtensionClassGet,
+    get_property_list_func: ExtensionClassGetPropertyList,
+    free_property_list_func: ExtensionClassFreePropertyList2,
+    property_can_revert_func: ExtensionClassPropertyCanRevert,
+    property_get_revert_func: ExtensionClassPropertyGetRevert,
+    validate_property_func: ExtensionClassValidateProperty,
+    notification_func: ExtensionClassNotification2,
+    to_string_func: ExtensionClassToString,
+    reference_func: ExtensionClassReference,
+    unreference_func: ExtensionClassUnreference,
+    create_instance_func: ExtensionClassCreateInstance2, // (Default) constructor; mandatory. If the class is not instantiable, consider making it virtual or abstract.
+    free_instance_func: ExtensionClassFreeInstance, // Destructor; mandatory.
+    recreate_instance_func: ExtensionClassRecreateInstance,
+    // Queries a virtual function by name and returns a callback to invoke the requested virtual function.
+    get_virtual_func: ExtensionClassGetVirtual2,
+    // Paired with `call_virtual_with_data_func`, this is an alternative to `get_virtual_func` for extensions that
+    // need or benefit from extra data when calling virtual functions.
+    // Returns user data that will be passed to `call_virtual_with_data_func`.
+    // Returning `NULL` from this function signals to Godot that the virtual function is not overridden.
+    // Data returned from this function should be managed by the extension and must be valid until the extension is deinitialized.
+    // You should supply either `get_virtual_func`, or `get_virtual_call_data_func` with `call_virtual_with_data_func`.
+    get_virtual_call_data_func: ExtensionClassGetVirtualCallData2,
+    // Used to call virtual functions when `get_virtual_call_data_func` is not null.
+    call_virtual_with_data_func: ExtensionClassCallVirtualWithData,
+    class_userdata: rawptr, // Per-class user data, later accessible in instance bindings.
 }
 
 ExtensionClassLibraryPtr :: distinct rawptr

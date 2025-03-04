@@ -43,7 +43,7 @@ ExtensionInterfaceMemFree :: #type proc "c" (p_ptr: rawptr)
  *
  * Logs an error to Godot's built-in debugger and to the OS terminal.
  *
- * @param p_description The code trigging the error.
+ * @param p_description The code triggering the error.
  * @param p_function The function name where the error occurred.
  * @param p_file The file where the error occurred.
  * @param p_line The line where the error occurred.
@@ -63,7 +63,7 @@ ExtensionInterfacePrintError :: #type proc "c" (
  *
  * Logs an error with a message to Godot's built-in debugger and to the OS terminal.
  *
- * @param p_description The code trigging the error.
+ * @param p_description The code triggering the error.
  * @param p_message The message to show along with the error.
  * @param p_function The function name where the error occurred.
  * @param p_file The file where the error occurred.
@@ -85,7 +85,7 @@ ExtensionInterfacePrintErrorWithMessage :: #type proc "c" (
  *
  * Logs a warning to Godot's built-in debugger and to the OS terminal.
  *
- * @param p_description The code trigging the warning.
+ * @param p_description The code triggering the warning.
  * @param p_function The function name where the warning occurred.
  * @param p_file The file where the warning occurred.
  * @param p_line The line where the warning occurred.
@@ -105,7 +105,7 @@ ExtensionInterfacePrintWarning :: #type proc "c" (
  *
  * Logs a warning with a message to Godot's built-in debugger and to the OS terminal.
  *
- * @param p_description The code trigging the warning.
+ * @param p_description The code triggering the warning.
  * @param p_message The message to show along with the warning.
  * @param p_function The function name where the warning occurred.
  * @param p_file The file where the warning occurred.
@@ -127,7 +127,7 @@ ExtensionInterfacePrintWarningWithMessage :: #type proc "c" (
  *
  * Logs a script error to Godot's built-in debugger and to the OS terminal.
  *
- * @param p_description The code trigging the error.
+ * @param p_description The code triggering the error.
  * @param p_function The function name where the error occurred.
  * @param p_file The file where the error occurred.
  * @param p_line The line where the error occurred.
@@ -147,7 +147,7 @@ ExtensionInterfacePrintScriptError :: #type proc "c" (
  *
  * Logs a script error with a message to Godot's built-in debugger and to the OS terminal.
  *
- * @param p_description The code trigging the error.
+ * @param p_description The code triggering the error.
  * @param p_message The message to show along with the error.
  * @param p_function The function name where the error occurred.
  * @param p_file The file where the error occurred.
@@ -614,6 +614,21 @@ ExtensionInterfaceVariantHasMember :: #type proc "c" (p_type: VariantType, p_mem
 ExtensionInterfaceVariantHasKey :: #type proc "c" (p_self: VariantPtr, p_key: VariantPtr, r_valid: ^bool) -> bool
 
 /**
+ * @name variant_get_object_instance_id
+ * @since 4.4
+ *
+ * Gets the object instance ID from a variant of type GDEXTENSION_VARIANT_TYPE_OBJECT.
+ *
+ * If the variant isn't of type GDEXTENSION_VARIANT_TYPE_OBJECT, then zero will be returned.
+ * The instance ID will be returned even if the object is no longer valid - use `object_get_instance_by_id()` to check if the object is still valid.
+ *
+ * @param p_self A pointer to the Variant.
+ *
+ * @return The instance ID for the contained object.
+ */
+ExtensionInterfaceVariantGetObjectInstanceId :: #type proc "c" (p_self: VariantPtr) -> ObjectInstanceId
+
+/**
  * @name variant_get_type_name
  * @since 4.1
  *
@@ -675,6 +690,25 @@ ExtensionInterfaceGetVariantFromTypeConstructor :: #type proc "c" (
  * @return A pointer to a function that can get the raw value from a Variant of the given type.
  */
 ExtensionInterfaceGetVariantToTypeConstructor :: #type proc "c" (p_type: VariantType) -> TypeFromVariantConstructorProc
+
+/**
+ * @name variant_get_ptr_internal_getter
+ * @since 4.4
+ *
+ * Provides a function pointer for retrieving a pointer to a variant's internal value.
+ * Access to a variant's internal value can be used to modify it in-place, or to retrieve its value without the overhead of variant conversion functions.
+ * It is recommended to cache the getter for all variant types in a function table to avoid retrieval overhead upon use.
+ *
+ * @note Each function assumes the variant's type has already been determined and matches the function.
+ * Invoking the function with a variant of a mismatched type has undefined behavior, and may lead to a segmentation fault.
+ *
+ * @param p_type The Variant type.
+ *
+ * @return A pointer to a type-specific function that returns a pointer to the internal value of a variant. Check the implementation of this function (gdextension_variant_get_ptr_internal_getter) for pointee type info of each variant type.
+ */
+ExtensionInterfaceGetVariantGetInternalPtrFunc :: #type proc "c" (
+    p_type: VariantType,
+) -> VariantGetInternalPtrFunc
 
 /**
  * @name variant_get_ptr_operator_evaluator
@@ -1762,6 +1796,30 @@ ExtensionInterfaceDictionaryOperatorIndex :: #type proc "c" (p_self: TypePtr, p_
 ExtensionInterfaceDictionaryOperatorIndexConst :: #type proc "c" (p_self: TypePtr, p_key: VariantPtr) -> VariantPtr
 
 /**
+ * @name dictionary_set_typed
+ * @since 4.4
+ *
+ * Makes a Dictionary into a typed Dictionary.
+ *
+ * @param p_self A pointer to the Dictionary.
+ * @param p_key_type The type of Variant the Dictionary key will store.
+ * @param p_key_class_name A pointer to a StringName with the name of the object (if p_key_type is GDEXTENSION_VARIANT_TYPE_OBJECT).
+ * @param p_key_script A pointer to a Script object (if p_key_type is GDEXTENSION_VARIANT_TYPE_OBJECT and the base class is extended by a script).
+ * @param p_value_type The type of Variant the Dictionary value will store.
+ * @param p_value_class_name A pointer to a StringName with the name of the object (if p_value_type is GDEXTENSION_VARIANT_TYPE_OBJECT).
+ * @param p_value_script A pointer to a Script object (if p_value_type is GDEXTENSION_VARIANT_TYPE_OBJECT and the base class is extended by a script).
+ */
+ExtensionInterfaceDictionarySetTyped :: #type proc "c" (
+    p_self: TypePtr,
+    p_key_type: VariantType,
+    p_key_class_name: StringNamePtr,
+    p_key_script: VariantPtr,
+    p_value_type: VariantType,
+    p_value_class_name: StringNamePtr,
+    p_value_script: VariantPtr,
+)
+
+/**
  * @name object_method_bind_call
  * @since 4.1
  *
@@ -1777,7 +1835,7 @@ ExtensionInterfaceDictionaryOperatorIndexConst :: #type proc "c" (p_self: TypePt
 ExtensionInterfaceObjectMethodBindCall :: #type proc "c" (
     p_method_bind: MethodBindPtr,
     p_instance: ObjectPtr,
-    p_args: [^]VariantPtr,
+    p_args: ^VariantPtr,
     p_arg_count: i64,
     r_ret: VariantPtr,
     r_error: ^CallError,
@@ -1831,7 +1889,7 @@ ExtensionInterfaceGlobalGetSingleton :: #type proc "c" (p_name: StringNamePtr) -
  *
  * @param p_o A pointer to the Object.
  * @param p_library A token the library received by the GDExtension's entry point function.
- * @param p_callbacks A pointer to a InstanceBindingCallbacks struct.
+ * @param p_callbacks A pointer to a GDExtensionInstanceBindingCallbacks struct.
  *
  * @return
  */
@@ -1850,7 +1908,7 @@ ExtensionInterfaceObjectGetInstanceBinding :: #type proc "c" (
  * @param p_o A pointer to the Object.
  * @param p_library A token the library received by the GDExtension's entry point function.
  * @param p_binding A pointer to the instance binding.
- * @param p_callbacks A pointer to a InstanceBindingCallbacks struct.
+ * @param p_callbacks A pointer to a GDExtensionInstanceBindingCallbacks struct.
  */
 ExtensionInterfaceObjectSetInstanceBinding :: #type proc "c" (
     p_o: ObjectPtr,
@@ -2156,6 +2214,7 @@ ExtensionInterfaceCallableCustomGetUserData :: #type proc "c" (p_callable: TypeP
 /**
  * @name classdb_construct_object
  * @since 4.1
+ * @deprecated in Godot 4.4. Use `classdb_construct_object2` instead.
  *
  * Constructs an Object of the requested class.
  *
@@ -2166,6 +2225,22 @@ ExtensionInterfaceCallableCustomGetUserData :: #type proc "c" (p_callable: TypeP
  * @return A pointer to the newly created Object.
  */
 ExtensionInterfaceClassdbConstructObject :: #type proc "c" (p_classname: StringNamePtr) -> ObjectPtr
+
+/**
+ * @name classdb_construct_object2
+ * @since 4.4
+ *
+ * Constructs an Object of the requested class.
+ *
+ * The passed class must be a built-in godot class, or an already-registered extension class. In both cases, object_set_instance() should be called to fully initialize the object.
+ *
+ * "NOTIFICATION_POSTINITIALIZE" must be sent after construction.
+ *
+ * @param p_classname A pointer to a StringName with the class name.
+ *
+ * @return A pointer to the newly created Object.
+ */
+ExtensionInterfaceClassdbConstructObject2 :: #type proc "c" (p_classname: StringNamePtr) -> ObjectPtr
 
 /**
  * @name classdb_get_method_bind
@@ -2200,7 +2275,7 @@ ExtensionInterfaceClassdbGetClassTag :: #type proc "c" (p_classname: StringNameP
 /**
  * @name classdb_register_extension_class
  * @since 4.1
- * @deprecated in Godot 4.2. Use `classdb_register_extension_class3` instead.
+ * @deprecated in Godot 4.2. Use `classdb_register_extension_class4` instead.
  *
  * Registers an extension class in the ClassDB.
  *
@@ -2221,7 +2296,7 @@ ExtensionInterfaceClassdbRegisterExtensionClass :: #type proc "c" (
 /**
  * @name classdb_register_extension_class2
  * @since 4.2
- * @deprecated in Godot 4.3. Use `classdb_register_extension_class3` instead.
+ * @deprecated in Godot 4.3. Use `classdb_register_extension_class4` instead.
  *
  * Registers an extension class in the ClassDB.
  *
@@ -2242,6 +2317,7 @@ ExtensionInterfaceClassdbRegisterExtensionClass2 :: #type proc "c" (
 /**
  * @name classdb_register_extension_class3
  * @since 4.3
+ * @deprecated in Godot 4.4. Use `classdb_register_extension_class4` instead.
  *
  * Registers an extension class in the ClassDB.
  *
@@ -2257,6 +2333,26 @@ ExtensionInterfaceClassdbRegisterExtensionClass3 :: #type proc "c" (
     p_class_name: StringNamePtr,
     p_parent_class_name: StringNamePtr,
     p_extension_funcs: ^ExtensionClassCreationInfo3,
+)
+
+/**
+ * @name classdb_register_extension_class4
+ * @since 4.4
+ *
+ * Registers an extension class in the ClassDB.
+ *
+ * Provided struct can be safely freed once the function returns.
+ *
+ * @param p_library A pointer the library received by the GDExtension's entry point function.
+ * @param p_class_name A pointer to a StringName with the class name.
+ * @param p_parent_class_name A pointer to a StringName with the parent class name.
+ * @param p_extension_funcs A pointer to a GDExtensionClassCreationInfo2 struct.
+ */
+ExtensionInterfaceClassdbRegisterExtensionClass4 :: #type proc "c" (
+    p_library: ExtensionClassLibraryPtr,
+    p_class_name: StringNamePtr,
+    p_parent_class_name: StringNamePtr,
+    p_extension_funcs: ^ExtensionClassCreationInfo4,
 )
 
 /**

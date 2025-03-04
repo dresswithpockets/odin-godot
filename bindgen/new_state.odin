@@ -193,6 +193,7 @@ skip_builtin_types_by_name :: []string {
     "int64_t",
     "uint32_t",
     "uint64_t",
+    "char32",
 }
 
 @(private)
@@ -220,6 +221,9 @@ new_pod_type_map := map[string]string {
     "uint16"   = "u16",
     "uint32"   = "u32",
     "uint64"   = "u64",
+
+    // TODO: this should map to c.uint_least32_t
+    "char32"   = "u32",
 }
 
 operator_enum_map := map[string]string {

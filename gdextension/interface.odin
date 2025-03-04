@@ -41,7 +41,7 @@ mem_free: ExtensionInterfaceMemFree
  *
  * Logs an error to Godot's built-in debugger and to the OS terminal.
  *
- * @param p_description The code trigging the error.
+ * @param p_description The code triggering the error.
  * @param p_function The function name where the error occurred.
  * @param p_file The file where the error occurred.
  * @param p_line The line where the error occurred.
@@ -55,7 +55,7 @@ print_error: ExtensionInterfacePrintError
  *
  * Logs an error with a message to Godot's built-in debugger and to the OS terminal.
  *
- * @param p_description The code trigging the error.
+ * @param p_description The code triggering the error.
  * @param p_message The message to show along with the error.
  * @param p_function The function name where the error occurred.
  * @param p_file The file where the error occurred.
@@ -70,7 +70,7 @@ print_error_with_message: ExtensionInterfacePrintErrorWithMessage
  *
  * Logs a warning to Godot's built-in debugger and to the OS terminal.
  *
- * @param p_description The code trigging the warning.
+ * @param p_description The code triggering the warning.
  * @param p_function The function name where the warning occurred.
  * @param p_file The file where the warning occurred.
  * @param p_line The line where the warning occurred.
@@ -84,7 +84,7 @@ print_warning: ExtensionInterfacePrintWarning
  *
  * Logs a warning with a message to Godot's built-in debugger and to the OS terminal.
  *
- * @param p_description The code trigging the warning.
+ * @param p_description The code triggering the warning.
  * @param p_message The message to show along with the warning.
  * @param p_function The function name where the warning occurred.
  * @param p_file The file where the warning occurred.
@@ -99,7 +99,7 @@ print_warning_with_message: ExtensionInterfacePrintWarningWithMessage
  *
  * Logs a script error to Godot's built-in debugger and to the OS terminal.
  *
- * @param p_description The code trigging the error.
+ * @param p_description The code triggering the error.
  * @param p_function The function name where the error occurred.
  * @param p_file The file where the error occurred.
  * @param p_line The line where the error occurred.
@@ -113,7 +113,7 @@ print_script_error: ExtensionInterfacePrintScriptError
  *
  * Logs a script error with a message to Godot's built-in debugger and to the OS terminal.
  *
- * @param p_description The code trigging the error.
+ * @param p_description The code triggering the error.
  * @param p_message The message to show along with the error.
  * @param p_function The function name where the error occurred.
  * @param p_file The file where the error occurred.
@@ -506,6 +506,21 @@ variant_has_member: ExtensionInterfaceVariantHasMember
 variant_has_key: ExtensionInterfaceVariantHasKey
 
 /**
+ * @name variant_get_object_instance_id
+ * @since 4.4
+ *
+ * Gets the object instance ID from a variant of type GDEXTENSION_VARIANT_TYPE_OBJECT.
+ *
+ * If the variant isn't of type GDEXTENSION_VARIANT_TYPE_OBJECT, then zero will be returned.
+ * The instance ID will be returned even if the object is no longer valid - use `object_get_instance_by_id()` to check if the object is still valid.
+ *
+ * @param p_self A pointer to the Variant.
+ *
+ * @return The instance ID for the contained object.
+ */
+variant_get_object_instance_id: ExtensionInterfaceVariantGetObjectInstanceId
+
+/**
  * @name variant_get_type_name
  * @since 4.1
  *
@@ -565,6 +580,23 @@ get_variant_from_type_constructor: ExtensionInterfaceGetVariantFromTypeConstruct
  * @return A pointer to a function that can get the raw value from a Variant of the given type.
  */
 get_variant_to_type_constructor: ExtensionInterfaceGetVariantToTypeConstructor
+
+/**
+ * @name variant_get_ptr_internal_getter
+ * @since 4.4
+ *
+ * Provides a function pointer for retrieving a pointer to a variant's internal value.
+ * Access to a variant's internal value can be used to modify it in-place, or to retrieve its value without the overhead of variant conversion functions.
+ * It is recommended to cache the getter for all variant types in a function table to avoid retrieval overhead upon use.
+ *
+ * @note Each function assumes the variant's type has already been determined and matches the function.
+ * Invoking the function with a variant of a mismatched type has undefined behavior, and may lead to a segmentation fault.
+ *
+ * @param p_type The Variant type.
+ *
+ * @return A pointer to a type-specific function that returns a pointer to the internal value of a variant. Check the implementation of this function (gdextension_variant_get_ptr_internal_getter) for pointee type info of each variant type.
+ */
+variant_get_ptr_internal_getter: ExtensionInterfaceGetVariantGetInternalPtrFunc
 
 /**
  * @name variant_get_ptr_operator_evaluator
@@ -1556,6 +1588,22 @@ dictionary_operator_index: ExtensionInterfaceDictionaryOperatorIndex
 dictionary_operator_index_const: ExtensionInterfaceDictionaryOperatorIndexConst
 
 /**
+ * @name dictionary_set_typed
+ * @since 4.4
+ *
+ * Makes a Dictionary into a typed Dictionary.
+ *
+ * @param p_self A pointer to the Dictionary.
+ * @param p_key_type The type of Variant the Dictionary key will store.
+ * @param p_key_class_name A pointer to a StringName with the name of the object (if p_key_type is GDEXTENSION_VARIANT_TYPE_OBJECT).
+ * @param p_key_script A pointer to a Script object (if p_key_type is GDEXTENSION_VARIANT_TYPE_OBJECT and the base class is extended by a script).
+ * @param p_value_type The type of Variant the Dictionary value will store.
+ * @param p_value_class_name A pointer to a StringName with the name of the object (if p_value_type is GDEXTENSION_VARIANT_TYPE_OBJECT).
+ * @param p_value_script A pointer to a Script object (if p_value_type is GDEXTENSION_VARIANT_TYPE_OBJECT and the base class is extended by a script).
+ */
+dictionary_set_typed: ExtensionInterfaceDictionarySetTyped
+
+/**
  * @name object_method_bind_call
  * @since 4.1
  *
@@ -1888,6 +1936,7 @@ callable_custom_get_userdata: ExtensionInterfaceCallableCustomGetUserData
 /**
  * @name classdb_construct_object
  * @since 4.1
+ * @deprecated in Godot 4.4. Use `classdb_construct_object2` instead.
  *
  * Constructs an Object of the requested class.
  *
@@ -1898,6 +1947,22 @@ callable_custom_get_userdata: ExtensionInterfaceCallableCustomGetUserData
  * @return A pointer to the newly created Object.
  */
 classdb_construct_object: ExtensionInterfaceClassdbConstructObject
+
+/**
+ * @name classdb_construct_object2
+ * @since 4.4
+ *
+ * Constructs an Object of the requested class.
+ *
+ * The passed class must be a built-in godot class, or an already-registered extension class. In both cases, object_set_instance() should be called to fully initialize the object.
+ *
+ * "NOTIFICATION_POSTINITIALIZE" must be sent after construction.
+ *
+ * @param p_classname A pointer to a StringName with the class name.
+ *
+ * @return A pointer to the newly created Object.
+ */
+classdb_construct_object2: ExtensionInterfaceClassdbConstructObject2
 
 /**
  * @name classdb_get_method_bind
@@ -1928,7 +1993,7 @@ classdb_get_class_tag: ExtensionInterfaceClassdbGetClassTag
 /**
  * @name classdb_register_extension_class
  * @since 4.1
- * @deprecated in Godot 4.2. Use `classdb_register_extension_class3` instead.
+ * @deprecated in Godot 4.2. Use `classdb_register_extension_class4` instead.
  *
  * Registers an extension class in the ClassDB.
  *
@@ -1944,7 +2009,7 @@ classdb_register_extension_class: ExtensionInterfaceClassdbRegisterExtensionClas
 /**
  * @name classdb_register_extension_class2
  * @since 4.2
- * @deprecated in Godot 4.3. Use `classdb_register_extension_class3` instead.
+ * @deprecated in Godot 4.3. Use `classdb_register_extension_class4` instead.
  *
  * Registers an extension class in the ClassDB.
  *
@@ -1960,6 +2025,7 @@ classdb_register_extension_class2: ExtensionInterfaceClassdbRegisterExtensionCla
 /**
  * @name classdb_register_extension_class3
  * @since 4.3
+ * @deprecated in Godot 4.4. Use `classdb_register_extension_class4` instead.
  *
  * Registers an extension class in the ClassDB.
  *
@@ -1971,6 +2037,21 @@ classdb_register_extension_class2: ExtensionInterfaceClassdbRegisterExtensionCla
  * @param p_extension_funcs A pointer to a GDExtensionClassCreationInfo2 struct.
  */
 classdb_register_extension_class3: ExtensionInterfaceClassdbRegisterExtensionClass3
+
+/**
+ * @name classdb_register_extension_class4
+ * @since 4.4
+ *
+ * Registers an extension class in the ClassDB.
+ *
+ * Provided struct can be safely freed once the function returns.
+ *
+ * @param p_library A pointer the library received by the GDExtension's entry point function.
+ * @param p_class_name A pointer to a StringName with the class name.
+ * @param p_parent_class_name A pointer to a StringName with the parent class name.
+ * @param p_extension_funcs A pointer to a GDExtensionClassCreationInfo2 struct.
+ */
+classdb_register_extension_class4: ExtensionInterfaceClassdbRegisterExtensionClass4
 
 /**
  * @name classdb_register_extension_class_method
@@ -2163,6 +2244,7 @@ editor_help_load_xml_from_utf8_chars: ExtensionsInterfaceEditorHelpLoadXmlFromUt
  */
 editor_help_load_xml_from_utf8_chars_and_len: ExtensionsInterfaceEditorHelpLoadXmlFromUtf8CharsAndLen
 
+
 init :: proc "contextless" (library_ptr: ExtensionClassLibraryPtr, get_proc_address: ExtensionInterfaceGetProcAddress) {
     library = library_ptr
     mem_alloc = cast(ExtensionInterfaceMemAlloc)get_proc_address("mem_alloc")
@@ -2202,11 +2284,13 @@ init :: proc "contextless" (library_ptr: ExtensionClassLibraryPtr, get_proc_addr
     variant_has_method = cast(ExtensionInterfaceVariantHasMethod)get_proc_address("variant_has_method")
     variant_has_member = cast(ExtensionInterfaceVariantHasMember)get_proc_address("variant_has_member")
     variant_has_key = cast(ExtensionInterfaceVariantHasKey)get_proc_address("variant_has_key")
+    variant_get_object_instance_id = cast(ExtensionInterfaceVariantGetObjectInstanceId)get_proc_address("variant_get_object_instance_id")
     variant_get_type_name = cast(ExtensionInterfaceVariantGetTypeName)get_proc_address("variant_get_type_name")
     variant_can_convert = cast(ExtensionInterfaceVariantCanConvert)get_proc_address("variant_can_convert")
     variant_can_convert_strict = cast(ExtensionInterfaceVariantCanConvertStrict)get_proc_address("variant_can_convert_strict")
     get_variant_from_type_constructor = cast(ExtensionInterfaceGetVariantFromTypeConstructor)get_proc_address("get_variant_from_type_constructor")
     get_variant_to_type_constructor = cast(ExtensionInterfaceGetVariantToTypeConstructor)get_proc_address("get_variant_to_type_constructor")
+    variant_get_ptr_internal_getter = cast(ExtensionInterfaceGetVariantGetInternalPtrFunc)get_proc_address("variant_get_ptr_internal_getter")
     variant_get_ptr_operator_evaluator = cast(ExtensionInterfaceVariantGetPtrOperatorEvaluator)get_proc_address("variant_get_ptr_operator_evaluator")
     variant_get_ptr_builtin_method = cast(ExtensionInterfaceVariantGetPtrBuiltinMethod)get_proc_address("variant_get_ptr_builtin_method")
     variant_get_ptr_constructor = cast(ExtensionInterfaceVariantGetPtrConstructor)get_proc_address("variant_get_ptr_constructor")
@@ -2282,6 +2366,7 @@ init :: proc "contextless" (library_ptr: ExtensionClassLibraryPtr, get_proc_addr
     array_set_typed = cast(ExtensionInterfaceArraySetTyped)get_proc_address("array_set_typed")
     dictionary_operator_index = cast(ExtensionInterfaceDictionaryOperatorIndex)get_proc_address("dictionary_operator_index")
     dictionary_operator_index_const = cast(ExtensionInterfaceDictionaryOperatorIndexConst)get_proc_address("dictionary_operator_index_const")
+    dictionary_set_typed = cast(ExtensionInterfaceDictionarySetTyped)get_proc_address("dictionary_set_typed")
     object_method_bind_call = cast(ExtensionInterfaceObjectMethodBindCall)get_proc_address("object_method_bind_call")
     object_method_bind_ptrcall = cast(ExtensionInterfaceObjectMethodBindPtrcall)get_proc_address("object_method_bind_ptrcall")
     object_destroy = cast(ExtensionInterfaceObjectDestroy)get_proc_address("object_destroy")
@@ -2308,11 +2393,13 @@ init :: proc "contextless" (library_ptr: ExtensionClassLibraryPtr, get_proc_addr
     callable_custom_create2 = cast(ExtensionInterfaceCallableCustomCreate2)get_proc_address("callable_custom_create2")
     callable_custom_get_userdata = cast(ExtensionInterfaceCallableCustomGetUserData)get_proc_address("callable_custom_get_userdata")
     classdb_construct_object = cast(ExtensionInterfaceClassdbConstructObject)get_proc_address("classdb_construct_object")
+    classdb_construct_object2 = cast(ExtensionInterfaceClassdbConstructObject2)get_proc_address("classdb_construct_object2")
     classdb_get_method_bind = cast(ExtensionInterfaceClassdbGetMethodBind)get_proc_address("classdb_get_method_bind")
     classdb_get_class_tag = cast(ExtensionInterfaceClassdbGetClassTag)get_proc_address("classdb_get_class_tag")
     classdb_register_extension_class = cast(ExtensionInterfaceClassdbRegisterExtensionClass)get_proc_address("classdb_register_extension_class")
     classdb_register_extension_class2 = cast(ExtensionInterfaceClassdbRegisterExtensionClass2)get_proc_address("classdb_register_extension_class2")
     classdb_register_extension_class3 = cast(ExtensionInterfaceClassdbRegisterExtensionClass3)get_proc_address("classdb_register_extension_class3")
+    classdb_register_extension_class4 = cast(ExtensionInterfaceClassdbRegisterExtensionClass4)get_proc_address("classdb_register_extension_class4")
     classdb_register_extension_class_method = cast(ExtensionInterfaceClassdbRegisterExtensionClassMethod)get_proc_address("classdb_register_extension_class_method")
     classdb_register_extension_class_virtual_method = cast(ExtensionInterfaceClassdbRegisterExtensionClassVirtualMethod)get_proc_address("classdb_register_extension_class_virtual_method")
     classdb_register_extension_class_integer_constant = cast(ExtensionInterfaceClassdbRegisterExtensionClassIntegerConstant)get_proc_address("classdb_register_extension_class_integer_constant")
