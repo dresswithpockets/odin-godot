@@ -3,7 +3,7 @@ package variant
 
 import __bindgen_gde "../gdextension"
 
-Object :: distinct __bindgen_gde.ObjectPtr
+Object :: __bindgen_gde.ObjectPtr
 
 new_object :: proc() -> Object {
     return cast(Object)__bindgen_gde.classdb_construct_object(&__Object__class_name)
