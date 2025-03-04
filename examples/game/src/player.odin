@@ -158,7 +158,7 @@ player_move :: proc "contextless" (
     accel: gde.float,
     max_speed: gde.float,
 ) {
-    if linalg.all(linalg.equal(wish_dir, [3]gde.float{0, 0, 0})) {
+    if (wish_dir == [3]gde.float{0, 0, 0}) {
         self.horizontal_velocity = exp_decay(self.horizontal_velocity, var.ARRAY_VEC3_ZERO, friction, delta)
         if is_zero_approx(self.horizontal_velocity) {
             self.horizontal_velocity = [3]gde.float{0, 0, 0}
@@ -188,7 +188,9 @@ player_apply_gravity :: proc "contextless" (self: ^Player, delta: gde.float) {
 }
 
 player_sweep_stairs_up :: proc "contextless" (self: ^Player, delta: gde.float) {
-
+    if !core.character_body3d_is_on_floor(self.object) {
+        return
+    }
 }
 
 player_sweep_stairs_down :: proc "contextless" (self: ^Player, was_grounded: bool) {
