@@ -48,7 +48,7 @@ import __bindgen_math "core:math"
 {% else %}
     __bindgen_gde.call_method_ptr_no_ret(
         __{{ method.odin_name }}__backing_ptr,
-        &self,
+        self,
 {% end %}
 {% for argument in method.arguments %}
         &{{ argument.name }}_,
