@@ -14,6 +14,27 @@ init :: proc "contextless" () {
 {% end %}
 }
 
+// casting
+class_name_of :: proc "contextless" ($C: typeid) -> __bindgen_var.StringName {
+    switch typeid_of(C) {
+{% for class in this.classes %}{% if !class.odin_skip && class.derived.(NewStateClass).api_type == "core" %}
+        case typeid_of({{ class.odin_type }}): return __{{ class.odin_type }}__class_name
+{% end %}{% end %}
+    }
+    return __bindgen_var.StringName{}
+}
+
+@(require_results)
+cast_class :: proc "contextless" (object: $T, $C: typeid) -> (result: C, ok: bool) {
+    class_name := class_name_of(C)
+    class_tag := __bindgen_gde.classdb_get_class_tag(&class_name)
+    result_ptr := __bindgen_gde.object_cast_to(object, class_tag)
+    if result_ptr != nil {
+        return (cast(C)result_ptr), true
+    }
+    return C{}, false
+}
+
 // singletons
 {% for singleton in this.core_singletons %}
 singleton_{{ singleton.snake_name }} :: proc "contextless" () -> {{ singleton.odin_type }} {
