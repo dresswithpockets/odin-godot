@@ -5,11 +5,13 @@
 >
 > If you are using parts of it, beware of sudden major changes to the API, structure, and features.
 
-This currently targets Godot v4.3. The interface should be backwards compatible with 4.2, and may even work with 4.1, **but it will not work with v4.0**. For a version which works with `v4.0` use the [dev-4.0-2024-02 release](https://github.com/dresswithpockets/odin-godot/tree/dev-4.0-2024-02).
+This currently targets Godot v4.4. The base interface is backwards compatible with v4.3 and v4.2, and may even work with v4.1, **but it will not work with v4.0**. For a version which works with `v4.0` use the [dev-4.0-2024-02 release](https://github.com/dresswithpockets/odin-godot/tree/dev-4.0-2024-02).
+
+Checkout releases for each Godot version here: https://github.com/dresswithpockets/odin-godot/releases - Some are more stable than others.
 
 ## Base GDExtension Bindings
 
-The bindings to the C Interface are in `./gdextension/lib.odin`. They're based on `godot-cpp/gdextension/gdextension_interface.h`.
+The bindings to the C Interface are in `gdextension`. Check out [hello-gdextension](examples/hello-gdextension/) for example usage of these bindings.
 
 ## Generating Complete Bindings
 
@@ -48,7 +50,7 @@ odin build bindgen/ -o:speed -out:bin/bindgen.exe
 
 ## Creating a GDExtension
 
-See [the example godot project](examples/hello-gdextension) for a working usage of these bindings.
+See [the example game](examples/game) for a working usage of these bindings.
 
 Then, follow the instructions for [using the extension module](https://docs.godotengine.org/en/stable/tutorials/scripting/gdextension/gdextension_cpp_example.html#using-the-gdextension-module).
 
