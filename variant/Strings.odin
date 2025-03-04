@@ -35,13 +35,13 @@ Inputs:
 Returns:
 - res: A cloned Godot String
 */
-new_string_odin :: proc(from: string) -> (ret: String) {
+new_string_odin :: proc "contextless" (from: string) -> (ret: String) {
     ret = String{}
 
     // N.B. we're transmuting the odin string into a cstring regardless of if it has a terminating null
     // byte or not. `string_new_with_utf8_chars_and_len2` takes a length, so we don't depend on the
     // terminating null byte.
-    as_cstring := strings.unsafe_string_to_cstring(from)
+    as_cstring := cast(cstring)(transmute(mem.Raw_String)from).data
     gd.string_new_with_utf8_chars_and_len2(&ret, as_cstring, cast(i64)len(from))
     return
 }
@@ -70,13 +70,13 @@ Inputs:
 Returns:
 - res: A cloned Godot StringName
 */
-new_string_name_odin :: proc(from: string) -> (ret: StringName) {
+new_string_name_odin :: proc "contextless" (from: string) -> (ret: StringName) {
     ret = StringName{}
 
     // N.B. we're transmuting the odin string into a cstring regardless of if it has a terminating null
     // byte or not. `string_new_with_utf8_chars_and_len2` takes a length, so we don't depend on the
     // terminating null byte.
-    as_cstring := strings.unsafe_string_to_cstring(from)
+    as_cstring := cast(cstring)(transmute(mem.Raw_String)from).data
     gd.string_name_new_with_utf8_chars_and_len(&ret, as_cstring, cast(i64)len(from))
     return
 }
