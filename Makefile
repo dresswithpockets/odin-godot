@@ -65,7 +65,7 @@ examples_game_dir := examples/game/
 examples_game_deps := $(wildcard $(examples_game_dir)src/*.odin)
 examples_game_out := $(examples_game_dir)bin/game$(shared_suffix)
 
-$(examples_hello_out): $(examples_hello_deps)
+$(examples_hello_out): core/init.gen.odin $(examples_hello_deps)
 	odin build $(examples_hello_dir)src/ \
 		-define:BUILD_CONFIG=$(GD_BUILD_CONFIG) \
 		-build-mode:shared \
@@ -73,9 +73,10 @@ $(examples_hello_out): $(examples_hello_deps)
 		-warnings-as-errors \
 		-default-to-nil-allocator \
 		-target:windows_amd64 \
-		-debug
+		-debug \
+		-show-timings
 
-$(examples_game_out): $(examples_game_deps)
+$(examples_game_out): core/init.gen.odin $(examples_game_deps)
 	odin build $(examples_game_dir)src/ \
 		-define:BUILD_CONFIG=$(GD_BUILD_CONFIG) \
 		-build-mode:shared \
@@ -83,7 +84,8 @@ $(examples_game_out): $(examples_game_deps)
 		-warnings-as-errors \
 		-default-to-nil-allocator \
 		-target:windows_amd64 \
-		-debug
+		-debug \
+		-show-timings
 
 examples: core/init.gen.odin $(examples_hello_out) $(examples_game_out)
 
@@ -102,4 +104,5 @@ clean:
 	rm -f core/*.gen.odin
 	rm -f variant/*.gen.odin
 	rm -f $(examples_hello_dir)bin/*
+	rm -f $(examples_game_dir)bin/*
 	rm -f examples/game/cbin/*
