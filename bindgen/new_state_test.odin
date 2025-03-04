@@ -19,13 +19,13 @@ state_type_map_contains_every_pod_type :: proc(t: ^testing.T) {
     for godot_type, odin_type in new_pod_type_map {
         state_type, has_type := state.all_types[godot_type]
         testing.expectf(t, has_type, "couldn't find type '%v' in all_types", godot_type)
-        _, ok := state_type.type.(NewStatePodType)
+        _, ok := state_type.type.(StatePodType)
         #partial switch _ in state_type.type {
-        case NewStateClass:
+        case StateClass:
             testing.errorf(t, "Expected POD derived type for '%v', got Class instead", godot_type)
-        case NewStateEnum:
+        case StateEnum:
             testing.errorf(t, "Expected POD derived type for '%v', got Enum instead", godot_type)
-        case NewStateNativeStructure:
+        case StateNativeStructure:
             testing.errorf(t, "Expected POD derived type for '%v', got Native Struct instead", godot_type)
         }
 

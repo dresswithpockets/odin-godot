@@ -4,7 +4,7 @@ package core
 {% for global_enum_type in this.global_enums %}
 
 {% if !global_enum_type.odin_skip %}
-{% embed "bindgen_enum.temple.twig" with global_enum_type.derived.(NewStateEnum) %}
+{% embed "bindgen_enum.temple.twig" with global_enum_type.derived.(StateEnum) %}
 {% end %}
 
 {% end %}

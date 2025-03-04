@@ -31,7 +31,7 @@ generate_variant_init_task :: proc(task: thread.Task) {
     }
 
     fstream := os.stream_from_handle(fhandle)
-    variant_init_template.with(fstream, cast(^NewState)task.data)
+    variant_init_template.with(fstream, cast(^State)task.data)
 }
 
 generate_core_init_task :: proc(task: thread.Task) {
@@ -47,7 +47,7 @@ generate_core_init_task :: proc(task: thread.Task) {
     }
 
     fstream := os.stream_from_handle(fhandle)
-    core_init_template.with(fstream, cast(^NewState)task.data)
+    core_init_template.with(fstream, cast(^State)task.data)
 }
 
 generate_editor_init_task :: proc(task: thread.Task) {
@@ -63,7 +63,7 @@ generate_editor_init_task :: proc(task: thread.Task) {
     }
 
     fstream := os.stream_from_handle(fhandle)
-    editor_init_template.with(fstream, cast(^NewState)task.data)
+    editor_init_template.with(fstream, cast(^State)task.data)
 }
 
 generate_global_enums_task :: proc(task: thread.Task) {
@@ -78,7 +78,7 @@ generate_global_enums_task :: proc(task: thread.Task) {
     }
 
     fstream := os.stream_from_handle(fhandle)
-    global_enums_template.with(fstream, cast(^NewState)task.data)
+    global_enums_template.with(fstream, cast(^State)task.data)
 }
 
 generate_utility_functions_task :: proc(task: thread.Task) {
@@ -93,7 +93,7 @@ generate_utility_functions_task :: proc(task: thread.Task) {
     }
 
     fstream := os.stream_from_handle(fhandle)
-    util_functions_template.with(fstream, cast(^NewState)task.data)
+    util_functions_template.with(fstream, cast(^State)task.data)
 }
 
 generate_native_structs_task :: proc(task: thread.Task) {
@@ -108,11 +108,11 @@ generate_native_structs_task :: proc(task: thread.Task) {
     }
 
     fstream := os.stream_from_handle(fhandle)
-    native_struct_template.with(fstream, cast(^NewState)task.data)
+    native_struct_template.with(fstream, cast(^State)task.data)
 }
 
 generate_builtin_class_task :: proc(task: thread.Task) {
-    class := cast(^NewStateType)task.data
+    class := cast(^StateType)task.data
 
     file_path := fmt.tprintf("variant/%v.gen.odin", class.odin_type)
     defer delete(file_path, allocator = context.temp_allocator)
@@ -132,9 +132,9 @@ generate_builtin_class_task :: proc(task: thread.Task) {
 }
 
 generate_engine_class_task :: proc(task: thread.Task) {
-    class := cast(^NewStateType)task.data
+    class := cast(^StateType)task.data
 
-    file_path := fmt.tprintf("%v/%v.gen.odin", class.derived.(NewStateClass).api_type, class.odin_type)
+    file_path := fmt.tprintf("%v/%v.gen.odin", class.derived.(StateClass).api_type, class.odin_type)
     defer delete(file_path, allocator = context.temp_allocator)
 
     fhandle, ferr := os.open(file_path, os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
@@ -151,7 +151,7 @@ generate_engine_class_task :: proc(task: thread.Task) {
     engine_class_template.with(fstream, class)
 }
 
-generate_bindings :: proc(state: ^NewState) {
+generate_bindings :: proc(state: ^State) {
     thread_pool: thread.Pool
     thread.pool_init(&thread_pool, context.allocator, state.options.job_count)
     thread.pool_add_task(&thread_pool, context.allocator, generate_global_enums_task, state)
@@ -162,13 +162,13 @@ generate_bindings :: proc(state: ^NewState) {
     thread.pool_add_task(&thread_pool, context.allocator, generate_editor_init_task, state)
 
     for builtin_class in state.builtin_classes do if !builtin_class.odin_skip {
-        _, ok := builtin_class.derived.(NewStateClass)
+        _, ok := builtin_class.derived.(StateClass)
         assert(ok)
         thread.pool_add_task(&thread_pool, context.allocator, generate_builtin_class_task, builtin_class)
     }
 
     for engine_class in state.classes do if !engine_class.odin_skip {
-        _, ok := engine_class.derived.(NewStateClass)
+        _, ok := engine_class.derived.(StateClass)
         assert(ok)
         thread.pool_add_task(&thread_pool, context.allocator, generate_engine_class_task, engine_class)
     }

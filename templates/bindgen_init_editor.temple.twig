@@ -4,7 +4,7 @@ import __bindgen_gde "../gdextension"
 import __bindgen_var "../variant"
 
 init :: proc "contextless" () {
-{% for class in this.classes %}{% if !class.odin_skip && class.derived.(NewStateClass).api_type == "editor" %}
+{% for class in this.classes %}{% if !class.odin_skip && class.derived.(StateClass).api_type == "editor" %}
     __{{ class.odin_type }}_init()
 {% end %}{% end %}
 
@@ -16,7 +16,7 @@ init :: proc "contextless" () {
 // casting
 class_name_of :: proc "contextless" ($C: typeid) -> __bindgen_var.StringName {
     switch typeid_of(C) {
-{% for class in this.classes %}{% if !class.odin_skip && class.derived.(NewStateClass).api_type == "editor" %}
+{% for class in this.classes %}{% if !class.odin_skip && class.derived.(StateClass).api_type == "editor" %}
         case typeid_of({{ class.odin_type }}): return __{{ class.odin_type }}__class_name
 {% end %}{% end %}
     }

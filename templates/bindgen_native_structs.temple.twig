@@ -4,13 +4,13 @@ package core
 import __bindgen_var "../variant"
 
 {% for type in this.native_structs %}
-{{ type.derived.(NewStateNativeStructure).odin_name }} :: struct {
-{% for field in type.derived.(NewStateNativeStructure).fields %}
+{{ type.derived.(StateNativeStructure).odin_name }} :: struct {
+{% for field in type.derived.(StateNativeStructure).fields %}
     {{ field.name }}: {{ field.array_specifier }}{{ bindgen_class_reference_type(field.type) }},{% end %}
 }
-{% if type.derived.(NewStateNativeStructure).has_defaults %}
-{{ type.snake_type }}_init :: proc(self: ^{{ type.derived.(NewStateNativeStructure).odin_name }}) { 
-{% for field in type.derived.(NewStateNativeStructure).fields %}{% if field.default != "" %}
+{% if type.derived.(StateNativeStructure).has_defaults %}
+{{ type.snake_type }}_init :: proc(self: ^{{ type.derived.(StateNativeStructure).odin_name }}) { 
+{% for field in type.derived.(StateNativeStructure).fields %}{% if field.default != "" %}
     self.{{ field.name }} = {{ field.default }}{% end %}{% end %}
 }
 {% end %}{% end %}

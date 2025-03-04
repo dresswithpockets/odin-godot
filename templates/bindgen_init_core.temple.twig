@@ -5,7 +5,7 @@ import __bindgen_var "../variant"
 
 init :: proc "contextless" () {
     __init_util_functions()
-{% for class in this.classes %}{% if !class.odin_skip && class.derived.(NewStateClass).api_type == "core" %}
+{% for class in this.classes %}{% if !class.odin_skip && class.derived.(StateClass).api_type == "core" %}
     __{{ class.odin_type }}_init()
 {% end %}{% end %}
 
@@ -17,7 +17,7 @@ init :: proc "contextless" () {
 // casting
 class_name_of :: proc "contextless" ($C: typeid) -> __bindgen_var.StringName {
     switch typeid_of(C) {
-{% for class in this.classes %}{% if !class.odin_skip && class.derived.(NewStateClass).api_type == "core" %}
+{% for class in this.classes %}{% if !class.odin_skip && class.derived.(StateClass).api_type == "core" %}
         case typeid_of({{ class.odin_type }}): return __{{ class.odin_type }}__class_name
 {% end %}{% end %}
     }
