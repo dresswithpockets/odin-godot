@@ -95,6 +95,8 @@ examples/game/cbin/game.dll: $(wildcard examples/game/csrc/*)
 cexamples: examples/game/cbin/game.dll
 ###
 
+check:
+	odin check gdextension/ -no-entry-point
 
 .PHONY: clean
 
