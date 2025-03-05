@@ -13,22 +13,6 @@ State calculates the following:
 - backing-field names for function pointers, default values
 */
 
-@(private)
-State :: struct {
-    options:           Options,
-    api:               ^Api,
-
-    // a type map to resolve types from full type names
-    all_types:         map[string]^StateType,
-    global_enums:      []^StateType,
-    builtin_classes:   []^StateType,
-    classes:           []^StateType,
-    native_structs:    []^StateType,
-    core_singletons:   [dynamic]StateSingleton,
-    editor_singletons: [dynamic]StateSingleton,
-    utility_functions: []StateFunction,
-}
-
 StateSingleton :: struct {
     name:       string,
     snake_name: string,
