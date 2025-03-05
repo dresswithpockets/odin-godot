@@ -11,7 +11,7 @@ temple_cli_deps := $(wildcard $(temple_cli_dir)*.odin)
 temple_cli_out := $(OUT_DIR)/temple_cli$(exe_suffix)
 
 bindgen_dir := bindgen/
-bindgen_deps := $(wildcard $(bindgen_dir)*.odin) $(bindgen_dir)templates.odin
+bindgen_deps := $(wildcard $(bindgen_dir)**/*.odin) $(bindgen_dir)templates.odin $(wildcard temple/*.odin)
 bindgen_out := $(OUT_DIR)/bindgen$(exe_suffix)
 debug_bindgen_out := $(OUT_DIR)/bindgen_debug$(exe_suffix)
 
@@ -32,27 +32,23 @@ debug_bindings: $(debug_bindgen_out) $(gdextension_api)
 ### temple
 $(temple_cli_out): $(temple_cli_deps)
 	odin build $(temple_cli_dir) -out:$(temple_cli_out) -o:minimal -show-timings
-temple: $(temple_cli_deps)
-	odin build $(temple_cli_dir) -out:$(temple_cli_out) -o:minimal -show-timings
+temple: $(temple_cli_out)
 ###
 
 ### templates
 bindgen/templates.odin: $(temple_cli_out) $(temple_deps)
 	$(temple_cli_out) $(bindgen_dir) $(bindgen_dir) bindgen
-templates: $(temple_cli_out) $(temple_deps)
-	$(temple_cli_out) $(bindgen_dir) $(bindgen_dir) bindgen
+templates: bindgen/templates.odin
 ###
 
 ### bindgen
 $(bindgen_out): $(bindgen_deps)
 	odin build $(bindgen_dir) -out:$(bindgen_out) -o:minimal -show-timings
-bindgen: $(bindgen_deps)
-	odin build $(bindgen_dir) -out:$(bindgen_out) -o:minimal -show-timings
+bindgen: $(bindgen_out)
 
 $(debug_bindgen_out): $(bindgen_deps)
 	odin build $(bindgen_dir) -out:$(debug_bindgen_out) -show-timings -debug
-debug_bindgen: $(bindgen_deps)
-	odin build $(bindgen_dir) -out:$(debug_bindgen_out) -show-timings -debug
+debug_bindgen: $(debug_bindgen_out)
 ###
 
 
@@ -102,6 +98,7 @@ check:
 .PHONY: clean
 
 clean:
+	rm -f bindgen/templates.odin
 	rm -f $(OUT_DIR)/*
 	rm -f editor/*.gen.odin
 	rm -f core/*.gen.odin
