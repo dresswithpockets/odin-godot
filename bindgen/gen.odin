@@ -3,8 +3,13 @@ package bindgen
 
 import "base:runtime"
 import "core:fmt"
+import "core:io"
 import "core:os"
 import "core:thread"
+import "../temple"
+
+import g "graph"
+import "views"
 
 @(private = "file")
 UNIX_ALLOW_READ_WRITE_ALL :: 0o666
@@ -18,108 +23,10 @@ native_odin_types :: []string{"bool", "f32", "f64", "int", "i8", "i16", "i32", "
 
 types_with_odin_string_constructors :: []string{"String", "StringName"}
 
-generate_variant_init_task :: proc(task: thread.Task) {
-
-    fhandle, ferr := os.open("variant/init.gen.odin", os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
-    if ferr != 0 {
-        fmt.eprintln("Error opening variant/init.gen.odin")
-        return
-    }
-    defer {
-        os.flush(fhandle)
-        os.close(fhandle)
-    }
-
-    fstream := os.stream_from_handle(fhandle)
-    variant_init_template.with(fstream, cast(^State)task.data)
-}
-
-generate_core_init_task :: proc(task: thread.Task) {
-
-    fhandle, ferr := os.open("core/init.gen.odin", os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
-    if ferr != 0 {
-        fmt.eprintln("Error opening core/init.gen.odin")
-        return
-    }
-    defer {
-        os.flush(fhandle)
-        os.close(fhandle)
-    }
-
-    fstream := os.stream_from_handle(fhandle)
-    core_init_template.with(fstream, cast(^State)task.data)
-}
-
-generate_editor_init_task :: proc(task: thread.Task) {
-
-    fhandle, ferr := os.open("editor/init.gen.odin", os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
-    if ferr != 0 {
-        fmt.eprintln("Error opening editor/init.gen.odin")
-        return
-    }
-    defer {
-        os.flush(fhandle)
-        os.close(fhandle)
-    }
-
-    fstream := os.stream_from_handle(fhandle)
-    editor_init_template.with(fstream, cast(^State)task.data)
-}
-
-generate_global_enums_task :: proc(task: thread.Task) {
-    fhandle, ferr := os.open("core/enums.gen.odin", os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
-    if ferr != 0 {
-        fmt.eprintln("Error opening core/enums.gen.odin")
-        return
-    }
-    defer {
-        os.flush(fhandle)
-        os.close(fhandle)
-    }
-
-    fstream := os.stream_from_handle(fhandle)
-    global_enums_template.with(fstream, cast(^State)task.data)
-}
-
-generate_utility_functions_task :: proc(task: thread.Task) {
-    fhandle, ferr := os.open("core/util.gen.odin", os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
-    if ferr != 0 {
-        fmt.eprintln("Error opening core/util.gen.odin")
-        return
-    }
-    defer {
-        os.flush(fhandle)
-        os.close(fhandle)
-    }
-
-    fstream := os.stream_from_handle(fhandle)
-    util_functions_template.with(fstream, cast(^State)task.data)
-}
-
-generate_native_structs_task :: proc(task: thread.Task) {
-    fhandle, ferr := os.open("core/native.gen.odin", os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
-    if ferr != 0 {
-        fmt.eprintln("Error opening core/native.gen.odin")
-        return
-    }
-    defer {
-        os.flush(fhandle)
-        os.close(fhandle)
-    }
-
-    fstream := os.stream_from_handle(fhandle)
-    native_struct_template.with(fstream, cast(^State)task.data)
-}
-
-generate_builtin_class_task :: proc(task: thread.Task) {
-    class := cast(^StateType)task.data
-
-    file_path := fmt.tprintf("variant/%v.gen.odin", class.odin_type)
-    defer delete(file_path, allocator = context.temp_allocator)
-
+open_write_template :: proc(file_path: string, view: $T, template: temple.Compiled(T)) {
     fhandle, ferr := os.open(file_path, os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
     if ferr != 0 {
-        fmt.eprintf("Error opening %v\n", file_path)
+        fmt.eprintfln("Error opening %v", file_path)
         return
     }
     defer {
@@ -128,49 +35,32 @@ generate_builtin_class_task :: proc(task: thread.Task) {
     }
 
     fstream := os.stream_from_handle(fhandle)
-    builtin_class_template.with(fstream, class)
+    flusher, flusher_ok := io.to_flusher(fstream)
+    defer if flusher_ok {
+        io.flush(flusher)
+    }
+
+    _, terr := template.with(fstream, view)
+    if terr != nil {
+        fmt.eprintfln("Error writing template %v (%v): %v", typeid_of(T), file_path, terr)
+    }
 }
 
-generate_engine_class_task :: proc(task: thread.Task) {
-    class := cast(^StateType)task.data
+codegen_variant :: proc(task: thread.Task) {
+    class := cast(^g.Builtin_Class)task.data
+    view := views.variant(class)
 
-    file_path := fmt.tprintf("%v/%v.gen.odin", class.derived.(StateClass).api_type, class.odin_type)
+    file_path := fmt.tprintf("variant/%v.gen.odin", view.name)
     defer delete(file_path, allocator = context.temp_allocator)
 
-    fhandle, ferr := os.open(file_path, os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
-    if ferr != 0 {
-        fmt.eprintf("Error opening %v\n", file_path)
-        return
-    }
-    defer {
-        os.flush(fhandle)
-        os.close(fhandle)
-    }
-
-    fstream := os.stream_from_handle(fhandle)
-    engine_class_template.with(fstream, class)
+    open_write_template(file_path, view, variant_template)
 }
 
-generate_bindings :: proc(state: ^State) {
+generate_bindings :: proc(graph: g.Graph, options: Options) {
     thread_pool: thread.Pool
-    thread.pool_init(&thread_pool, context.allocator, state.options.job_count)
-    thread.pool_add_task(&thread_pool, context.allocator, generate_global_enums_task, state)
-    thread.pool_add_task(&thread_pool, context.allocator, generate_utility_functions_task, state)
-    thread.pool_add_task(&thread_pool, context.allocator, generate_native_structs_task, state)
-    thread.pool_add_task(&thread_pool, context.allocator, generate_variant_init_task, state)
-    thread.pool_add_task(&thread_pool, context.allocator, generate_core_init_task, state)
-    thread.pool_add_task(&thread_pool, context.allocator, generate_editor_init_task, state)
-
-    for builtin_class in state.builtin_classes do if !builtin_class.odin_skip {
-        _, ok := builtin_class.derived.(StateClass)
-        assert(ok)
-        thread.pool_add_task(&thread_pool, context.allocator, generate_builtin_class_task, builtin_class)
-    }
-
-    for engine_class in state.classes do if !engine_class.odin_skip {
-        _, ok := engine_class.derived.(StateClass)
-        assert(ok)
-        thread.pool_add_task(&thread_pool, context.allocator, generate_engine_class_task, engine_class)
+    thread.pool_init(&thread_pool, context.allocator, options.job_count)
+    for &builtin_class in graph.builtin_classes {
+        thread.pool_add_task(&thread_pool, context.allocator, codegen_variant, &builtin_class)
     }
 
     thread.pool_start(&thread_pool)
