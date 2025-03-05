@@ -1,5 +1,4 @@
-#+private
-package bindgen
+package graph
 
 Api :: struct {
     version:         ApiVersion `json:"header"`,
@@ -148,7 +147,7 @@ ApiClassSignalArgument :: struct {
 ApiClassProperty :: struct {
     type:   string `json:"type"`,
     name:   string `json:"name"`,
-    setter: string `json:"setter"`,
+    setter: Maybe(string) `json:"setter"`,
     getter: string `json:"getter"`,
 }
 
