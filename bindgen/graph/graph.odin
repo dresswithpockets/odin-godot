@@ -16,7 +16,7 @@ odin_primitives := [?]Primitive {
     Primitive{name = "uint16", odin_name = "u16"},
     Primitive{name = "uint32", odin_name = "u32"},
     Primitive{name = "uint64", odin_name = "u64"},
-    Primitive{name = "float", odin_name = "GDFLOAT"},
+    Primitive{name = "float", odin_name = "__bindgen_gd.float"},
     Primitive{name = "double", odin_name = "f64"},
 
     // c types
@@ -45,7 +45,7 @@ odin_primitives := [?]Primitive {
     Primitive{name = "uint64_t", odin_name = "u64"},
     Primitive{name = "uint64_t*", odin_name = "^u64"},
     Primitive{name = "uint64_t **", odin_name = "^^u64"},
-    Primitive{name = "float*", odin_name = "^GDFLOAT"},
+    Primitive{name = "float*", odin_name = "^__bindgen_gd.float"},
     Primitive{name = "const void*", odin_name = "rawptr"},
     Primitive{name = "const int8_t*", odin_name = "^i8"},
     Primitive{name = "const int8_t **", odin_name = "^^i8"},
@@ -63,7 +63,7 @@ odin_primitives := [?]Primitive {
     Primitive{name = "const uint32_t **", odin_name = "^^u32"},
     Primitive{name = "const uint64_t*", odin_name = "^u64"},
     Primitive{name = "const uint64_t **", odin_name = "^^u64"},
-    Primitive{name = "const float*", odin_name = "^GDFLOAT"},
+    Primitive{name = "const float*", odin_name = "^__bindgen_gd.float"},
 }
 
 Graph :: struct {
