@@ -1,0 +1,97 @@
+package variant
+
+{% for import_ in this.imports %}
+import {{ import_.name }} "{{ import_.path }}"
+{% end %}
+
+when __bindgen_gde.BUILD_CONFIG == "float_32" {
+{{ this.name }} :: distinct [{{int(this.size_float32)}}]u8
+} else when __bindgen_gde.BUILD_CONFIG == "float_64" {
+{{ this.name }} :: distinct [{{int(this.size_float64)}}]u8
+} else when __bindgen_gde.BUILD_CONFIG == "double_32" {
+{{ this.name }} :: distinct [{{int(this.size_double32)}}]u8
+} else when __bindgen_gde.BUILD_CONFIG == "double_64" {
+{{ this.name }} :: distinct [{{int(this.size_double64)}}]u8
+}
+
+// enums
+{% for enum_ in this.enums %}
+{% embed "bindgen_view_enum.temple.twig" with enum_ %}
+{% end %}
+
+// compile-time constants
+{% for constant in this.file_constants %}
+{{ constant.name }}: {{ constant.type }} : {{ constant.value }}
+{% end %}
+
+// static constants - call init proc to use these
+{% for constant in this.file_constants %}
+{{ constant.name }}: {{ constant.type }}
+{% end %}
+
+// constructors
+{% if len(this.constructors) + len(this.extern_constructors) > 0 %}
+{{ this.constructor_overload_name }} :: proc {
+{% for constructor in this.constructors %}
+    {{ constructor.name }},
+{% end %}
+{% for extern_constructor in this.extern_constructors %}
+    {{ extern_constructor }},
+{% end %}
+}
+{% end %}
+
+{% for constructor in this.constructors %}
+@(private = "file")
+__ptr_constructor_{{ int(constructor.index) }}: __bindgen_gde.PtrConstructor
+
+{{ constructor.name }} :: proc "contextless" ({% for arg in constructor.args %}
+    {{ arg.name }}: {{ arg.type }},
+{% end %}
+) -> (ret: {{ this.name }}) {
+{% for arg in constructor.args %}
+    {{ arg.name }} := {{ arg.name }}
+{% end %}
+    args := []__bindgen_gde.TypePtr {
+{% for arg in constructor.args %}
+        &{{ arg.name }},
+{% end %}
+    }
+    __ptr_constructor_{{ int(constructor.index) }}(&ret, raw_data(args))
+    return
+}
+{% end %}
+
+{% if destructor_name, has_destructor := this.destructor.(string); has_destructor %}
+TODO: DESTRUCTOR PROC PTR
+TODO: DESTRUCTOR
+{% end %}
+
+// getters
+{% for getter in this.getters %}
+TODO: GETTER PTR
+TODO: GETTER
+{% end %}
+
+// setters
+{% for setter in this.setters %}
+TODO: SETTER PTR
+TODO: SETTER
+{% end %}
+
+// methods
+{% for method in this.methods %}
+TODO: METHOD PTR
+TODO: METHOD
+{% end %}
+
+// operators
+{% for operator in this.operators %}
+TODO: OPERATOR PTR
+TODO: OPERATORS
+{% end %}
+
+// init function
+__{{ this.name }}_init :: proc "contextless" () {
+    TODO: INIT
+}
