@@ -101,6 +101,9 @@ main :: proc() {
 
     graph: g.Graph
     g.graph_init(&graph, api, context.allocator)
+    g.graph_type_info_pass(&graph, api)
+    g.graph_builtins_structure_pass(&graph, api)
+    g.graph_relationship_pass(&graph, api)
 
     fmt.printf("Generating API for %v, with up to %v threads.\n", api.version.full_name, options.job_count)
     generate_bindings(graph, options)
