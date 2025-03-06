@@ -93,6 +93,8 @@ cexamples: examples/game/cbin/game.dll
 
 check:
 	odin check bindgen/graph/ -no-entry-point
+	odin check bindgen/views/ -no-entry-point
+	odin check bindgen/ -no-entry-point
 	odin check gdextension/ -no-entry-point
 
 .PHONY: clean
