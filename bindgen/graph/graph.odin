@@ -115,17 +115,27 @@ Any_Type :: union {
 }
 
 Builtin_Class :: struct {
-    name:          string,
-    destructor:    bool,
-    index_returns: Any_Type, // nil if no indexer
-    keyed:         bool,
-    constants:     []Constant,
-    constructors:  []Constructor,
-    enums:         []Class_Enum(Builtin_Class),
-    bit_fields:    []Class_Bit_Field(Builtin_Class),
-    members:       []Member,
-    methods:       []Method,
-    operators:     []Operator,
+    graph:           ^Graph,
+    name:            string,
+    destructor:      bool,
+    index_returns:   Any_Type, // nil if no indexer
+    keyed:           bool,
+    constants:       []Constant,
+    constructors:    []Constructor,
+    enums:           []Class_Enum(Builtin_Class),
+    bit_fields:      []Class_Bit_Field(Builtin_Class),
+    members:         []Member,
+    methods:         []Method,
+    operators:       []Operator,
+    layout_float32:  Layout,
+    layout_float64:  Layout,
+    layout_double32: Layout,
+    layout_double64: Layout,
+}
+
+Layout :: struct {
+    size:           uint,
+    member_offsets: map[string]Member_Offset,
 }
 
 Member :: struct {
@@ -987,6 +997,26 @@ _graph_native_struct_fields :: proc(graph: ^Graph, format: string) -> []Struct_F
 graph_relationship_pass :: proc(graph: ^Graph, api: ^Api) {
     for api_builtin_class, class_idx in api.builtin_classes {
         builtin_class := &graph.builtin_classes[class_idx]
+
+        builtin_class.layout_float32 = Layout {
+            size = graph.configuration["float_32"].class_sizes[api_builtin_class.name],
+            member_offsets = graph.configuration["float_32"].member_offsets[api_builtin_class.name],
+        }
+
+        builtin_class.layout_float64 = Layout {
+            size = graph.configuration["float_64"].class_sizes[api_builtin_class.name],
+            member_offsets = graph.configuration["float_64"].member_offsets[api_builtin_class.name],
+        }
+
+        builtin_class.layout_double32 = Layout {
+            size = graph.configuration["double_32"].class_sizes[api_builtin_class.name],
+            member_offsets = graph.configuration["double_32"].member_offsets[api_builtin_class.name],
+        }
+
+        builtin_class.layout_double64 = Layout {
+            size = graph.configuration["double_64"].class_sizes[api_builtin_class.name],
+            member_offsets = graph.configuration["double_64"].member_offsets[api_builtin_class.name],
+        }
 
         for api_constant, constant_idx in api_builtin_class.constants {
             builtin_class.constants[constant_idx] = _graph_constant(graph, api_constant)
