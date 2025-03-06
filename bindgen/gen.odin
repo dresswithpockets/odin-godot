@@ -57,6 +57,8 @@ codegen_variant :: proc(task: thread.Task) {
 }
 
 generate_bindings :: proc(graph: g.Graph, options: Options) {
+    views.map_types_to_imports(graph, options.map_mode)
+
     thread_pool: thread.Pool
     thread.pool_init(&thread_pool, context.allocator, options.job_count)
     for &builtin_class in graph.builtin_classes {

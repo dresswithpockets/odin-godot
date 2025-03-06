@@ -159,8 +159,8 @@ Constructor_Arg :: struct {
 }
 
 Engine_Api_Type :: enum {
-    Core,
-    Editor,
+    Core = 0,
+    Editor = 1,
 }
 
 Engine_Class :: struct {

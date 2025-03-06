@@ -89,16 +89,6 @@ string_name_constructors := []string{"new_string_name_odin", "new_string_name_cs
 @(private = "file")
 string_constructors := []string{"new_string_odin", "new_string_cstring"}
 
-@(private = "file")
-_resolve_qualified_type :: proc(type: g.Any_Type) -> string {
-    unimplemented()
-}
-
-@(private = "file")
-_resolve_constructor_proc_name :: proc(type: g.Any_Type) -> string {
-    unimplemented()
-}
-
 variant :: proc(class: ^g.Builtin_Class) -> Variant {
     snake_name := godot_to_snake_case(class.name)
 
@@ -184,17 +174,17 @@ variant :: proc(class: ^g.Builtin_Class) -> Variant {
         case string:
             variant.file_constants[file_constant_idx] = File_Constant {
                 name  = strings.clone(class_constant.name),
-                type  = _resolve_qualified_type(class_constant.type),
+                type  = resolve_qualified_type(class_constant.type, "godot:variant"), // TODO: other package modes
                 value = initializer,
             }
 
             file_constant_idx += 1
         case g.Initialize_By_Constructor:
             init_constant := Init_Constant {
-                name = strings.clone(class_constant.name),
-                type = _resolve_qualified_type(class_constant.type),
-                constructor = _resolve_constructor_proc_name(class_constant.type),
-                args = make([]string, len(initializer.arg_values))
+                name        = strings.clone(class_constant.name),
+                type        = resolve_qualified_type(class_constant.type, "godot:variant"), // TODO: other package modes
+                constructor = resolve_constructor_proc_name(class_constant.type, "godot:variant"), // TODO: other package modes
+                args        = make([]string, len(initializer.arg_values)),
             }
 
             for value, arg_idx in initializer.arg_values {

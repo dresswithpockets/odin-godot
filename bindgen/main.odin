@@ -7,14 +7,16 @@ import "core:strconv"
 import "core:strings"
 import "core:time"
 import g "graph"
+import "views"
 
 Options :: struct {
     api_file:  string,
     job_count: int,
+    map_mode:  views.Package_Map_Mode,
 }
 
 default_options :: proc() -> Options {
-    return Options{"", 0}
+    return Options{api_file = "", job_count = 0, map_mode = .Flat}
 }
 
 print_usage :: proc() {
