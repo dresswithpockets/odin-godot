@@ -688,17 +688,12 @@ _graph_resolve_type :: proc(graph: ^Graph, type_string: string) -> Any_Type {
                 colon_idx = strings.last_index(suffix, ":")
                 if colon_idx > -1 {
                     // if there is ':' in the suffix, it means there is additional information padded into the hint
-                    // string. If the Variant Type declared in the prefix is 27, then its a dictionary and we can set
-                    // suffix to "Dictionary". Otherwise, there isn't much we can do with that information for now so
-                    // we'll just skip it.
-
+                    // string, conveying what type of elements the array contains. This can be used to indicate
+                    // nested type arrays as well. Since we can't really use this information yet, we discard it
+                    // and set suffix to always be "Array" for now.
                     // TODO: nested typed arrays
                     // TODO: property parsing hint string
-                    if strings.has_prefix(suffix, "27/") {
-                        suffix = "Dictionary"
-                    } else {
-                        suffix = suffix[colon_idx + 1:]
-                    }
+                    suffix = "Array"
                 }
                 
                 element_type, ok := graph.types[suffix]
