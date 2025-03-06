@@ -103,8 +103,6 @@ variant :: proc(class: ^g.Builtin_Class) -> Variant {
         }
     }
 
-    fmt.printfln("%v: fconstant count: %v, iconstant count: %v", class.name, file_constant_count, init_constant_count)
-
     variant := Variant {
         imports                   = default_imports,
         name                      = godot_to_odin_case(class.name),
