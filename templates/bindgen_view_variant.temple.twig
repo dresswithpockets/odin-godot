@@ -25,7 +25,7 @@ when __bindgen_gde.BUILD_CONFIG == "float_32" {
 {% end %}
 
 // static constants - call init proc to use these
-{% for constant in this.file_constants %}
+{% for constant in this.init_constants %}
 {{ constant.name }}: {{ constant.type }}
 {% end %}
 
