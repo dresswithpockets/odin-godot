@@ -230,7 +230,7 @@ Typed_Array :: struct {
 Constant :: struct {
     name:        string,
     type:        Any_Type,
-    initializer: union {
+    initializer: union #no_nil {
         string,
         Initialize_By_Constructor,
     },
