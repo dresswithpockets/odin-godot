@@ -99,8 +99,14 @@ map_types_to_imports :: proc(graph: g.Graph, map_mode: Package_Map_Mode) {
                     path = "godot:variant",
                 }
             case ^g.Primitive:
-                // TODO: refactor Primitive to not include pointer or package qualifier in odin_name?
-                unimplemented("TODO: primitive")
+                if root_type.odin_name == "GDFLOAT" {
+                    import_map[cast(rawptr)root_type] = Import {
+                        name = "__bindgen_gde",
+                        path = "godot:gdextension"
+                    }
+                } else {
+                    import_map[cast(rawptr)root_type] = No_Import{}
+                }
             }
         }
     case .Nested:
@@ -162,7 +168,7 @@ _any_to_name :: proc(type: g.Any_Type) -> string {
     case ^g.Native_Struct:
         return as_type.name
     case ^g.Primitive:
-        return as_type.name
+        return as_type.odin_name
     case ^g.Typed_Array:
         unimplemented("See TODO in map_type_to_imports")
     }
@@ -174,11 +180,12 @@ resolve_qualified_type :: proc(type: g.Any_Type, current_package: string) -> str
     type_import, ok := import_map[_any_to_rawptr(type)]
     assert(ok, "Couldn't find mapped import for type.")
 
-    if type_import.path == current_package {
+    import_, is_import := type_import.(Import)
+    if !is_import || import_.path == current_package {
         return _any_to_name(type)
     }
 
-    return fmt.aprintf("%v.%v", type_import.name, _any_to_name(type))
+    return fmt.aprintf("%v.%v", import_.name, _any_to_name(type))
 }
 
 resolve_constructor_proc_name :: proc(type: g.Any_Type, current_package: string) -> string {
@@ -186,8 +193,8 @@ resolve_constructor_proc_name :: proc(type: g.Any_Type, current_package: string)
     assert(ok, "Couldn't find mapped import for type.")
 
     prefix := ""
-    if type_import.path != current_package {
-        prefix = fmt.tprintf("%v.", type_import.name)
+    if import_, is_import := type_import.(Import); is_import && import_.path != current_package {
+        prefix = fmt.tprintf("%v.", import_.name)
     }
 
     class_name: string
