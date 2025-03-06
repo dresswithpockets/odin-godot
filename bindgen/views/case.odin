@@ -1,4 +1,4 @@
-package bindgen
+package views
 
 import "core:fmt"
 import "core:strings"
