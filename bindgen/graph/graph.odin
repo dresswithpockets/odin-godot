@@ -396,6 +396,8 @@ _graph_class_enums :: proc(
 
 // initial pass over all types, copies over all data that doesn't depend on another type being present
 graph_type_info_pass :: proc(graph: ^Graph, api: ^Api) {
+    context.allocator = graph.allocator
+
     for api_builtin_class, class_idx in api.builtin_classes {
         enum_count := 0
         bitfield_count := 0
@@ -527,6 +529,8 @@ graph_type_info_pass :: proc(graph: ^Graph, api: ^Api) {
 }
 
 graph_builtins_structure_pass :: proc(graph: ^Graph, api: ^Api) {
+    context.allocator = graph.allocator
+
     for api_size_configuration in api.builtin_sizes {
         configuration, configuration_ok := &graph.configuration[api_size_configuration.configuration]
         assert(configuration_ok, api_size_configuration.configuration)
@@ -995,6 +999,8 @@ _graph_native_struct_fields :: proc(graph: ^Graph, format: string) -> []Struct_F
 }
 
 graph_relationship_pass :: proc(graph: ^Graph, api: ^Api) {
+    context.allocator = graph.allocator
+
     for api_builtin_class, class_idx in api.builtin_classes {
         builtin_class := &graph.builtin_classes[class_idx]
 
