@@ -1,5 +1,7 @@
 package graph
 
+import "../names"
+
 Api :: struct {
     version:         ApiVersion `json:"header"`,
     builtin_sizes:   []ApiBuiltinClassSizes `json:"builtin_class_sizes"`,
@@ -28,7 +30,7 @@ ApiBuiltinClassSizes :: struct {
 }
 
 ApiTypeSize :: struct {
-    name: string,
+    name: names.Godot_Name,
     size: uint,
 }
 
@@ -38,7 +40,7 @@ ApiBuiltinClassMemberOffsets :: struct {
 }
 
 ApiMemberOffsetClass :: struct {
-    name:    string `json:"name"`,
+    name:    names.Godot_Name `json:"name"`,
     members: []ApiMemberOffset `json:"members"`,
 }
 
@@ -49,10 +51,10 @@ ApiMemberOffset :: struct {
 }
 
 ApiEnum :: struct {
-    name:        string `json:"name"`,
+    name:        names.Godot_Name `json:"name"`,
     is_bitfield: bool `json:"is_bitfield"`,
     values:      []struct {
-        name:  string `json:"name"`,
+        name:  names.Const_Name `json:"name"`,
         value: int `json:"value"`,
     } `json:"values"`,
 }
@@ -73,7 +75,7 @@ ApiFunctionArgument :: struct {
 }
 
 ApiBuiltinClass :: struct {
-    name:                 string `json:"name"`,
+    name:                 names.Godot_Name `json:"name"`,
     has_destructor:       bool `json:"has_destructor"`,
     indexing_return_type: Maybe(string) `json:"indexing_return_type"`,
     is_keyed:             bool `json:"is_keyed"`,
@@ -112,10 +114,10 @@ ApiClassMember :: struct {
 }
 
 ApiClass :: struct {
-    name:            string `json:"name"`,
+    name:            names.Godot_Name `json:"name"`,
     is_refcounted:   bool `json:"is_refcounted"`,
     is_instantiable: bool `json:"is_instantiable"`,
-    inherits:        Maybe(string) `json:"inherits"`,
+    inherits:        Maybe(names.Godot_Name) `json:"inherits"`,
     api_type:        string `json:"api_type"`,
     enums:           []ApiEnum `json:"enums"`,
     constants:       []ApiConstant `json:"constants"`,
@@ -126,7 +128,7 @@ ApiClass :: struct {
 }
 
 ApiConstant :: struct {
-    name:  string `json:"name"`,
+    name:  names.Const_Name `json:"name"`,
     type:  Maybe(string) `json:"type"`,
     value: union {
         int,
@@ -176,12 +178,12 @@ ApiClassMethodArguments :: struct {
 }
 
 ApiSingleton :: struct {
-    name: string `json:"name"`,
-    type: string `json:"type"`,
+    name: names.Godot_Name `json:"name"`,
+    type: names.Godot_Name `json:"type"`,
 }
 
 ApiNativeStructure :: struct {
-    name:   string `json:"name"`,
+    name:   names.Godot_Name `json:"name"`,
     format: string `json:"format"`,
 }
 

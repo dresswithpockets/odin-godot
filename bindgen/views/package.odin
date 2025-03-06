@@ -1,5 +1,6 @@
 package views
 
+import "../names"
 import g "../graph"
 import "core:fmt"
 
@@ -197,7 +198,7 @@ resolve_constructor_proc_name :: proc(type: g.Any_Type, current_package: string)
         prefix = fmt.tprintf("%v.", import_.name)
     }
 
-    class_name: string
+    class_name: names.Godot_Name
 
     #partial switch class in type {
     case ^g.Builtin_Class:
@@ -213,5 +214,5 @@ resolve_constructor_proc_name :: proc(type: g.Any_Type, current_package: string)
         )
     }
 
-    return fmt.aprintf("%vnew_%v", prefix, odin_to_snake_case(class_name))
+    return fmt.aprintf("%vnew_%v", prefix, names.godot_to_snake(class_name))
 }

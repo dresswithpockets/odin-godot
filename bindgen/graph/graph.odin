@@ -1,5 +1,6 @@
 package graph
 
+import "../names"
 import "core:fmt"
 import "core:mem"
 import "core:strings"
@@ -70,7 +71,7 @@ Graph :: struct {
     allocator:       mem.Allocator,
 
     // caches
-    types:           map[string]Root_Type,
+    types:           map[names.Godot_Name]Root_Type,
     configuration:   map[string]Configuration,
 
     // types
@@ -86,9 +87,9 @@ Graph :: struct {
 }
 
 Configuration :: struct {
-    class_sizes:    map[string]uint,
+    class_sizes:    map[names.Godot_Name]uint,
     // maps type name to an inner map. The inner map maps member name to Member_Offset
-    member_offsets: map[string]map[string]Member_Offset,
+    member_offsets: map[names.Godot_Name]map[string]Member_Offset,
 }
 
 Root_Type :: union #no_nil {
@@ -115,7 +116,7 @@ Any_Type :: union {
 }
 
 Builtin_Class :: struct {
-    name:            string,
+    name:            names.Godot_Name,
     destructor:      bool,
     index_returns:   Any_Type, // nil if no indexer
     keyed:           bool,
@@ -164,7 +165,7 @@ Engine_Api_Type :: enum {
 }
 
 Engine_Class :: struct {
-    name:         string,
+    name:         names.Godot_Name,
     inherits:     Any_Type,
     instantiable: bool,
     api_type:     Engine_Api_Type,
@@ -179,34 +180,34 @@ Engine_Class :: struct {
 }
 
 Enum_Value :: struct {
-    name:  string,
+    name:  names.Const_Name,
     value: string,
 }
 
 Class_Enum :: struct($C: typeid) where C == Builtin_Class || C == Engine_Class {
     class:  ^C,
-    name:   string,
+    name:   names.Godot_Name,
     values: []Enum_Value,
 }
 
 Class_Bit_Field :: struct($C: typeid) where C == Builtin_Class || C == Engine_Class {
     class:  ^C,
-    name:   string,
+    name:   names.Godot_Name,
     values: []Enum_Value,
 }
 
 Enum :: struct {
-    name:   string,
+    name:   names.Godot_Name,
     values: []Enum_Value,
 }
 
 Bit_Field :: struct {
-    name:   string,
+    name:   names.Godot_Name,
     values: []Enum_Value,
 }
 
 Native_Struct :: struct {
-    name:   string,
+    name:   names.Godot_Name,
     fields: []Struct_Field,
 }
 
@@ -228,7 +229,7 @@ Typed_Array :: struct {
 }
 
 Constant :: struct {
-    name:        string,
+    name:        names.Const_Name,
     type:        Any_Type,
     initializer: union #no_nil {
         string,
@@ -282,7 +283,7 @@ Property :: struct {
 }
 
 Singleton :: struct {
-    name: string,
+    name: names.Godot_Name,
     type: Any_Type,
 }
 
@@ -317,25 +318,25 @@ graph_init :: proc(graph: ^Graph, api: ^Api, allocator: mem.Allocator) {
 
     configuration := make(map[string]Configuration)
     configuration["float_32"] = Configuration {
-        class_sizes    = make(map[string]uint),
-        member_offsets = make(map[string]map[string]Member_Offset),
+        class_sizes    = make(map[names.Godot_Name]uint),
+        member_offsets = make(map[names.Godot_Name]map[string]Member_Offset),
     }
     configuration["float_64"] = Configuration {
-        class_sizes    = make(map[string]uint),
-        member_offsets = make(map[string]map[string]Member_Offset),
+        class_sizes    = make(map[names.Godot_Name]uint),
+        member_offsets = make(map[names.Godot_Name]map[string]Member_Offset),
     }
     configuration["double_32"] = Configuration {
-        class_sizes    = make(map[string]uint),
-        member_offsets = make(map[string]map[string]Member_Offset),
+        class_sizes    = make(map[names.Godot_Name]uint),
+        member_offsets = make(map[names.Godot_Name]map[string]Member_Offset),
     }
     configuration["double_64"] = Configuration {
-        class_sizes    = make(map[string]uint),
-        member_offsets = make(map[string]map[string]Member_Offset),
+        class_sizes    = make(map[names.Godot_Name]uint),
+        member_offsets = make(map[names.Godot_Name]map[string]Member_Offset),
     }
 
     graph^ = Graph {
         allocator       = allocator,
-        types           = make(map[string]Root_Type),
+        types           = make(map[names.Godot_Name]Root_Type),
         configuration   = configuration,
         builtin_classes = make([]Builtin_Class, len(api.builtin_classes)),
         engine_classes  = make([]Engine_Class, len(api.classes)),
@@ -536,7 +537,9 @@ graph_type_info_pass :: proc(graph: ^Graph, api: ^Api) {
     }
 
     for &primitive in odin_primitives {
-        graph.types[primitive.name] = &primitive
+        // primitive.name is never actually ever in Godot_Name case... but we never
+        // render primitive.name so it doesn't matter if we lie here.
+        graph.types[cast(names.Godot_Name)primitive.name] = &primitive
     }
 }
 
@@ -588,6 +591,12 @@ _root_to_any :: proc(root_type: Root_Type) -> Any_Type {
     panic("Couldn't match root type to any type")
 }
 
+@(private)
+Type_Specifier :: union #no_nil {
+    string,
+    names.Godot_Name,
+}
+
 /*
 Type strings can be in the following formats:
     TypeName
@@ -598,134 +607,145 @@ Type strings can be in the following formats:
     typedarray::TypeName
     typedarray::VariantType/PropertyHint:TypeName
 */
-@(private = "file")
-_graph_resolve_type :: proc(graph: ^Graph, type_string: string) -> Any_Type {
-    colon_idx := strings.index(type_string, "::")
-    if colon_idx > -1 {
-        suffix := type_string[colon_idx + 2:]
-        switch type_string[:colon_idx] {
-        case "enum":
-            {
-                dot_idx := strings.index_rune(suffix, '.')
-                if dot_idx > -1 {
-                    class_type, class_type_ok := graph.types[suffix[:dot_idx]]
-                    assert(
-                        class_type_ok,
-                        fmt.tprintfln(
-                            "Couldn't find class_type in typestring '%v' (searched: '%v').",
-                            suffix,
-                            suffix[:dot_idx],
-                        ),
-                    )
-                    child_type_string := suffix[dot_idx + 1:]
+@(private)
+_graph_resolve_type :: proc(graph: ^Graph, type_specifier: Type_Specifier) -> Any_Type {
+    godot_name, is_godot_name := type_specifier.(names.Godot_Name)
 
-                    #partial switch class in class_type {
-                    case ^Builtin_Class:
-                        for &class_enum in class.enums {
-                            if class_enum.name == child_type_string {
-                                return &class_enum
-                            }
-                        }
-                        panic(
+    if !is_godot_name {
+        type_string := type_specifier.(string)
+        
+        // used later if we fall through the colon check
+        godot_name = cast(names.Godot_Name)type_string
+
+        colon_idx := strings.index(type_string, "::")
+        if colon_idx > -1 {
+            suffix := type_string[colon_idx + 2:]
+            switch type_string[:colon_idx] {
+            case "enum":
+                {
+                    dot_idx := strings.index_rune(suffix, '.')
+                    if dot_idx > -1 {
+                        class_type, class_type_ok := graph.types[cast(names.Godot_Name)suffix[:dot_idx]]
+                        assert(
+                            class_type_ok,
                             fmt.tprintfln(
-                                "Couldn't match '%v' in '%v' to a Class_Enum",
-                                child_type_string,
-                                type_string,
+                                "Couldn't find class_type in typestring '%v' (searched: '%v').",
+                                suffix,
+                                suffix[:dot_idx],
                             ),
                         )
-                    case ^Engine_Class:
-                        for &class_enum in class.enums {
-                            if class_enum.name == child_type_string {
-                                return &class_enum
+                        child_type_string := cast(names.Godot_Name)suffix[dot_idx + 1:]
+
+                        #partial switch class in class_type {
+                        case ^Builtin_Class:
+                            for &class_enum in class.enums {
+                                if class_enum.name == child_type_string {
+                                    return &class_enum
+                                }
                             }
-                        }
-                        panic("Couldn't match TypeName in enum::ClassName.TypeName to a Class_Enum")
-                    case:
-                        panic("Expected ClassName in enum::ClassName.TypeName to be an Engine Class or Builtin Class")
-                    }
-                }
-
-                if class_type, ok := graph.types[suffix]; ok {
-                    if class_enum, enum_ok := class_type.(^Enum); enum_ok {
-                        return class_enum
-                    }
-
-                    panic("Expected TypeName in bitfield::TypeName to be an Enum")
-                }
-
-                panic("Couldn't match TypeName in bitfield::TypeName to a type")
-            }
-        case "bitfield":
-            {
-                dot_idx := strings.index_rune(suffix, '.')
-                if dot_idx > -1 {
-                    class_type := graph.types[suffix[:dot_idx]]
-                    child_type_string := suffix[dot_idx + 1:]
-
-                    #partial switch class in class_type {
-                    case ^Builtin_Class:
-                        for &class_bit_field in class.bit_fields {
-                            if class_bit_field.name == child_type_string {
-                                return &class_bit_field
+                            panic(
+                                fmt.tprintfln(
+                                    "Couldn't match '%v' in '%v' to a Class_Enum",
+                                    child_type_string,
+                                    type_string,
+                                ),
+                            )
+                        case ^Engine_Class:
+                            for &class_enum in class.enums {
+                                if class_enum.name == child_type_string {
+                                    return &class_enum
+                                }
                             }
+                            panic("Couldn't match TypeName in enum::ClassName.TypeName to a Class_Enum")
+                        case:
+                            panic(
+                                "Expected ClassName in enum::ClassName.TypeName to be an Engine Class or Builtin Class",
+                            )
                         }
-                        panic("Couldn't match TypeName in bitfield::ClassName.TypeName to a Class_Bit_Field")
-                    case ^Engine_Class:
-                        for &class_bit_field in class.bit_fields {
-                            if class_bit_field.name == child_type_string {
-                                return &class_bit_field
+                    }
+
+                    if class_type, ok := graph.types[cast(names.Godot_Name)suffix]; ok {
+                        if class_enum, enum_ok := class_type.(^Enum); enum_ok {
+                            return class_enum
+                        }
+
+                        panic("Expected TypeName in bitfield::TypeName to be an Enum")
+                    }
+
+                    panic("Couldn't match TypeName in bitfield::TypeName to a type")
+                }
+            case "bitfield":
+                {
+                    dot_idx := strings.index_rune(suffix, '.')
+                    if dot_idx > -1 {
+                        class_type := graph.types[cast(names.Godot_Name)suffix[:dot_idx]]
+                        child_type_string := cast(names.Godot_Name)suffix[dot_idx + 1:]
+
+                        #partial switch class in class_type {
+                        case ^Builtin_Class:
+                            for &class_bit_field in class.bit_fields {
+                                if class_bit_field.name == child_type_string {
+                                    return &class_bit_field
+                                }
                             }
+                            panic("Couldn't match TypeName in bitfield::ClassName.TypeName to a Class_Bit_Field")
+                        case ^Engine_Class:
+                            for &class_bit_field in class.bit_fields {
+                                if class_bit_field.name == child_type_string {
+                                    return &class_bit_field
+                                }
+                            }
+                            panic("Couldn't match TypeName in bitfield::ClassName.TypeName to a Class_Bit_Field")
+                        case:
+                            panic(
+                                "Expected ClassName in bitfield::ClassName.TypeName to be an Engine Class or Builtin Class",
+                            )
                         }
-                        panic("Couldn't match TypeName in bitfield::ClassName.TypeName to a Class_Bit_Field")
-                    case:
-                        panic(
-                            "Expected ClassName in bitfield::ClassName.TypeName to be an Engine Class or Builtin Class",
-                        )
-                    }
-                }
-
-                if class_type, ok := graph.types[suffix]; ok {
-                    if class_bit_field, bit_field_ok := class_type.(^Bit_Field); bit_field_ok {
-                        return class_bit_field
                     }
 
-                    panic("Expected TypeName in bitfield::TypeName to be a Bit_Field")
+                    if class_type, ok := graph.types[cast(names.Godot_Name)suffix]; ok {
+                        if class_bit_field, bit_field_ok := class_type.(^Bit_Field); bit_field_ok {
+                            return class_bit_field
+                        }
+
+                        panic("Expected TypeName in bitfield::TypeName to be a Bit_Field")
+                    }
+
+                    panic("Couldn't match TypeName in bitfield::TypeName to a type")
                 }
+            case "typedarray":
+                {
+                    colon_idx = strings.last_index(suffix, ":")
+                    if colon_idx > -1 {
+                        // if there is ':' in the suffix, it means there is additional information padded into the hint
+                        // string, conveying what type of elements the array contains. This can be used to indicate
+                        // nested type arrays as well. Since we can't really use this information yet, we discard it
+                        // and set suffix to always be "Array" for now.
+                        // TODO: nested typed arrays
+                        // TODO: property parsing hint string
+                        suffix = "Array"
+                    }
 
-                panic("Couldn't match TypeName in bitfield::TypeName to a type")
-            }
-        case "typedarray":
-            {
-                colon_idx = strings.last_index(suffix, ":")
-                if colon_idx > -1 {
-                    // if there is ':' in the suffix, it means there is additional information padded into the hint
-                    // string, conveying what type of elements the array contains. This can be used to indicate
-                    // nested type arrays as well. Since we can't really use this information yet, we discard it
-                    // and set suffix to always be "Array" for now.
-                    // TODO: nested typed arrays
-                    // TODO: property parsing hint string
-                    suffix = "Array"
+                    element_type, ok := graph.types[cast(names.Godot_Name)suffix]
+                    assert(
+                        ok,
+                        fmt.tprintfln(
+                            "Couldn't match typedarray::TypeName to type in graph.types: '%v', '%v'",
+                            type_string,
+                            suffix,
+                        ),
+                    )
+
+                    typed_array := new(Typed_Array)
+                    typed_array.element_type = _root_to_any(element_type)
                 }
-
-                element_type, ok := graph.types[suffix]
-                assert(
-                    ok,
-                    fmt.tprintfln(
-                        "Couldn't match typedarray::TypeName to type in graph.types: '%v', '%v'",
-                        type_string,
-                        suffix,
-                    ),
-                )
-
-                typed_array := new(Typed_Array)
-                typed_array.element_type = _root_to_any(element_type)
+            case:
+                panic("Unexpected type prefix before ::")
             }
-        case:
-            panic("Unexpected type prefix before ::")
         }
     }
 
-    switch type in graph.types[type_string] {
+    switch type in graph.types[godot_name] {
     case ^Builtin_Class:
         return type
     case ^Engine_Class:
@@ -953,7 +973,7 @@ _graph_util_proc :: proc(graph: ^Graph, api_util_func: ApiUtilityFunction) -> Ut
 }
 
 @(private = "file")
-_search_class_enums :: proc(enums: []Class_Enum($C), name: string) -> (ret: ^Class_Enum(C), ok: bool) {
+_search_class_enums :: proc(enums: []Class_Enum($C), name: names.Godot_Name) -> (ret: ^Class_Enum(C), ok: bool) {
     for &class_enum in enums {
         if class_enum.name == name {
             return &class_enum, true
@@ -965,7 +985,7 @@ _search_class_enums :: proc(enums: []Class_Enum($C), name: string) -> (ret: ^Cla
 @(private = "file")
 _search_class_bit_fields :: proc(
     bit_fields: []Class_Bit_Field($C),
-    name: string,
+    name: names.Godot_Name,
 ) -> (
     ret: ^Class_Bit_Field(C),
     ok: bool,
@@ -984,7 +1004,7 @@ _graph_native_struct_field_type :: proc(graph: ^Graph, type_string: string) -> A
     if colon_idx > -1 {
         // type is a member of another type
         class_type := _graph_resolve_type(graph, type_string[:colon_idx])
-        child_type_string := type_string[colon_idx + 2:]
+        child_type_string := cast(names.Godot_Name)type_string[colon_idx + 2:]
 
         #partial switch class in class_type {
         case ^Builtin_Class:
@@ -1112,7 +1132,8 @@ graph_relationship_pass :: proc(graph: ^Graph, api: ^Api) {
     for api_engine_class, class_idx in api.classes {
         class := &graph.engine_classes[class_idx]
 
-        class.inherits = _graph_resolve_type(graph, api_engine_class.inherits.(string) or_else "Object")
+        class_godot_name := api_engine_class.inherits.(names.Godot_Name) or_else "Object"
+        class.inherits = _graph_resolve_type(graph, cast(string)class_godot_name)
 
         for api_constant, constant_idx in api_engine_class.constants {
             class.constants[constant_idx] = _graph_constant(graph, api_constant)
