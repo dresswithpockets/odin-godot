@@ -62,6 +62,10 @@ generate_bindings :: proc(graph: g.Graph, options: Options) {
     thread_pool: thread.Pool
     thread.pool_init(&thread_pool, context.allocator, options.job_count)
     for &builtin_class in graph.builtin_classes {
+        if builtin_class.name == "Nil" {
+            continue
+        }
+
         thread.pool_add_task(&thread_pool, context.allocator, codegen_variant, &builtin_class)
     }
 
