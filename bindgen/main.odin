@@ -94,7 +94,7 @@ main :: proc() {
         os.exit(1)
     }
 
-    fmt.printf("Parsing API Spec from %v.\n", options.api_file)
+    fmt.printfln("Parsing API: %v", options.api_file)
     api, ok := load_api(options)
     if !ok {
         fmt.println("There was an error loading the api from the file.")
@@ -102,12 +102,18 @@ main :: proc() {
     }
 
     graph: g.Graph
+
+    fmt.println("Running Pass: Init")
     g.graph_init(&graph, api, context.allocator)
+
+    fmt.println("Running Pass: Map")
     g.graph_type_info_pass(&graph, api)
     g.graph_builtins_structure_pass(&graph, api)
+
+    fmt.println("Running Pass: TDG")
     g.graph_relationship_pass(&graph, api)
 
-    fmt.printf("Generating API for %v, with up to %v threads.\n", api.version.full_name, options.job_count)
+    fmt.printfln("Running Codegen (%v)", api.version.full_name)
     generate_bindings(graph, options)
 
     // since we wanna keep state around until the end of the program's lifetime,
