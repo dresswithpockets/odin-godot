@@ -159,7 +159,7 @@ Constructor_Arg :: struct {
 }
 
 Engine_Api_Type :: enum {
-    Core = 0,
+    Core   = 0,
     Editor = 1,
 }
 
@@ -400,13 +400,10 @@ graph_type_info_pass :: proc(graph: ^Graph, api: ^Api) {
 
     // variant isn't included in the api, but it always exists
     {
-        variant := new_clone(Builtin_Class {
-            name = "Variant",
-            enums = make([]Class_Enum(Builtin_Class), 1)
-        })
+        variant := new_clone(Builtin_Class{name = "Variant", enums = make([]Class_Enum(Builtin_Class), 1)})
 
         variant.enums[0] = Class_Enum(Builtin_Class) {
-            name = "Type",
+            name  = "Type",
             class = variant,
         }
 
@@ -612,7 +609,14 @@ _graph_resolve_type :: proc(graph: ^Graph, type_string: string) -> Any_Type {
                 dot_idx := strings.index_rune(suffix, '.')
                 if dot_idx > -1 {
                     class_type, class_type_ok := graph.types[suffix[:dot_idx]]
-                    assert(class_type_ok, fmt.tprintfln("Couldn't find class_type in typestring '%v' (searched: '%v').", suffix, suffix[:dot_idx]))
+                    assert(
+                        class_type_ok,
+                        fmt.tprintfln(
+                            "Couldn't find class_type in typestring '%v' (searched: '%v').",
+                            suffix,
+                            suffix[:dot_idx],
+                        ),
+                    )
                     child_type_string := suffix[dot_idx + 1:]
 
                     #partial switch class in class_type {
@@ -622,7 +626,13 @@ _graph_resolve_type :: proc(graph: ^Graph, type_string: string) -> Any_Type {
                                 return &class_enum
                             }
                         }
-                        panic(fmt.tprintfln("Couldn't match '%v' in '%v' to a Class_Enum", child_type_string, type_string))
+                        panic(
+                            fmt.tprintfln(
+                                "Couldn't match '%v' in '%v' to a Class_Enum",
+                                child_type_string,
+                                type_string,
+                            ),
+                        )
                     case ^Engine_Class:
                         for &class_enum in class.enums {
                             if class_enum.name == child_type_string {
@@ -696,9 +706,17 @@ _graph_resolve_type :: proc(graph: ^Graph, type_string: string) -> Any_Type {
                     // TODO: property parsing hint string
                     suffix = "Array"
                 }
-                
+
                 element_type, ok := graph.types[suffix]
-                assert(ok, fmt.tprintfln("Couldn't match typedarray::TypeName to type in graph.types: '%v', '%v'", type_string, suffix))
+                assert(
+                    ok,
+                    fmt.tprintfln(
+                        "Couldn't match typedarray::TypeName to type in graph.types: '%v', '%v'",
+                        type_string,
+                        suffix,
+                    ),
+                )
+
                 typed_array := new(Typed_Array)
                 typed_array.element_type = _root_to_any(element_type)
             }
@@ -1051,22 +1069,22 @@ graph_relationship_pass :: proc(graph: ^Graph, api: ^Api) {
         builtin_class := &graph.builtin_classes[class_idx]
 
         builtin_class.layout_float32 = Layout {
-            size = graph.configuration["float_32"].class_sizes[api_builtin_class.name],
+            size           = graph.configuration["float_32"].class_sizes[api_builtin_class.name],
             member_offsets = graph.configuration["float_32"].member_offsets[api_builtin_class.name],
         }
 
         builtin_class.layout_float64 = Layout {
-            size = graph.configuration["float_64"].class_sizes[api_builtin_class.name],
+            size           = graph.configuration["float_64"].class_sizes[api_builtin_class.name],
             member_offsets = graph.configuration["float_64"].member_offsets[api_builtin_class.name],
         }
 
         builtin_class.layout_double32 = Layout {
-            size = graph.configuration["double_32"].class_sizes[api_builtin_class.name],
+            size           = graph.configuration["double_32"].class_sizes[api_builtin_class.name],
             member_offsets = graph.configuration["double_32"].member_offsets[api_builtin_class.name],
         }
 
         builtin_class.layout_double64 = Layout {
-            size = graph.configuration["double_64"].class_sizes[api_builtin_class.name],
+            size           = graph.configuration["double_64"].class_sizes[api_builtin_class.name],
             member_offsets = graph.configuration["double_64"].member_offsets[api_builtin_class.name],
         }
 
