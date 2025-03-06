@@ -11,6 +11,13 @@ Package_Map_Mode :: enum {
     Nested,
 }
 
+Type_Import :: union {
+    No_Import,
+    Import,
+}
+
+No_Import :: struct{}
+
 @(private = "file")
 _api_type_to_import_name := [2]string{"__bindgen_core", "__bindgen_editor"}
 
@@ -30,7 +37,7 @@ _get_api_type_import_path :: proc(api_type: g.Engine_Api_Type) -> string {
 }
 
 @(private)
-import_map: map[rawptr]Import
+import_map: map[rawptr]Type_Import
 
 map_types_to_imports :: proc(graph: g.Graph, map_mode: Package_Map_Mode) {
 
