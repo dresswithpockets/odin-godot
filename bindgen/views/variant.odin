@@ -1,5 +1,6 @@
 package views
 
+import "../names"
 import g "../graph"
 import "core:fmt"
 import "core:mem"
@@ -90,7 +91,7 @@ string_name_constructors := []string{"new_string_name_odin", "new_string_name_cs
 string_constructors := []string{"new_string_odin", "new_string_cstring"}
 
 variant :: proc(class: ^g.Builtin_Class) -> Variant {
-    snake_name := godot_to_snake_case(class.name)
+    snake_name := names.to_snake(class.name)
 
     file_constant_count := 0
     init_constant_count := 0
@@ -105,7 +106,7 @@ variant :: proc(class: ^g.Builtin_Class) -> Variant {
 
     variant := Variant {
         imports                   = default_imports,
-        name                      = godot_to_odin_case(class.name),
+        name                      = cast(string)names.to_odin(class.name),
         size_float32              = class.layout_float32.size,
         size_float64              = class.layout_float64.size,
         size_double32             = class.layout_double32.size,
@@ -137,13 +138,13 @@ variant :: proc(class: ^g.Builtin_Class) -> Variant {
 
     for class_enum, enum_idx in class.enums {
         variant_enum := Enum {
-            name   = fmt.tprintf("%v_%v", class_enum.class.name, class_enum.name),
+            name   = fmt.tprintf("%v_%v", names.to_odin(class_enum.class.name), names.to_odin(class_enum.name)),
             values = make([]Enum_Value, len(class_enum.values)),
         }
 
         for value, value_idx in class_enum.values {
             variant_enum.values[value_idx] = Enum_Value {
-                name  = strings.clone(value.name),
+                name  = cast(string)names.to_odin(value.name),
                 value = strings.clone(value.value),
             }
         }
@@ -153,13 +154,13 @@ variant :: proc(class: ^g.Builtin_Class) -> Variant {
 
     for class_bit_field, bit_field_idx in class.bit_fields {
         variant_bit_set := Enum {
-            name   = fmt.tprintf("%v_%v", class_bit_field.class.name, class_bit_field.name),
+            name   = fmt.tprintf("%v_%v", names.to_odin(class_bit_field.class.name), names.to_odin(class_bit_field.name)),
             values = make([]Enum_Value, len(class_bit_field.values)),
         }
 
         for value, value_idx in class_bit_field.values {
             variant_bit_set.values[value_idx] = Enum_Value {
-                name  = strings.clone(value.name),
+                name  = cast(string)names.to_odin(value.name),
                 value = strings.clone(value.value),
             }
         }
@@ -173,7 +174,7 @@ variant :: proc(class: ^g.Builtin_Class) -> Variant {
         switch initializer in class_constant.initializer {
         case string:
             variant.file_constants[file_constant_idx] = File_Constant {
-                name  = fmt.aprintf("%v_%v", variant.name, class_constant.name), // TODO: prefixing by variant.name isnt necessary in Nested package mode
+                name  = fmt.aprintf("%v_%v", variant.name, names.to_odin(class_constant.name)), // TODO: prefixing by variant.name isnt necessary in Nested package mode
                 type  = resolve_qualified_type(class_constant.type, "godot:variant"), // TODO: other package modes
                 value = initializer,
             }
@@ -181,7 +182,7 @@ variant :: proc(class: ^g.Builtin_Class) -> Variant {
             file_constant_idx += 1
         case g.Initialize_By_Constructor:
             init_constant := Init_Constant {
-                name        = fmt.aprintf("%v_%v", variant.name, class_constant.name), // TODO: prefixing by variant.name isnt necessary in Nested package mode
+                name        = fmt.aprintf("%v_%v", variant.name, names.to_odin(class_constant.name)), // TODO: prefixing by variant.name isnt necessary in Nested package mode
                 type        = resolve_qualified_type(class_constant.type, "godot:variant"), // TODO: other package modes
                 constructor = resolve_constructor_proc_name(class_constant.type, "godot:variant"), // TODO: other package modes
                 args        = make([]string, len(initializer.arg_values)),

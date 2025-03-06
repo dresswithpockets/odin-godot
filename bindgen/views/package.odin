@@ -148,28 +148,28 @@ _any_to_rawptr :: proc(type: g.Any_Type) -> rawptr {
 }
 
 @(private)
-_any_to_name :: proc(type: g.Any_Type) -> string {
+_any_to_name :: proc(type: g.Any_Type) -> names.Odin_Name {
     switch as_type in type {
     case ^g.Builtin_Class:
-        return as_type.name
+        return names.to_odin(as_type.name)
     case ^g.Engine_Class:
-        return as_type.name
+        return names.to_odin(as_type.name)
     case ^g.Class_Enum(g.Builtin_Class):
-        return as_type.name
+        return names.to_odin(as_type.name)
     case ^g.Class_Bit_Field(g.Builtin_Class):
-        return as_type.name
+        return names.to_odin(as_type.name)
     case ^g.Class_Enum(g.Engine_Class):
-        return as_type.name
+        return names.to_odin(as_type.name)
     case ^g.Class_Bit_Field(g.Engine_Class):
-        return as_type.name
+        return names.to_odin(as_type.name)
     case ^g.Enum:
-        return as_type.name
+        return names.to_odin(as_type.name)
     case ^g.Bit_Field:
-        return as_type.name
+        return names.to_odin(as_type.name)
     case ^g.Native_Struct:
-        return as_type.name
+        return names.to_odin(as_type.name)
     case ^g.Primitive:
-        return as_type.odin_name
+        return cast(names.Odin_Name)as_type.odin_name
     case ^g.Typed_Array:
         unimplemented("See TODO in map_type_to_imports")
     }
@@ -183,7 +183,7 @@ resolve_qualified_type :: proc(type: g.Any_Type, current_package: string) -> str
 
     import_, is_import := type_import.(Import)
     if !is_import || import_.path == current_package {
-        return _any_to_name(type)
+        return cast(string)_any_to_name(type)
     }
 
     return fmt.aprintf("%v.%v", import_.name, _any_to_name(type))
