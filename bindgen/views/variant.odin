@@ -103,6 +103,8 @@ variant :: proc(class: ^g.Builtin_Class) -> Variant {
         }
     }
 
+    fmt.printfln("%v: fconstant count: %v, iconstant count: %v", class.name, file_constant_count, init_constant_count)
+
     variant := Variant {
         imports                   = default_imports,
         name                      = godot_to_odin_case(class.name),
@@ -173,7 +175,7 @@ variant :: proc(class: ^g.Builtin_Class) -> Variant {
         switch initializer in class_constant.initializer {
         case string:
             variant.file_constants[file_constant_idx] = File_Constant {
-                name  = strings.clone(class_constant.name),
+                name  = fmt.aprintf("%v_%v", variant.name, class_constant.name), // TODO: prefixing by variant.name isnt necessary in Nested package mode
                 type  = resolve_qualified_type(class_constant.type, "godot:variant"), // TODO: other package modes
                 value = initializer,
             }
@@ -181,7 +183,7 @@ variant :: proc(class: ^g.Builtin_Class) -> Variant {
             file_constant_idx += 1
         case g.Initialize_By_Constructor:
             init_constant := Init_Constant {
-                name        = strings.clone(class_constant.name),
+                name        = fmt.aprintf("%v_%v", variant.name, class_constant.name), // TODO: prefixing by variant.name isnt necessary in Nested package mode
                 type        = resolve_qualified_type(class_constant.type, "godot:variant"), // TODO: other package modes
                 constructor = resolve_constructor_proc_name(class_constant.type, "godot:variant"), // TODO: other package modes
                 args        = make([]string, len(initializer.arg_values)),
