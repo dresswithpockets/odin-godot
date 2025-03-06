@@ -572,6 +572,7 @@ graph_builtins_structure_pass :: proc(graph: ^Graph, api: ^Api) {
     }
 }
 
+@(private = "file")
 _root_to_any :: proc(root_type: Root_Type) -> Any_Type {
     switch type in root_type {
     case ^Builtin_Class:
@@ -600,6 +601,7 @@ Type strings can be in the following formats:
     bitfield::TypeName.TypeName
     typedarray::TypeName
 */
+@(private = "file")
 _graph_resolve_type :: proc(graph: ^Graph, type_string: string) -> Any_Type {
     colon_idx := strings.index(type_string, "::")
     if colon_idx > -1 {
@@ -716,10 +718,12 @@ Field type strings can be in the following formats:
     TypeName
     TypeName::TypeName
 */
+@(private = "file")
 _graph_struct_field_type :: proc(graph: ^Graph, type_string: string) -> Any_Type {
     panic("")
 }
 
+@(private = "file")
 _graph_initializer_by_constructor :: proc(graph: ^Graph, call_string: string) -> Initialize_By_Constructor {
     lparen_idx := strings.index_rune(call_string, '(')
     rparen_idx := strings.index_rune(call_string, ')')
@@ -733,6 +737,7 @@ _graph_initializer_by_constructor :: proc(graph: ^Graph, call_string: string) ->
     }
 }
 
+@(private = "file")
 _graph_constant :: proc(graph: ^Graph, api_constant: ApiConstant) -> Constant {
     type_string := api_constant.type.(string) or_else "int64"
     value_string, ok := api_constant.value.(string)
@@ -753,6 +758,7 @@ _graph_constant :: proc(graph: ^Graph, api_constant: ApiConstant) -> Constant {
     return constant
 }
 
+@(private = "file")
 _graph_constructor :: proc(graph: ^Graph, api_constructor: ApiClassConstructor) -> Constructor {
     constructor := Constructor {
         index = api_constructor.index,
@@ -770,6 +776,7 @@ _graph_constructor :: proc(graph: ^Graph, api_constructor: ApiClassConstructor) 
     return constructor
 }
 
+@(private = "file")
 _graph_member :: proc(graph: ^Graph, api_class: ApiBuiltinClass, api_member: ApiClassMember) -> Member {
     member := Member {
         name = api_member.name,
@@ -797,6 +804,7 @@ _graph_member :: proc(graph: ^Graph, api_class: ApiBuiltinClass, api_member: Api
     return member
 }
 
+@(private = "file")
 _graph_engine_method :: proc(graph: ^Graph, api_method: ApiClassMethod) -> Method {
     method := Method {
         name        = api_method.name,
@@ -825,6 +833,7 @@ _graph_engine_method :: proc(graph: ^Graph, api_method: ApiClassMethod) -> Metho
     return method
 }
 
+@(private = "file")
 _graph_builtin_method :: proc(graph: ^Graph, api_method: ApiBuiltinClassMethod) -> Method {
     method := Method {
         name        = api_method.name,
@@ -852,6 +861,7 @@ _graph_builtin_method :: proc(graph: ^Graph, api_method: ApiBuiltinClassMethod) 
     return method
 }
 
+@(private = "file")
 _graph_operator :: proc(graph: ^Graph, api_operator: ApiClassOperator) -> Operator {
     operator := Operator {
         name        = api_operator.name,
@@ -866,6 +876,7 @@ _graph_operator :: proc(graph: ^Graph, api_operator: ApiClassOperator) -> Operat
     return operator
 }
 
+@(private = "file")
 _graph_property :: proc(graph: ^Graph, api_property: ApiClassProperty) -> Property {
     return Property {
         name = api_property.name,
@@ -875,6 +886,7 @@ _graph_property :: proc(graph: ^Graph, api_property: ApiClassProperty) -> Proper
     }
 }
 
+@(private = "file")
 _graph_signal :: proc(graph: ^Graph, api_signal: ApiClassSignal) -> Signal {
     signal := Signal {
         name = api_signal.name,
@@ -891,10 +903,12 @@ _graph_signal :: proc(graph: ^Graph, api_signal: ApiClassSignal) -> Signal {
     return signal
 }
 
+@(private = "file")
 _graph_singleton :: proc(graph: ^Graph, api_singleton: ApiSingleton) -> Singleton {
     return Singleton{name = api_singleton.name, type = _graph_resolve_type(graph, api_singleton.type)}
 }
 
+@(private = "file")
 _graph_util_proc :: proc(graph: ^Graph, api_util_func: ApiUtilityFunction) -> Util_Proc {
     util_proc := Util_Proc {
         name        = api_util_func.name,
@@ -908,6 +922,7 @@ _graph_util_proc :: proc(graph: ^Graph, api_util_func: ApiUtilityFunction) -> Ut
     return util_proc
 }
 
+@(private = "file")
 _search_class_enums :: proc(enums: []Class_Enum($C), name: string) -> (ret: ^Class_Enum(C), ok: bool) {
     for &class_enum in enums {
         if class_enum.name == name {
@@ -917,6 +932,7 @@ _search_class_enums :: proc(enums: []Class_Enum($C), name: string) -> (ret: ^Cla
     return nil, false
 }
 
+@(private = "file")
 _search_class_bit_fields :: proc(
     bit_fields: []Class_Bit_Field($C),
     name: string,
@@ -932,6 +948,7 @@ _search_class_bit_fields :: proc(
     return nil, false
 }
 
+@(private = "file")
 _graph_native_struct_field_type :: proc(graph: ^Graph, type_string: string) -> Any_Type {
     colon_idx := strings.index(type_string, "::")
     if colon_idx > -1 {
@@ -975,6 +992,7 @@ prefix     := ident '::'
 field      := prefix? ident WS '*'? WS ident
 field_list := field (';' WS format)?
 */
+@(private = "file")
 _graph_native_struct_fields :: proc(graph: ^Graph, format: string) -> []Struct_Field {
     fields := make([]Struct_Field, strings.count(format, ";"))
     format := format
