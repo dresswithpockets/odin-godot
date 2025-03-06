@@ -600,6 +600,7 @@ Type strings can be in the following formats:
     enum::TypeName.TypeName
     bitfield::TypeName.TypeName
     typedarray::TypeName
+    typedarray::VariantType/PropertyHint:TypeName
 */
 @(private = "file")
 _graph_resolve_type :: proc(graph: ^Graph, type_string: string) -> Any_Type {
