@@ -115,7 +115,6 @@ Any_Type :: union {
 }
 
 Builtin_Class :: struct {
-    graph:           ^Graph,
     name:            string,
     destructor:      bool,
     index_returns:   Any_Type, // nil if no indexer
@@ -401,7 +400,6 @@ graph_type_info_pass :: proc(graph: ^Graph, api: ^Api) {
     // variant isn't included in the api, but it always exists
     {
         variant := new_clone(Builtin_Class {
-            graph = graph,
             name = "Variant",
             enums = make([]Class_Enum(Builtin_Class), 1)
         })
