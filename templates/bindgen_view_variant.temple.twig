@@ -4,16 +4,6 @@ package variant
 import {{ import_.name }} "{{ import_.path }}"
 {% end %}
 
-when __bindgen_gde.BUILD_CONFIG == "float_32" {
-{{ this.name }} :: distinct [{{int(this.size_float32)}}]u8
-} else when __bindgen_gde.BUILD_CONFIG == "float_64" {
-{{ this.name }} :: distinct [{{int(this.size_float64)}}]u8
-} else when __bindgen_gde.BUILD_CONFIG == "double_32" {
-{{ this.name }} :: distinct [{{int(this.size_double32)}}]u8
-} else when __bindgen_gde.BUILD_CONFIG == "double_64" {
-{{ this.name }} :: distinct [{{int(this.size_double64)}}]u8
-}
-
 // enums
 {% for enum_ in this.enums %}
 {% embed "bindgen_view_enum.temple.twig" with enum_ %}
