@@ -5,18 +5,15 @@ import {{ import_.name }} "{{ import_.path }}"
 {% end %}
 
 // enums
-{% for enum_ in this.enums %}
-{% embed "bindgen_view_enum.temple.twig" with enum_ %}
+{% for enum_ in this.enums %}{% embed "bindgen_view_enum.temple.twig" with enum_ %}
 {% end %}
 
 // compile-time constants
-{% for constant in this.file_constants %}
-{{ constant.name }}: {{ constant.type }} : {{ constant.value }}
+{% for constant in this.file_constants %}{{ constant.name }}: {{ constant.type }} : {{ constant.value }}
 {% end %}
 
 // static constants - call init proc to use these
-{% for constant in this.init_constants %}
-{{ constant.name }}: {{ constant.type }}
+{% for constant in this.init_constants %}{{ constant.name }}: {{ constant.type }}
 {% end %}
 
 // constructors
@@ -35,10 +32,10 @@ import {{ import_.name }} "{{ import_.path }}"
 @(private = "file")
 __ptr_constructor_{{ int(constructor.index) }}: __bindgen_gde.PtrConstructor
 
-{{ constructor.name }} :: proc "contextless" ({% for arg in constructor.args %}
+{{ constructor.name }} :: proc "contextless" (
+{% for arg in constructor.args %}
     {{ arg.name }}: {{ arg.type }},
-{% end %}
-) -> (ret: {{ this.name }}) {
+{% end %}) -> (ret: {{ this.name }}) {
 {% for arg in constructor.args %}
     {{ arg.name }} := {{ arg.name }}
 {% end %}
@@ -53,18 +50,42 @@ __ptr_constructor_{{ int(constructor.index) }}: __bindgen_gde.PtrConstructor
 {% end %}
 
 {% if destructor_name, has_destructor := this.destructor.(string); has_destructor %}
-TODO: DESTRUCTOR PROC PTR
-TODO: DESTRUCTOR
+@(private = "file")
+__ptr_destructor: __bindgen_gde.PtrDestructor
+
+{{ destructor_name }} :: proc "contextless" (self: {{ this.name }}) {
+    self := self
+    __ptr_destructor(&self)
+}
 {% end %}
 
 // members
 {% for member in this.members %}
-TODO: MEMBER PTR
-TODO: MEMBER
+@(private="file")
+__ptr_setter_{{ member.name }}: __bindgen_gde.PtrSetter
+
+{{ this.proc_prefix }}_set_{{ member.name }} :: proc "contextless" (self: ^{{ this.name }}, value: {{ member.type }}) {
+    value := value
+    __ptr_setter_{{ member.name }}(self, &value)
+}
+
+@(private="file")
+__ptr_getter_{{ member.name }}: __bindgen_gde.PtrGetter
+
+{{ this.proc_prefix }}_get_{{ member.name }} :: proc "contextless" (self: ^{{ this.name }}) -> (ret: {{ member.type }}) {
+    __ptr_getter_{{ member.name }}(self, &ret)
+    return
+}
 {% end %}
 
-// methods
-{% for method in this.methods %}
+// static methods
+{% for method in this.static_methods %}
+TODO: METHOD PTR
+TODO: METHOD
+{% end %}
+
+// instance methods
+{% for method in this.instance_methods %}
 TODO: METHOD PTR
 TODO: METHOD
 {% end %}

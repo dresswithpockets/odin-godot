@@ -1,10 +1,67 @@
+#+feature dynamic-literals
 package views
 
-import "../names"
 import g "../graph"
+import "../names"
 import "core:fmt"
 import "core:mem"
 import "core:strings"
+
+@(private = "file")
+render_flag_map := map[string]Render_Flags {
+    // skip these builtins
+    "Bool" = {},
+    "Int" = {},
+    "Float" = {},
+    "Nil" = {},
+
+    "AABB" = Render_Flags_Native,
+    "Basis" = Render_Flags_Native,
+    "Color" = Render_Flags_Native,
+    "Plane" = Render_Flags_Native,
+    "Projection" = Render_Flags_Native,
+    "Quaternion" = Render_Flags_Native,
+    "Rect2" = Render_Flags_Native,
+    "Rect2i" = Render_Flags_Native,
+    "Transform2d" = Render_Flags_Native,
+    "Transform3d" = Render_Flags_Native,
+    "Vector2" = Render_Flags_Native,
+    "Vector2i" = Render_Flags_Native,
+    "Vector3" = Render_Flags_Native,
+    "Vector3i" = Render_Flags_Native,
+    "Vector4" = Render_Flags_Native,
+    "Vector4i" = Render_Flags_Native,
+
+    "Callable" = Render_Flags_Opaque,
+    "Dictionary" = Render_Flags_Opaque,
+    "NodePath" = Render_Flags_Opaque,
+    "PackedByteArray" = Render_Flags_Opaque,
+    "PackedColorArray" = Render_Flags_Opaque,
+    "PackedFloat32Array" = Render_Flags_Opaque,
+    "PackedFloat64Array" = Render_Flags_Opaque,
+    "PackedInt32Array" = Render_Flags_Opaque,
+    "PackedInt64Array" = Render_Flags_Opaque,
+    "PackedStringArray" = Render_Flags_Opaque,
+    "PackedVector2Array" = Render_Flags_Opaque,
+    "PackedVector3Array" = Render_Flags_Opaque,
+    "PackedVector4Array" = Render_Flags_Opaque,
+    "Rid" = Render_Flags_Opaque,
+    "Signal" = Render_Flags_Opaque,
+    "String" = Render_Flags_Opaque,
+    "StringName" = Render_Flags_Opaque,
+}
+
+Render_Flags :: bit_set[enum{
+    Constants,
+    Constructors,
+    Destructor,
+    Members,
+    Methods,
+    Operators,
+}]
+
+Render_Flags_Native: Render_Flags: {.Methods, .Operators}
+Render_Flags_Opaque: Render_Flags: {.Constructors, .Destructor, .Members, .Methods, .Operators}
 
 Import :: struct {
     name: string,
@@ -36,7 +93,7 @@ Init_Constant :: struct {
 
 Constructor :: struct {
     name:  string,
-    index: int,
+    index: u64,
     args:  []Constructor_Arg,
 }
 
@@ -45,19 +102,30 @@ Constructor_Arg :: struct {
     type: string,
 }
 
-Member :: struct {}
+Member :: struct {
+    name: string,
+    type: string,
+}
 
-Method :: struct {}
+Method :: struct {
+    name:        string,
+    vararg:      bool,
+    hash:        i64,
+    return_type: Maybe(string),
+    args:        []Method_Arg,
+}
+
+Method_Arg :: struct {
+    name: string,
+    type: string,
+}
 
 Operator :: struct {}
 
 Variant :: struct {
     imports:                   []Import,
     name:                      string,
-    size_float32:              uint,
-    size_float64:              uint,
-    size_double32:             uint,
-    size_double64:             uint,
+    proc_prefix:               string,
     enums:                     []Enum,
     bit_sets:                  []Enum,
     // constants rendered as compile-time constants (`x :: y` in Odin)
@@ -71,7 +139,8 @@ Variant :: struct {
     extern_constructors:       []string,
     destructor:                Maybe(string),
     members:                   []Member,
-    methods:                   []Method,
+    static_methods:            []Method,
+    instance_methods:          []Method,
     operators:                 []Operator,
 }
 
@@ -90,27 +159,67 @@ string_name_constructors := []string{"new_string_name_odin", "new_string_name_cs
 @(private = "file")
 string_constructors := []string{"new_string_odin", "new_string_cstring"}
 
-variant :: proc(class: ^g.Builtin_Class) -> Variant {
+@(private)
+_class_constructor_name :: proc(base_constructor_name: string, args: []g.Constructor_Arg) -> string {
+    sb := strings.builder_make()
+    defer strings.builder_destroy(&sb)
+
+    fmt.sbprint(&sb, base_constructor_name)
+    if len(args) == 0 {
+        fmt.sbprint(&sb, "_default")
+        return strings.clone(strings.to_string(sb))
+    }
+
+    for arg in args {
+        type_name := _any_to_name(arg.type)
+        if type_name == cast(names.Odin_Name)"GDFLOAT" {
+            type_name = cast(names.Odin_Name)"float"
+        }
+        snake_type := names.to_snake(type_name)
+        fmt.sbprintf(&sb, "_%v", snake_type)
+    }
+
+    return strings.clone(strings.to_string(sb))
+}
+
+variant :: proc(class: ^g.Builtin_Class) -> (variant: Variant, render: bool) {
+    render_flags := render_flag_map[class.name] or_else {}
+
+    if render_flags == {} {
+        return {}, false
+    }
+
     snake_name := names.to_snake(class.name)
 
     file_constant_count := 0
     init_constant_count := 0
-    for constant in class.constants {
-        switch _ in constant.initializer {
-        case string:
-            file_constant_count += 1
-        case g.Initialize_By_Constructor:
-            init_constant_count += 1
+    if Render_Flags.Constants in render_flags {
+        for constant in class.constants {
+            switch _ in constant.initializer {
+            case string:
+                file_constant_count += 1
+            case g.Initialize_By_Constructor:
+                init_constant_count += 1
+            }
         }
     }
 
-    variant := Variant {
+    static_method_count := 0
+    instance_method_count := 0
+    if Render_Flags.Methods in render_flags {
+        for method in class.methods {
+            if method.static {
+                static_method_count += 1
+            } else {
+                instance_method_count += 1
+            }
+        }
+    }
+
+    variant = Variant {
         imports                   = default_imports,
         name                      = cast(string)names.to_odin(class.name),
-        size_float32              = class.layout_float32.size,
-        size_float64              = class.layout_float64.size,
-        size_double32             = class.layout_double32.size,
-        size_double64             = class.layout_double64.size,
+        proc_prefix               = cast(string)names.to_snake(class.name),
         enums                     = make([]Enum, len(class.enums)),
         bit_sets                  = make([]Enum, len(class.bit_fields)),
         file_constants            = make([]File_Constant, file_constant_count),
@@ -120,7 +229,8 @@ variant :: proc(class: ^g.Builtin_Class) -> Variant {
         extern_constructors       = nil,
         destructor                = nil,
         members                   = make([]Member, len(class.members)),
-        methods                   = make([]Method, len(class.methods)),
+        static_methods            = make([]Method, static_method_count),
+        instance_methods          = make([]Method, instance_method_count),
         operators                 = make([]Operator, len(class.operators)),
     }
 
@@ -154,7 +264,11 @@ variant :: proc(class: ^g.Builtin_Class) -> Variant {
 
     for class_bit_field, bit_field_idx in class.bit_fields {
         variant_bit_set := Enum {
-            name   = fmt.tprintf("%v_%v", names.to_odin(class_bit_field.class.name), names.to_odin(class_bit_field.name)),
+            name   = fmt.tprintf(
+                "%v_%v",
+                names.to_odin(class_bit_field.class.name),
+                names.to_odin(class_bit_field.name),
+            ),
             values = make([]Enum_Value, len(class_bit_field.values)),
         }
 
@@ -199,22 +313,66 @@ variant :: proc(class: ^g.Builtin_Class) -> Variant {
     }
 
     for class_constructor, constructor_idx in class.constructors {
-        // TODO:
+        constructor := Constructor {
+            name  = _class_constructor_name(variant.constructor_overload_name, class_constructor.args),
+            index = class_constructor.index,
+            args  = make([]Constructor_Arg, len(class_constructor.args)),
+        }
+
+        for constructor_arg, arg_idx in class_constructor.args {
+            constructor.args[arg_idx] = Constructor_Arg {
+                name = constructor_arg.name,
+                type = resolve_qualified_type(constructor_arg.type, "godot:variant"), // TODO: other package modes
+            }
+        }
+
+        variant.constructors[constructor_idx] = constructor
     }
 
     for class_member, member_idx in class.members {
-        // TODO:
+        variant.members[member_idx] = Member {
+            name = class_member.name,
+            type = resolve_qualified_type(class_member.type, "godot:variant"), // TODO: other package modes
+        }
     }
 
+    static_method_idx := 0
+    instance_method_idx := 0
     for class_method, method_idx in class.methods {
-        // TODO:
+        method := Method{
+            name = fmt.aprintf("%v_%v", snake_name, class_method.name),
+            hash = class_method.hash,
+            args = make([]Method_Arg, len(class_method.args)),
+            vararg = class_method.vararg,
+            return_type = nil,
+        }
+
+        if class_method.return_type != nil {
+            method.return_type = resolve_qualified_type(class_method.return_type, "godot:variant") // TODO: other package modes
+        }
+
+        for class_method_arg, arg_idx in class_method.args {
+            method.args[arg_idx] = Method_Arg {
+                name = class_method_arg.name,
+                type = resolve_qualified_type(class_method_arg.type, "godot:variant") // TODO: other package modes
+                // TODO: defaults?
+            }
+        }
+
+        if class_method.static {
+            variant.static_methods[static_method_idx] = method
+            static_method_idx += 1
+        } else {
+            variant.instance_methods[instance_method_idx] = method
+            instance_method_idx += 1
+        }
     }
 
     for class_operator, operator_idx in class.operators {
         // TODO:
     }
 
-    return variant
+    return variant, true
 }
 
 free_variant :: proc(view: Variant) -> (error: mem.Allocator_Error) {

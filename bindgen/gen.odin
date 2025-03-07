@@ -48,12 +48,12 @@ open_write_template :: proc(file_path: string, view: $T, template: temple.Compil
 
 codegen_variant :: proc(task: thread.Task) {
     class := cast(^g.Builtin_Class)task.data
-    view := views.variant(class)
+    if view, should_render := views.variant(class); should_render {
+        file_path := fmt.tprintf("variant/%v.gen.odin", view.name)
+        defer delete(file_path, allocator = context.temp_allocator)
 
-    file_path := fmt.tprintf("variant/%v.gen.odin", view.name)
-    defer delete(file_path, allocator = context.temp_allocator)
-
-    open_write_template(file_path, view, variant_template)
+        open_write_template(file_path, view, variant_template)
+    }
 }
 
 generate_bindings :: proc(graph: g.Graph, options: Options) {
@@ -62,10 +62,6 @@ generate_bindings :: proc(graph: g.Graph, options: Options) {
     thread_pool: thread.Pool
     thread.pool_init(&thread_pool, context.allocator, options.job_count)
     for &builtin_class in graph.builtin_classes {
-        if builtin_class.name == "Nil" {
-            continue
-        }
-
         thread.pool_add_task(&thread_pool, context.allocator, codegen_variant, &builtin_class)
     }
 

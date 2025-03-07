@@ -1,5 +1,4 @@
 {{ this.name }} :: enum {
-{% for value in this.values %}
-    {{ value.name }} = {{ value.value }},
+{% for value in this.values %}    {{ value.name }} = {{ value.value }},
 {% end %}
 }
