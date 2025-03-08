@@ -1,7 +1,7 @@
 package views
 
-import "../names"
 import g "../graph"
+import "../names"
 import "core:fmt"
 
 Package_Map_Mode :: enum {
@@ -17,7 +17,7 @@ Type_Import :: union {
     Import,
 }
 
-No_Import :: struct{}
+No_Import :: struct {}
 
 @(private = "file")
 _api_type_to_import_name := [2]string{"__bindgen_core", "__bindgen_editor"}
@@ -41,7 +41,6 @@ _get_api_type_import_path :: proc(api_type: g.Engine_Api_Type) -> string {
 import_map: map[rawptr]Type_Import
 
 map_types_to_imports :: proc(graph: g.Graph, map_mode: Package_Map_Mode) {
-
     switch map_mode {
     case .Flat:
         for _, type in graph.types {
@@ -66,6 +65,14 @@ map_types_to_imports :: proc(graph: g.Graph, map_mode: Package_Map_Mode) {
                     }
                 }
             case ^g.Engine_Class:
+                if root_type.name == "Object" {
+                    import_map[root_type] = Import {
+                        name = "__bindgen_var",
+                        path = "godot:variant",
+                    }
+                    continue
+                }
+
                 import_map[root_type] = Import {
                     name = _api_type_to_import_name[root_type.api_type],
                     path = _api_type_to_import_path[root_type.api_type],
@@ -100,10 +107,10 @@ map_types_to_imports :: proc(graph: g.Graph, map_mode: Package_Map_Mode) {
                     path = "godot:variant",
                 }
             case ^g.Primitive:
-                if root_type.odin_name == "GDFLOAT" {
+                if root_type.odin_name == "Float" {
                     import_map[cast(rawptr)root_type] = Import {
                         name = "__bindgen_gde",
-                        path = "godot:gdextension"
+                        path = "godot:gdextension",
                     }
                 } else {
                     import_map[cast(rawptr)root_type] = No_Import{}
@@ -147,6 +154,42 @@ _any_to_rawptr :: proc(type: g.Any_Type) -> rawptr {
     unimplemented("type is nil")
 }
 
+_any_to_variant_type :: proc(type: g.Any_Type) -> names.Odin_Name {
+    switch as_type in type {
+    case ^g.Builtin_Class:
+        if as_type.name == "Variant" {
+            return "Nil"
+        }
+        return names.to_odin(as_type.name)
+    case ^g.Engine_Class:
+        return "Object"
+    case ^g.Class_Enum(g.Builtin_Class):
+        return "Int"
+    case ^g.Class_Bit_Field(g.Builtin_Class):
+        return "Int"
+    case ^g.Class_Enum(g.Engine_Class):
+        return "Int"
+    case ^g.Class_Bit_Field(g.Engine_Class):
+        return "Int"
+    case ^g.Enum:
+        return "Int"
+    case ^g.Bit_Field:
+        return "Int"
+    case ^g.Native_Struct:
+        panic("Native Structs cant be used as Variant")
+    case ^g.Primitive:
+        if as_type.odin_name == "Float" {
+            return "Float"
+        }
+
+        return "Int"
+    case ^g.Typed_Array:
+        return "Array"
+    }
+
+    unimplemented("type is nil")
+}
+
 @(private)
 _any_to_name :: proc(type: g.Any_Type) -> names.Odin_Name {
     switch as_type in type {
@@ -175,6 +218,18 @@ _any_to_name :: proc(type: g.Any_Type) -> names.Odin_Name {
     }
 
     unimplemented("type is nil")
+}
+
+ensure_imports :: proc(imports: ^map[string]Import, type: g.Any_Type, current_package: string) {
+    type_import, ok := import_map[_any_to_rawptr(type)]
+    assert(ok, "Couldn't find mapped import for type.")
+
+    import_, is_import := type_import.(Import)
+    if !is_import || import_.path == current_package {
+        return
+    }
+
+    imports[import_.name] = import_
 }
 
 resolve_qualified_type :: proc(type: g.Any_Type, current_package: string) -> string {

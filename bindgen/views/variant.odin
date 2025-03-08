@@ -5,54 +5,57 @@ import g "../graph"
 import "../names"
 import "core:fmt"
 import "core:mem"
+import "core:slice"
 import "core:strings"
 
 @(private = "file")
-render_flag_map := map[string]Render_Flags {
+render_flag_map := map[names.Godot_Name]Render_Flags {
     // skip these builtins
-    "Bool" = {},
-    "Int" = {},
-    "Float" = {},
-    "Nil" = {},
+    "bool"               = {},
+    "int"                = {},
+    "float"              = {},
+    "Nil"                = {},
 
-    "AABB" = Render_Flags_Native,
-    "Basis" = Render_Flags_Native,
-    "Color" = Render_Flags_Native,
-    "Plane" = Render_Flags_Native,
-    "Projection" = Render_Flags_Native,
-    "Quaternion" = Render_Flags_Native,
-    "Rect2" = Render_Flags_Native,
-    "Rect2i" = Render_Flags_Native,
-    "Transform2d" = Render_Flags_Native,
-    "Transform3d" = Render_Flags_Native,
-    "Vector2" = Render_Flags_Native,
-    "Vector2i" = Render_Flags_Native,
-    "Vector3" = Render_Flags_Native,
-    "Vector3i" = Render_Flags_Native,
-    "Vector4" = Render_Flags_Native,
-    "Vector4i" = Render_Flags_Native,
+    // defined in variant/Variant.odin
+    "AABB"               = Render_Flags_Native,
+    "Basis"              = Render_Flags_Native,
+    "Color"              = Render_Flags_Native,
+    "Plane"              = Render_Flags_Native,
+    "Projection"         = Render_Flags_Native,
+    "Quaternion"         = Render_Flags_Native,
+    "Rect2"              = Render_Flags_Native,
+    "Rect2i"             = Render_Flags_Native,
+    "Transform2D"        = Render_Flags_Native,
+    "Transform3D"        = Render_Flags_Native,
+    "Vector2"            = Render_Flags_Native,
+    "Vector2i"           = Render_Flags_Native,
+    "Vector3"            = Render_Flags_Native,
+    "Vector3i"           = Render_Flags_Native,
+    "Vector4"            = Render_Flags_Native,
+    "Vector4i"           = Render_Flags_Native,
 
-    "Callable" = Render_Flags_Opaque,
-    "Dictionary" = Render_Flags_Opaque,
-    "NodePath" = Render_Flags_Opaque,
-    "PackedByteArray" = Render_Flags_Opaque,
-    "PackedColorArray" = Render_Flags_Opaque,
+    // defined as Opaque in variant/Variant.odin
+    "Array"              = Render_Flags_Opaque,
+    "Callable"           = Render_Flags_Opaque,
+    "Dictionary"         = Render_Flags_Opaque,
+    "NodePath"           = Render_Flags_Opaque,
+    "PackedByteArray"    = Render_Flags_Opaque,
+    "PackedColorArray"   = Render_Flags_Opaque,
     "PackedFloat32Array" = Render_Flags_Opaque,
     "PackedFloat64Array" = Render_Flags_Opaque,
-    "PackedInt32Array" = Render_Flags_Opaque,
-    "PackedInt64Array" = Render_Flags_Opaque,
-    "PackedStringArray" = Render_Flags_Opaque,
+    "PackedInt32Array"   = Render_Flags_Opaque,
+    "PackedInt64Array"   = Render_Flags_Opaque,
+    "PackedStringArray"  = Render_Flags_Opaque,
     "PackedVector2Array" = Render_Flags_Opaque,
     "PackedVector3Array" = Render_Flags_Opaque,
     "PackedVector4Array" = Render_Flags_Opaque,
-    "Rid" = Render_Flags_Opaque,
-    "Signal" = Render_Flags_Opaque,
-    "String" = Render_Flags_Opaque,
-    "StringName" = Render_Flags_Opaque,
+    "RID"                = Render_Flags_Opaque,
+    "Signal"             = Render_Flags_Opaque,
+    "String"             = Render_Flags_Opaque,
+    "StringName"         = Render_Flags_Opaque,
 }
 
-Render_Flags :: bit_set[enum{
-    Constants,
+Render_Flags :: bit_set[enum {
     Constructors,
     Destructor,
     Members,
@@ -60,8 +63,8 @@ Render_Flags :: bit_set[enum{
     Operators,
 }]
 
-Render_Flags_Native: Render_Flags: {.Methods, .Operators}
-Render_Flags_Opaque: Render_Flags: {.Constructors, .Destructor, .Members, .Methods, .Operators}
+Render_Flags_Native: Render_Flags : {.Methods, .Operators}
+Render_Flags_Opaque: Render_Flags : {.Constructors, .Destructor, .Members, .Methods, .Operators}
 
 Import :: struct {
     name: string,
@@ -120,51 +123,60 @@ Method_Arg :: struct {
     type: string,
 }
 
-Operator :: struct {}
+Operator :: struct {
+    proc_name:    string,
+    overloads:    []Operator_Overload,
+    variant_name: string,
+}
+
+Operator_Overload :: struct {
+    proc_name:          string,
+    right_type:         Maybe(string),
+    right_variant_type: string,
+    return_type:        string,
+}
 
 Variant :: struct {
-    imports:                   []Import,
-    name:                      string,
-    proc_prefix:               string,
-    enums:                     []Enum,
-    bit_sets:                  []Enum,
-    // constants rendered as compile-time constants (`x :: y` in Odin)
-    file_constants:            []File_Constant,
-    // constants rendered as a static variable that has to be initialized in a proc
-    init_constants:            []Init_Constant,
-    constructor_overload_name: string,
+    imports:             map[string]Import,
+    name:                string,
+    snake_name:          string,
+    enums:               []Enum,
+    bit_sets:            []Enum,
     // constructors rendered in the template that correlate 1-to-1 with a builtin constructor in Godot
-    constructors:              []Constructor,
+    constructors:        []Constructor,
     // special constructor names written manually, these are included in the `new_XX` overload proc
-    extern_constructors:       []string,
-    destructor:                Maybe(string),
-    members:                   []Member,
-    static_methods:            []Method,
-    instance_methods:          []Method,
-    operators:                 []Operator,
+    extern_constructors: []string,
+    destructor:          Maybe(string),
+    members:             []Member,
+    static_methods:      []Method,
+    instance_methods:    []Method,
+    operators:           []Operator,
 }
 
 @(private = "file")
-default_imports := []Import{Import{name = "__bindgen_gd", path = "../gdextension"}}
+default_imports := map[string]Import {
+    "__bindgen_gde" = Import{name = "__bindgen_gde", path = "../gdextension"},
+}
 
 @(private = "file")
 imports_with_math := []Import {
-    Import{name = "__bindgen_gd", path = "../gdextension"},
+    Import{name = "__bindgen_gde", path = "../gdextension"},
     Import{name = "__bindgen_math", path = "core:math"},
 }
 
 @(private = "file")
-string_name_constructors := []string{"new_string_name_odin", "new_string_name_cstring"}
-
-@(private = "file")
-string_constructors := []string{"new_string_odin", "new_string_cstring"}
+extern_constructors := map[names.Godot_Name][]string {
+    "StringName" = {"new_string_name_odin", "new_string_name_cstring"},
+    "String"     = {"new_string_odin", "new_string_cstring"},
+}
 
 @(private)
-_class_constructor_name :: proc(base_constructor_name: string, args: []g.Constructor_Arg) -> string {
+_class_constructor_name :: proc(snake_name: string, args: []g.Constructor_Arg) -> string {
     sb := strings.builder_make()
     defer strings.builder_destroy(&sb)
 
-    fmt.sbprint(&sb, base_constructor_name)
+    fmt.sbprint(&sb, "new_")
+    fmt.sbprint(&sb, snake_name)
     if len(args) == 0 {
         fmt.sbprint(&sb, "_default")
         return strings.clone(strings.to_string(sb))
@@ -172,7 +184,7 @@ _class_constructor_name :: proc(base_constructor_name: string, args: []g.Constru
 
     for arg in args {
         type_name := _any_to_name(arg.type)
-        if type_name == cast(names.Odin_Name)"GDFLOAT" {
+        if type_name == cast(names.Odin_Name)"Float" {
             type_name = cast(names.Odin_Name)"float"
         }
         snake_type := names.to_snake(type_name)
@@ -182,8 +194,11 @@ _class_constructor_name :: proc(base_constructor_name: string, args: []g.Constru
     return strings.clone(strings.to_string(sb))
 }
 
-variant :: proc(class: ^g.Builtin_Class) -> (variant: Variant, render: bool) {
-    render_flags := render_flag_map[class.name] or_else {}
+variant :: proc(class: ^g.Builtin_Class, allocator: mem.Allocator) -> (variant: Variant, render: bool) {
+    context.allocator = allocator
+
+    render_flags, in_flag_map := render_flag_map[class.name]
+    assert(in_flag_map, fmt.tprintfln("Couldn't find render flags for class: '%v'", class.name))
 
     if render_flags == {} {
         return {}, false
@@ -191,17 +206,14 @@ variant :: proc(class: ^g.Builtin_Class) -> (variant: Variant, render: bool) {
 
     snake_name := names.to_snake(class.name)
 
-    file_constant_count := 0
-    init_constant_count := 0
-    if Render_Flags.Constants in render_flags {
-        for constant in class.constants {
-            switch _ in constant.initializer {
-            case string:
-                file_constant_count += 1
-            case g.Initialize_By_Constructor:
-                init_constant_count += 1
-            }
-        }
+    constructor_count := 0
+    if Render_Flags.Constructors in render_flags {
+        constructor_count = len(class.constructors)
+    }
+
+    member_count := 0
+    if Render_Flags.Members in render_flags {
+        member_count = len(class.members)
     }
 
     static_method_count := 0
@@ -216,34 +228,40 @@ variant :: proc(class: ^g.Builtin_Class) -> (variant: Variant, render: bool) {
         }
     }
 
-    variant = Variant {
-        imports                   = default_imports,
-        name                      = cast(string)names.to_odin(class.name),
-        proc_prefix               = cast(string)names.to_snake(class.name),
-        enums                     = make([]Enum, len(class.enums)),
-        bit_sets                  = make([]Enum, len(class.bit_fields)),
-        file_constants            = make([]File_Constant, file_constant_count),
-        init_constants            = make([]Init_Constant, init_constant_count),
-        constructor_overload_name = fmt.tprintf("new_%v", snake_name),
-        constructors              = make([]Constructor, len(class.constructors)),
-        extern_constructors       = nil,
-        destructor                = nil,
-        members                   = make([]Member, len(class.members)),
-        static_methods            = make([]Method, static_method_count),
-        instance_methods          = make([]Method, instance_method_count),
-        operators                 = make([]Operator, len(class.operators)),
+    operator_count := 0
+    if Render_Flags.Operators in render_flags {
+        operator_names := make(map[names.Snake_Name]int)
+        defer delete(operator_names)
+
+        for class_operator in class.operators {
+            operator_names[class_operator.name] = (operator_names[class_operator.name] or_else 0) + 1
+        }
+
+        operator_count = len(operator_names)
     }
 
-    if class.destructor {
+    variant = Variant {
+        imports             = default_imports,
+        name                = cast(string)names.to_odin(class.name),
+        snake_name          = cast(string)names.to_snake(class.name),
+        enums               = make([]Enum, len(class.enums)),
+        bit_sets            = make([]Enum, len(class.bit_fields)),
+        constructors        = make([]Constructor, constructor_count),
+        extern_constructors = nil,
+        destructor          = nil,
+        members             = make([]Member, member_count),
+        static_methods      = make([]Method, static_method_count),
+        instance_methods    = make([]Method, instance_method_count),
+        operators           = make([]Operator, operator_count),
+    }
+
+    if Render_Flags.Destructor in render_flags && class.destructor {
         variant.destructor = fmt.tprintf("free_%v", snake_name)
     }
 
     // N.B. some builtin classes have specialized constructors that aren't automatically generated
-    switch class.name {
-    case "StringName":
-        variant.extern_constructors = string_name_constructors
-    case "String":
-        variant.extern_constructors = string_constructors
+    if extern_constructors, has_extern_constructors := extern_constructors[class.name]; has_extern_constructors {
+        variant.extern_constructors = extern_constructors
     }
 
     for class_enum, enum_idx in class.enums {
@@ -282,99 +300,126 @@ variant :: proc(class: ^g.Builtin_Class) -> (variant: Variant, render: bool) {
         variant.bit_sets[bit_field_idx] = variant_bit_set
     }
 
-    file_constant_idx := 0
-    init_constant_idx := 0
-    for class_constant, constant_idx in class.constants {
-        switch initializer in class_constant.initializer {
-        case string:
-            variant.file_constants[file_constant_idx] = File_Constant {
-                name  = fmt.aprintf("%v_%v", variant.name, names.to_odin(class_constant.name)), // TODO: prefixing by variant.name isnt necessary in Nested package mode
-                type  = resolve_qualified_type(class_constant.type, "godot:variant"), // TODO: other package modes
-                value = initializer,
+    if Render_Flags.Constructors in render_flags {
+        for class_constructor, constructor_idx in class.constructors {
+            constructor := Constructor {
+                name  = _class_constructor_name(variant.snake_name, class_constructor.args),
+                index = class_constructor.index,
+                args  = make([]Constructor_Arg, len(class_constructor.args)),
             }
 
-            file_constant_idx += 1
-        case g.Initialize_By_Constructor:
-            init_constant := Init_Constant {
-                name        = fmt.aprintf("%v_%v", variant.name, names.to_odin(class_constant.name)), // TODO: prefixing by variant.name isnt necessary in Nested package mode
-                type        = resolve_qualified_type(class_constant.type, "godot:variant"), // TODO: other package modes
-                constructor = resolve_constructor_proc_name(class_constant.type, "godot:variant"), // TODO: other package modes
-                args        = make([]string, len(initializer.arg_values)),
+            for constructor_arg, arg_idx in class_constructor.args {
+                constructor.args[arg_idx] = Constructor_Arg {
+                    name = constructor_arg.name,
+                    type = resolve_qualified_type(constructor_arg.type, "godot:variant"), // TODO: other package modes
+                }
+
+                ensure_imports(&variant.imports, constructor_arg.type, "godot:variant") // TODO: other package modes
             }
 
-            for value, arg_idx in initializer.arg_values {
-                init_constant.args[arg_idx] = strings.clone(value)
-            }
-
-            variant.init_constants[init_constant_idx] = init_constant
-
-            init_constant_idx += 1
+            variant.constructors[constructor_idx] = constructor
         }
     }
 
-    for class_constructor, constructor_idx in class.constructors {
-        constructor := Constructor {
-            name  = _class_constructor_name(variant.constructor_overload_name, class_constructor.args),
-            index = class_constructor.index,
-            args  = make([]Constructor_Arg, len(class_constructor.args)),
-        }
+    if Render_Flags.Members in render_flags {
+        for class_member, member_idx in class.members {
+            variant.members[member_idx] = Member {
+                name = class_member.name,
+                type = resolve_qualified_type(class_member.type, "godot:variant"), // TODO: other package modes
+            }
 
-        for constructor_arg, arg_idx in class_constructor.args {
-            constructor.args[arg_idx] = Constructor_Arg {
-                name = constructor_arg.name,
-                type = resolve_qualified_type(constructor_arg.type, "godot:variant"), // TODO: other package modes
+            ensure_imports(&variant.imports, class_member.type, "godot:variant") // TODO: other package modes
+        }
+    }
+
+    if Render_Flags.Methods in render_flags {
+        static_method_idx := 0
+        instance_method_idx := 0
+        for class_method, method_idx in class.methods {
+            method := Method {
+                name        = fmt.aprintf("%v_%v", snake_name, class_method.name),
+                hash        = class_method.hash,
+                args        = make([]Method_Arg, len(class_method.args)),
+                vararg      = class_method.vararg,
+                return_type = nil,
+            }
+
+            if class_method.return_type != nil {
+                method.return_type = resolve_qualified_type(class_method.return_type, "godot:variant") // TODO: other package modes
+                ensure_imports(&variant.imports, class_method.return_type, "godot:variant") // TODO: other package modes
+            }
+
+            for class_method_arg, arg_idx in class_method.args {
+                method.args[arg_idx] = Method_Arg {
+                    name = class_method_arg.name,
+                    type = resolve_qualified_type(class_method_arg.type, "godot:variant"), // TODO: other package modes
+                    // TODO: defaults?
+                }
+
+                ensure_imports(&variant.imports, class_method_arg.type, "godot:variant") // TODO: other package modes
+            }
+
+            if class_method.static {
+                variant.static_methods[static_method_idx] = method
+                static_method_idx += 1
+            } else {
+                variant.instance_methods[instance_method_idx] = method
+                instance_method_idx += 1
             }
         }
-
-        variant.constructors[constructor_idx] = constructor
     }
 
-    for class_member, member_idx in class.members {
-        variant.members[member_idx] = Member {
-            name = class_member.name,
-            type = resolve_qualified_type(class_member.type, "godot:variant"), // TODO: other package modes
-        }
-    }
+    if Render_Flags.Operators in render_flags {
+        overload_map := make(map[names.Snake_Name][dynamic]Operator_Overload)
+        defer delete(overload_map)
 
-    static_method_idx := 0
-    instance_method_idx := 0
-    for class_method, method_idx in class.methods {
-        method := Method{
-            name = fmt.aprintf("%v_%v", snake_name, class_method.name),
-            hash = class_method.hash,
-            args = make([]Method_Arg, len(class_method.args)),
-            vararg = class_method.vararg,
-            return_type = nil,
-        }
+        operator_names := make([dynamic]names.Snake_Name)
+        defer delete(operator_names)
 
-        if class_method.return_type != nil {
-            method.return_type = resolve_qualified_type(class_method.return_type, "godot:variant") // TODO: other package modes
-        }
-
-        for class_method_arg, arg_idx in class_method.args {
-            method.args[arg_idx] = Method_Arg {
-                name = class_method_arg.name,
-                type = resolve_qualified_type(class_method_arg.type, "godot:variant") // TODO: other package modes
-                // TODO: defaults?
+        for class_operator, idx in class.operators {
+            if class_operator.name not_in overload_map {
+                overload_map[class_operator.name] = make([dynamic]Operator_Overload)
+                append(&operator_names, class_operator.name)
             }
+
+            overload := Operator_Overload {
+                return_type = resolve_qualified_type(class_operator.return_type, "godot:variant"), // TODO: other package modes
+                right_type  = nil,
+            }
+
+            ensure_imports(&variant.imports, class_operator.return_type, "godot:variant") // TODO: other package modes
+
+            if class_operator.right_type != nil {
+                ensure_imports(&variant.imports, class_operator.right_type, "godot:variant") // TODO: other package modes
+
+                overload.right_type = cast(string)_any_to_name(class_operator.right_type)
+                overload.right_variant_type = cast(string)_any_to_variant_type(class_operator.right_type)
+                overload.proc_name = fmt.aprintf(
+                    "%v_%v_%v",
+                    variant.snake_name,
+                    class_operator.name,
+                    names.to_snake(_any_to_name(class_operator.right_type)),
+                )
+            } else {
+                overload.proc_name = fmt.aprintf("%v_%v_default", variant.snake_name, class_operator.name)
+            }
+
+            append(&overload_map[class_operator.name], overload)
         }
 
-        if class_method.static {
-            variant.static_methods[static_method_idx] = method
-            static_method_idx += 1
-        } else {
-            variant.instance_methods[instance_method_idx] = method
-            instance_method_idx += 1
-        }
-    }
+        for operator_name, operator_idx in operator_names {
+            overloads, ok := overload_map[operator_name]
+            assert(ok, "Couldn't map operator_name to overload")
 
-    for class_operator, operator_idx in class.operators {
-        // TODO:
+            variant.operators[operator_idx] = Operator {
+                proc_name    = fmt.aprintf("%v_%v", variant.snake_name, operator_name),
+                variant_name = cast(string)names.to_odin(operator_name),
+                overloads    = slice.clone(overloads[:]),
+            }
+
+            delete(overloads)
+        }
     }
 
     return variant, true
-}
-
-free_variant :: proc(view: Variant) -> (error: mem.Allocator_Error) {
-    unimplemented()
 }

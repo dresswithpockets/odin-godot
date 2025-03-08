@@ -8,13 +8,13 @@ import "core:strings"
 EmptyString := String{}
 
 @(private)
-EmptyStringName := StringName{}
+EmptyStringName := String_Name{}
 
 string_empty :: proc "contextless" () -> String {
     return EmptyString
 }
 
-string_name_empty :: proc "contextless" () -> StringName {
+string_name_empty :: proc "contextless" () -> String_Name {
     return EmptyStringName
 }
 
@@ -22,7 +22,7 @@ string_empty_ref :: proc "contextless" () -> ^String {
     return &EmptyString
 }
 
-string_name_empty_ref :: proc "contextless" () -> ^StringName {
+string_name_empty_ref :: proc "contextless" () -> ^String_Name {
     return &EmptyStringName
 }
 
@@ -62,16 +62,16 @@ new_string_cstring :: proc "contextless" (from: cstring) -> (ret: String) {
 }
 
 /*
-Clones a UTF8 Odin string into a Godot StringName
+Clones a UTF8 Odin string into a Godot String_Name
 
 Inputs:
 - from: The string to be cloned
 
 Returns:
-- res: A cloned Godot StringName
+- res: A cloned Godot String_Name
 */
-new_string_name_odin :: proc "contextless" (from: string) -> (ret: StringName) {
-    ret = StringName{}
+new_string_name_odin :: proc "contextless" (from: string) -> (ret: String_Name) {
+    ret = String_Name{}
 
     // N.B. we're transmuting the odin string into a cstring regardless of if it has a terminating null
     // byte or not. `string_new_with_utf8_chars_and_len2` takes a length, so we don't depend on the
@@ -82,22 +82,22 @@ new_string_name_odin :: proc "contextless" (from: string) -> (ret: StringName) {
 }
 
 /*
-Clones a UTF8 cstring into a Godot StringName
+Clones a UTF8 cstring into a Godot String_Name
 
 Inputs:
 - from: The cstring to be cloned. Must be null-terminated.
 
 Returns:
-- res: A cloned Godot StringName
+- res: A cloned Godot String_Name
 */
-new_string_name_cstring :: proc "contextless" (from: cstring, static: bool) -> (ret: StringName) {
-    ret = StringName{}
+new_string_name_cstring :: proc "contextless" (from: cstring, static: bool) -> (ret: String_Name) {
+    ret = String_Name{}
     gd.string_name_new_with_utf8_chars(&ret, from)
     return
 }
 
 
-new_node_path_cstring :: proc "contextless" (from: cstring) -> NodePath {
+new_node_path_cstring :: proc "contextless" (from: cstring) -> Node_Path {
     str: String
     gd.string_new_with_utf8_chars(&str, from)
     return new_node_path_string(str)

@@ -4,6 +4,10 @@ import gd "../gdextension"
 import "base:intrinsics"
 import "core:math"
 
+Bool :: bool
+Int :: i64
+Float :: gd.Float
+
 Opaque :: struct(I: int) {
     opaque: [I]uintptr,
 }
@@ -13,9 +17,9 @@ Variant :: struct {
     opaque: Opaque(4),
 }
 
-Vector2 :: [2]gd.float
-Vector3 :: [3]gd.float
-Vector4 :: [4]gd.float
+Vector2 :: [2]gd.Float
+Vector3 :: [3]gd.Float
+Vector4 :: [4]gd.Float
 Vector2i :: [2]i32
 Vector3i :: [3]i32
 Vector4i :: [4]i32
@@ -30,7 +34,7 @@ Rect2i :: struct {
     size:     Vector2i,
 }
 
-Transform2D :: struct {
+Transform2d :: struct {
     x:      Vector2,
     y:      Vector2,
     origin: Vector2,
@@ -38,41 +42,41 @@ Transform2D :: struct {
 
 Plane :: struct {
     normal: Vector3,
-    d:      gd.float,
+    d:      gd.Float,
 }
 
-Quaternion :: gd.quat
+Quaternion :: gd.Quat
 
-AABB :: struct {
+Aabb :: struct {
     position: Vector3,
     size:     Vector3,
 }
 
 Basis :: [3]Vector3
 
-Transform3D :: struct {
+Transform3d :: struct {
     basis:  Basis,
     origin: Vector3,
 }
 
 Projection :: [4]Vector4
 
-Color :: [4]gd.float
+Color :: distinct [4]gd.Float
 
-RID :: distinct Opaque(2)
+Rid :: distinct Opaque(2)
 String :: distinct Opaque(1)
-StringName :: distinct Opaque(1)
-NodePath :: distinct Opaque(1)
+String_Name :: distinct Opaque(1)
+Node_Path :: distinct Opaque(1)
 Callable :: distinct Opaque(4)
 Signal :: distinct Opaque(4)
 Dictionary :: distinct Opaque(1)
 Array :: distinct Opaque(1)
 
 Typed_Array :: struct($T: typeid) where type_is_some_variant(T) {
-    array: Array,
+    using untyped: Array,
 }
 
-Packed_Array :: struct($T: typeid) {
+Packed_Array :: struct($T: typeid) where intrinsics.type_is_variant_of(Some_Packable, T) {
     proxy:       rawptr,
     data_unsafe: [^]T,
 }
@@ -91,6 +95,19 @@ Packed_Color_Array :: Packed_Array(Color)
 Object :: gd.ObjectPtr
 RefCounted :: ^Object
 
+Some_Packable :: union {
+    byte,
+    i32,
+    i64,
+    f32,
+    f64,
+    String,
+    Vector2,
+    Vector3,
+    Vector4,
+    Color,
+}
+
 Some_Vector :: union {
     Vector2,
     Vector2i,
@@ -103,24 +120,24 @@ Some_Vector :: union {
 Some_Primitive :: union {
     bool,
     i64,
-    gd.float,
+    gd.Float,
     Rect2,
     Rect2i,
-    Transform2D,
+    Transform2d,
     Plane,
     Quaternion,
-    AABB,
+    Aabb,
     Basis,
-    Transform3D,
+    Transform3d,
     Projection,
     Color,
 }
 
 Some_Godot_Unique :: union {
     String,
-    StringName,
-    NodePath,
-    RID,
+    String_Name,
+    Node_Path,
+    Rid,
     Callable,
     Signal,
     Dictionary,
@@ -171,9 +188,9 @@ VECTOR3I_DOWN :: Vector3i{0, -1, 0}
 VECTOR3I_FORWARD :: Vector3i{0, 0, -1}
 VECTOR3I_BACK :: Vector3i{0, 0, 1}
 
-TRANSFORM2D_IDENTITY :: Transform2D{{1, 0}, {0, 1}, {0, 0}}
-TRANSFORM2D_FLIP_X :: Transform2D{{-1, 0}, {0, 1}, {0, 0}}
-TRANSFORM2D_FLIP_Y :: Transform2D{{1, 0}, {0, -1}, {0, 0}}
+TRANSFORM2D_IDENTITY :: Transform2d{{1, 0}, {0, 1}, {0, 0}}
+TRANSFORM2D_FLIP_X :: Transform2d{{-1, 0}, {0, 1}, {0, 0}}
+TRANSFORM2D_FLIP_Y :: Transform2d{{1, 0}, {0, -1}, {0, 0}}
 
 VECTOR4_ZERO :: Vector4{0, 0, 0, 0}
 VECTOR4_ONE :: Vector4{1, 1, 1, 1}
@@ -188,46 +205,37 @@ Plane_PLANE_YZ :: Plane{{1, 0, 0}, 0}
 Plane_PLANE_XZ :: Plane{{0, 1, 0}, 0}
 Plane_PLANE_XY :: Plane{{0, 0, 1}, 0}
 
-QUATERNION_IDENTITY :: quaternion(real=cast(gd.float)0, imag=cast(gd.float)0, jmag=cast(gd.float)0, kmag=cast(gd.float)1)
+QUATERNION_IDENTITY :: quaternion(
+    real = cast(gd.Float)0,
+    imag = cast(gd.Float)0,
+    jmag = cast(gd.Float)0,
+    kmag = cast(gd.Float)1,
+)
 
-BASIS_IDENTITY :: Basis{
-    Vector3{1, 0, 0},
-    Vector3{0, 1, 0},
-    Vector3{0, 0, 1},
+BASIS_IDENTITY :: Basis{Vector3{1, 0, 0}, Vector3{0, 1, 0}, Vector3{0, 0, 1}}
+BASIS_FLIP_X :: Basis{Vector3{-1, 0, 0}, Vector3{0, 1, 0}, Vector3{0, 0, 1}}
+BASIS_FLIP_Y :: Basis{Vector3{1, 0, 0}, Vector3{0, -1, 0}, Vector3{0, 0, 1}}
+BASIS_FLIP_Z :: Basis{Vector3{1, 0, 0}, Vector3{0, 1, 0}, Vector3{0, 0, -1}}
+
+TRANSFORM3D_IDENTITY :: Transform3d {
+    basis  = BASIS_IDENTITY,
+    origin = VECTOR3_ZERO,
 }
-BASIS_FLIP_X :: Basis{
-    Vector3{-1, 0, 0},
-    Vector3{0, 1, 0},
-    Vector3{0, 0, 1},
+TRANSFORM3D_FLIP_X :: Transform3d {
+    basis  = BASIS_FLIP_X,
+    origin = VECTOR3_ZERO,
 }
-BASIS_FLIP_Y :: Basis{
-    Vector3{1, 0, 0},
-    Vector3{0, -1, 0},
-    Vector3{0, 0, 1},
+TRANSFORM3D_FLIP_Y :: Transform3d {
+    basis  = BASIS_FLIP_Y,
+    origin = VECTOR3_ZERO,
 }
-BASIS_FLIP_Z :: Basis{
-    Vector3{1, 0, 0},
-    Vector3{0, 1, 0},
-    Vector3{0, 0, -1},
+TRANSFORM3D_FLIP_Z :: Transform3d {
+    basis  = BASIS_FLIP_Z,
+    origin = VECTOR3_ZERO,
 }
 
-TRANSFORM3D_IDENTITY :: Transform3D{basis = BASIS_IDENTITY, origin = VECTOR3_ZERO}
-TRANSFORM3D_FLIP_X :: Transform3D{basis = BASIS_FLIP_X, origin = VECTOR3_ZERO}
-TRANSFORM3D_FLIP_Y :: Transform3D{basis = BASIS_FLIP_Y, origin = VECTOR3_ZERO}
-TRANSFORM3D_FLIP_Z :: Transform3D{basis = BASIS_FLIP_Z, origin = VECTOR3_ZERO}
-
-PROJECTION_IDENTITY :: Projection{
-    {1, 0, 0, 0},
-    {0, 1, 0, 0},
-    {0, 0, 1, 0},
-    {0, 0, 0, 1},
-}
-PROJECTION_ZERO :: Projection {
-    {0, 0, 0, 0},
-    {0, 0, 0, 0},
-    {0, 0, 0, 0},
-    {0, 0, 0, 0},
-}
+PROJECTION_IDENTITY :: Projection{{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}}
+PROJECTION_ZERO :: Projection{{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}
 
 COLOR_ALICE_BLUE :: Color{0.941176, 0.972549, 1, 1}
 COLOR_ANTIQUE_WHITE :: Color{0.980392, 0.921569, 0.843137, 1}
@@ -409,7 +417,7 @@ type_is_some_variant :: proc(
 //     return
 // }
 
-// variant_from_float :: proc "contextless" (from: ^gd.float) -> (ret: Variant) {
+// variant_from_float :: proc "contextless" (from: ^gd.Float) -> (ret: Variant) {
 //     variant_constructor := gd.get_variant_from_type_constructor(.Float)
 //     ret = Variant{}
 //     variant_constructor(&ret, from)

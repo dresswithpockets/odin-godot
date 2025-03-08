@@ -6,6 +6,7 @@ import "core:fmt"
 import "core:io"
 import "core:os"
 import "core:thread"
+import "core:mem"
 import "../temple"
 
 import g "graph"
@@ -48,12 +49,19 @@ open_write_template :: proc(file_path: string, view: $T, template: temple.Compil
 
 codegen_variant :: proc(task: thread.Task) {
     class := cast(^g.Builtin_Class)task.data
-    if view, should_render := views.variant(class); should_render {
+
+    tracking_alloc: mem.Tracking_Allocator
+    mem.tracking_allocator_init(&tracking_alloc, context.allocator)
+
+    allocator := mem.tracking_allocator(&tracking_alloc)
+    if view, should_render := views.variant(class, allocator = allocator); should_render {
         file_path := fmt.tprintf("variant/%v.gen.odin", view.name)
         defer delete(file_path, allocator = context.temp_allocator)
 
         open_write_template(file_path, view, variant_template)
     }
+
+    free_all(allocator)
 }
 
 generate_bindings :: proc(graph: g.Graph, options: Options) {

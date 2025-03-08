@@ -1,3 +1,4 @@
+#+feature dynamic-literals
 package graph
 
 import "../names"
@@ -17,7 +18,7 @@ odin_primitives := [?]Primitive {
     Primitive{name = "uint16", odin_name = "u16"},
     Primitive{name = "uint32", odin_name = "u32"},
     Primitive{name = "uint64", odin_name = "u64"},
-    Primitive{name = "float", odin_name = "GDFLOAT"},
+    Primitive{name = "float", odin_name = "Float"},
     Primitive{name = "double", odin_name = "f64"},
 
     // c types
@@ -46,7 +47,7 @@ odin_primitives := [?]Primitive {
     Primitive{name = "uint64_t", odin_name = "u64"},
     Primitive{name = "uint64_t*", odin_name = "u64", pointer = 1},
     Primitive{name = "uint64_t **", odin_name = "u64", pointer = 2},
-    Primitive{name = "float*", odin_name = "GDFLOAT", pointer = 1},
+    Primitive{name = "float*", odin_name = "Float", pointer = 1},
     Primitive{name = "const void*", odin_name = "rawptr"},
     Primitive{name = "const int8_t*", odin_name = "i8", pointer = 1},
     Primitive{name = "const int8_t **", odin_name = "i8", pointer = 2},
@@ -64,7 +65,45 @@ odin_primitives := [?]Primitive {
     Primitive{name = "const uint32_t **", odin_name = "u32", pointer = 2},
     Primitive{name = "const uint64_t*", odin_name = "u64", pointer = 1},
     Primitive{name = "const uint64_t **", odin_name = "u64", pointer = 2},
-    Primitive{name = "const float*", odin_name = "GDFLOAT", pointer = 1},
+    Primitive{name = "const float*", odin_name = "Float", pointer = 1},
+}
+
+@(private = "file")
+operator_name_map := map[string]names.Snake_Name {
+    // comparison
+    "=="     = "equal",
+    "!="     = "not_equal",
+    "<"      = "less",
+    "<="     = "less_equal",
+    ">"      = "greater",
+    ">="     = "greater_equal",
+
+    // maths
+    "+"      = "add",
+    "-"      = "subtract",
+    "*"      = "multiply",
+    "/"      = "divide",
+    "unary-" = "negate",
+    "unary+" = "positive",
+    "%"      = "module",
+    "**"     = "power",
+
+    // bits
+    "<<"     = "shift_left",
+    ">>"     = "shift_right",
+    "&"      = "Bit_and",
+    "|"      = "bit_or",
+    "^"      = "bit_xor",
+    "~"      = "bit_negate",
+
+    // logic
+    "and"    = "and",
+    "or"     = "or",
+    "xor"    = "xor",
+    "not"    = "not",
+
+    // containment
+    "in"     = "in",
 }
 
 Graph :: struct {
@@ -269,7 +308,7 @@ Signal_Arg :: struct {
 }
 
 Operator :: struct {
-    name:        string,
+    name:        names.Snake_Name,
     // nil if unary operator
     right_type:  Any_Type,
     return_type: Any_Type,
@@ -913,8 +952,11 @@ _graph_builtin_method :: proc(graph: ^Graph, api_method: ApiBuiltinClassMethod) 
 
 @(private = "file")
 _graph_operator :: proc(graph: ^Graph, api_operator: ApiClassOperator) -> Operator {
+    operator_name, ok := operator_name_map[api_operator.name]
+    assert(ok)
+
     operator := Operator {
-        name        = api_operator.name,
+        name        = operator_name,
         return_type = _graph_resolve_type(graph, api_operator.return_type),
         right_type  = nil,
     }

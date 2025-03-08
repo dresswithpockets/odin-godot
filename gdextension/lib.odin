@@ -63,8 +63,8 @@ VariantType :: enum u64 {
 
     /* misc types */
     Color,
-    StringName,
-    NodePath,
+    String_Name,
+    Node_Path,
     Rid,
     Object,
     Callable,
@@ -73,29 +73,29 @@ VariantType :: enum u64 {
     Array,
 
     /* typed arrays */
-    PackedByteArray,
-    PackedInt32Array,
-    PackedInt64Array,
-    PackedFloat32Array,
-    PackedFloat64Array,
-    PackedStringArray,
-    PackedVector2Array,
-    PackedVector3Array,
-    PackedColorArray,
-    PackedVector4Array,
+    Packed_Byte_Array,
+    Packed_Int32_Array,
+    Packed_Int64_Array,
+    Packed_Float32_Array,
+    Packed_Float64_Array,
+    Packed_String_Array,
+    Packed_Vector2_Array,
+    Packed_Vector3_Array,
+    Packed_Color_Array,
+    Packed_Vector4_Array,
 
     /* enum max */
-    VariantMax,
+    Variant_Max,
 }
 
 VariantOperator :: enum c.int {
     /* comparison */
     Equal,
-    NotEqual,
+    Not_Equal,
     Less,
-    LessEqual,
+    Less_Equal,
     Greater,
-    GreaterEqual,
+    Greater_Equal,
 
     /* mathematic */
     Add,
@@ -108,12 +108,12 @@ VariantOperator :: enum c.int {
     Power,
 
     /* bitwise */
-    ShiftLeft,
-    ShiftRight,
-    BitAnd,
-    BitOr,
-    BitXor,
-    BitNegate,
+    Shift_Left,
+    Shift_Right,
+    Bit_And,
+    Bit_Or,
+    Bit_Xor,
+    Bit_Negate,
 
     /* logic */
     And,
@@ -128,12 +128,12 @@ VariantOperator :: enum c.int {
 
 CallErrorType :: enum c.int {
     Ok,
-    InvalidMethod,
-    InvalidArgument,
-    TooManyArguments,
-    TooFewArguments,
-    InstanceIsNull,
-    MethodNotConst,
+    Invalid_Method,
+    Invalid_Argument,
+    TooMany_Arguments,
+    Too_Few_Arguments,
+    Instance_Is_Null,
+    Method_Not_Const,
 }
 
 CallError :: struct {
@@ -389,16 +389,16 @@ ExtensionClassMethodFlags :: enum c.int {
 
 ExtensionClassMethodArgumentMetadata :: enum c.int {
     None,
-    IntIsInt8,
-    IntIsInt16,
-    IntIsInt32,
-    IntIsInt64,
-    IntIsUInt8,
-    IntIsUInt16,
-    IntIsUInt32,
-    IntIsUInt64,
-    RealIsFloat,
-    RealIsDouble,
+    Int_Is_Int8,
+    Int_Is_Int16,
+    Int_Is_Int32,
+    Int_Is_Int64,
+    Int_Is_UInt8,
+    Int_Is_UInt16,
+    Int_Is_UInt32,
+    Int_Is_UInt64,
+    Real_Is_Float,
+    Real_Is_Double,
 }
 
 ExtensionClassMethodCall :: #type proc "c" (

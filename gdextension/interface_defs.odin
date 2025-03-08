@@ -1491,7 +1491,7 @@ ExtensionInterfacePackedByteArrayOperatorIndexConst :: #type proc "c" (p_self: T
  *
  * @return A pointer to the requested 32-bit float.
  */
-ExtensionInterfacePackedFloat32ArrayOperatorIndex :: #type proc "c" (p_self: TypePtr, p_index: i64) -> ^float
+ExtensionInterfacePackedFloat32ArrayOperatorIndex :: #type proc "c" (p_self: TypePtr, p_index: i64) -> ^Float
 
 /**
  * @name packed_float32_array_operator_index_const
@@ -1504,7 +1504,7 @@ ExtensionInterfacePackedFloat32ArrayOperatorIndex :: #type proc "c" (p_self: Typ
  *
  * @return A const pointer to the requested 32-bit float.
  */
-ExtensionInterfacePackedFloat32ArrayOperatorIndexConst :: #type proc "c" (p_self: TypePtr, p_index: i64) -> ^float
+ExtensionInterfacePackedFloat32ArrayOperatorIndexConst :: #type proc "c" (p_self: TypePtr, p_index: i64) -> ^Float
 
 /**
  * @name packed_float64_array_operator_index
