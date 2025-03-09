@@ -70,7 +70,8 @@ $(examples_hello_out): core/init.gen.odin $(examples_hello_deps)
 		-default-to-nil-allocator \
 		-target:windows_amd64 \
 		-debug \
-		-show-timings
+		-show-timings \
+		-collection:godot=.
 
 $(examples_game_out): core/init.gen.odin $(examples_game_deps)
 	odin build $(examples_game_dir)src/ \
@@ -81,7 +82,8 @@ $(examples_game_out): core/init.gen.odin $(examples_game_deps)
 		-default-to-nil-allocator \
 		-target:windows_amd64 \
 		-debug \
-		-show-timings
+		-show-timings \
+		-collection:godot=.
 
 examples: core/init.gen.odin $(examples_hello_out) $(examples_game_out)
 
