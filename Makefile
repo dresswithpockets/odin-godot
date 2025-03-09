@@ -85,6 +85,18 @@ $(examples_game_out): core/init.gen.odin $(examples_game_deps)
 		-show-timings \
 		-collection:godot=.
 
+examples/tests/bin/tests$(shared_suffix): core/init.gen.odin $(wildcard examples/tests/src/*.odin)
+	odin build examples/tests/src/ \
+		-define:BUILD_CONFIG=$(GD_BUILD_CONFIG) \
+		-build-mode:shared \
+		-out:examples/tests/bin/tests$(shared_suffix) \
+		-warnings-as-errors \
+		-default-to-nil-allocator \
+		-target:windows_amd64 \
+		-debug \
+		-show-timings \
+		-collection:godot=.
+
 examples: core/init.gen.odin $(examples_hello_out) $(examples_game_out)
 
 examples/game/cbin/game.dll: $(wildcard examples/game/csrc/*)
@@ -96,6 +108,7 @@ cexamples: examples/game/cbin/game.dll
 check:
 	odin check bindgen/
 	odin check gdextension/ -no-entry-point
+	odin check examples/tests/src -no-entry-point -collection:godot=. -define:BUILD_CONFIG=$(GD_BUILD_CONFIG)
 
 .PHONY: clean
 
@@ -107,4 +120,5 @@ clean:
 	rm -f variant/*.gen.odin
 	rm -f $(examples_hello_dir)bin/*
 	rm -f $(examples_game_dir)bin/*
+	rm -f examples/tests/bin/*
 	rm -f examples/game/cbin/*
