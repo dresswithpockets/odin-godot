@@ -4,7 +4,7 @@ ifeq ($(OS),Windows_NT)
 endif
 
 OUT_DIR := bin/
-GD_BUILD_CONFIG := float_64
+GD_BUILD_CONFIG := float_32
 
 temple_cli_dir := temple/cli/
 temple_cli_deps := $(wildcard $(temple_cli_dir)*.odin)
