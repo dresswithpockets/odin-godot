@@ -1,26 +1,27 @@
 package example
 
-import gd "../../../gdextension"
-import var "../../../variant"
-import core "../../../core"
+import gd "godot:gdextension"
+import var "godot:variant"
 
-new_property :: proc(type: gd.VariantType, name: ^var.StringName) -> gd.PropertyInfo {
+new_property :: proc(type: gd.VariantType, name: ^var.String_Name) -> gd.PropertyInfo {
     return gd.PropertyInfo {
         name = name,
         type = type,
-        hint = cast(u32)core.PropertyHint.None,
+        //hint = cast(u32)core.PropertyHint.None,
+        hint = 0,
         hint_string = var.string_empty_ref(),
         class_name = var.string_name_empty_ref(),
-        usage = cast(u32)core.PropertyUsageFlags.Default,
+        //usage = cast(u32)core.PropertyUsageFlags.Default,
+        usage = 0,
     }
 }
 
 MethodBindArgument :: struct {
-    name: ^var.StringName,
+    name: ^var.String_Name,
     type: gd.VariantType,
 }
 
-bind_method_return :: proc(class_name: ^var.StringName, method_name: ^var.StringName, function: rawptr, return_type: gd.VariantType, call_func: gd.ExtensionClassMethodCall, ptr_call_func: gd.ExtensionClassMethodPtrCall, args: ..MethodBindArgument) {
+bind_method_return :: proc(class_name: ^var.String_Name, method_name: ^var.String_Name, function: rawptr, return_type: gd.VariantType, call_func: gd.ExtensionClassMethodCall, ptr_call_func: gd.ExtensionClassMethodPtrCall, args: ..MethodBindArgument) {
     return_info := new_property(return_type, var.string_name_empty_ref())
 
     method_info := gd.ExtensionClassMethodInfo{
@@ -48,7 +49,7 @@ bind_method_return :: proc(class_name: ^var.StringName, method_name: ^var.String
     gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
 }
 
-bind_method_no_return :: proc(class_name: ^var.StringName, method_name: ^var.StringName, function: rawptr, call_func: gd.ExtensionClassMethodCall, ptr_call_func: gd.ExtensionClassMethodPtrCall, args: ..MethodBindArgument) {
+bind_method_no_return :: proc(class_name: ^var.String_Name, method_name: ^var.String_Name, function: rawptr, call_func: gd.ExtensionClassMethodCall, ptr_call_func: gd.ExtensionClassMethodPtrCall, args: ..MethodBindArgument) {
     method_info := gd.ExtensionClassMethodInfo{
         name                  = method_name,
         method_user_data      = function,
@@ -80,12 +81,12 @@ bind_method_no_return :: proc(class_name: ^var.StringName, method_name: ^var.Str
     gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
 }
 
-bind_property :: proc(class_name: ^var.StringName, name: ^var.StringName, type: gd.VariantType, getter: ^var.StringName, setter: ^var.StringName) {
+bind_property :: proc(class_name: ^var.String_Name, name: ^var.String_Name, type: gd.VariantType, getter: ^var.String_Name, setter: ^var.String_Name) {
     info := new_property(type, name)
     gd.classdb_register_extension_class_property(gd.library, class_name, &info, setter, getter)
 }
 
-bind_signal :: proc(class_name: ^var.StringName, signal_name: ^var.StringName, args: ..MethodBindArgument) {
+bind_signal :: proc(class_name: ^var.String_Name, signal_name: ^var.String_Name, args: ..MethodBindArgument) {
     if len(args) == 0 {
         gd.classdb_register_extension_class_signal(gd.library, class_name, signal_name, nil, 0)
         return
@@ -101,22 +102,22 @@ bind_signal :: proc(class_name: ^var.StringName, signal_name: ^var.StringName, a
     gd.classdb_register_extension_class_signal(gd.library, class_name, signal_name, raw_data(args_info), cast(i64)len(args))
 }
 
-GetterFloat :: proc "c" (instance: rawptr) -> gd.float
-SetterFloat :: proc "c" (instance: rawptr, value: gd.float)
+GetterFloat :: proc "c" (instance: rawptr) -> gd.Float
+SetterFloat :: proc "c" (instance: rawptr, value: gd.Float)
 
 ptrcall_getter_float :: proc "c" (method_user_data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, call_return: gd.TypePtr) {
     method := cast(GetterFloat)method_user_data
-    (cast(^gd.float)call_return)^ = method(instance)
+    (cast(^gd.Float)call_return)^ = method(instance)
 }
 
 ptrcall_setter_float :: proc "c" (method_user_data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, call_return: gd.TypePtr) {
     method := cast(SetterFloat)method_user_data
-    method(instance, (cast(^gd.float)args[0])^)
+    method(instance, (cast(^gd.Float)args[0])^)
 }
 
 call_getter_float :: proc "c" (method_user_data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.VariantPtr, arg_count: i64, call_return: gd.VariantPtr, error: ^gd.CallError) {
     if arg_count != 0 {
-        error.error = .TooManyArguments
+        error.error = .Too_Many_Arguments
         error.expected = 0
         return
     }
@@ -129,20 +130,20 @@ call_getter_float :: proc "c" (method_user_data: rawptr, instance: gd.ExtensionC
 
 call_setter_float :: proc "c" (method_user_data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.VariantPtr, arg_count: i64, call_return: gd.VariantPtr, error: ^gd.CallError) {
     if arg_count < 1 {
-        error.error = .TooFewArguments
+        error.error = .Too_Few_Arguments
         error.expected = 1
         return
     }
 
     if arg_count > 1 {
-        error.error = .TooManyArguments
+        error.error = .Too_Many_Arguments
         error.expected = 1
         return
     }
 
     type := gd.variant_get_type(args[0])
     if type != .Float {
-        error.error = .InvalidArgument
+        error.error = .Invalid_Argument
         error.expected = cast(i32)gd.VariantType.Float
         error.argument = 0
         return

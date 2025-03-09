@@ -1,8 +1,7 @@
 package example
 
-import gd "../../../gdextension"
-import var "../../../variant"
-import core "../../../core"
+import gd "godot:gdextension"
+import var "godot:variant"
 import "core:strings"
 import "core:c"
 import "core:fmt"
@@ -18,10 +17,7 @@ example_library_init :: proc "c" (
     gd.init(library, get_proc_address)
 
     // MUST be called before using any core classes, singletons, or utility functions
-    core.init()
-
-    // MUST be called before using any variant types
-    var.init()
+    // core.init()
 
     initialization.initialize = initialize_example_module
     initialization.deinitialize = uninitialize_example_module
