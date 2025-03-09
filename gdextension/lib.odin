@@ -130,7 +130,7 @@ CallErrorType :: enum c.int {
     Ok,
     Invalid_Method,
     Invalid_Argument,
-    TooMany_Arguments,
+    Too_Many_Arguments,
     Too_Few_Arguments,
     Instance_Is_Null,
     Method_Not_Const,
