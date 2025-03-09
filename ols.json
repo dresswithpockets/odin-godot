@@ -16,6 +16,10 @@
         {
             "name": "vendor",
             "path": "C:\\Odin\\vendor"
+        },
+        {
+            "name": "godot",
+            "path": "."
         }
     ],
     "enable_document_symbols": true,
