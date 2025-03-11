@@ -14,6 +14,7 @@ odin_primitives := [?]Primitive {
     Primitive{name = "int16", odin_name = "i16"},
     Primitive{name = "int32", odin_name = "i32"},
     Primitive{name = "int64", odin_name = "i64"},
+    Primitive{name = "char32", odin_name = "u32"},
     Primitive{name = "uint8", odin_name = "u8"},
     Primitive{name = "uint16", odin_name = "u16"},
     Primitive{name = "uint32", odin_name = "u32"},
@@ -24,48 +25,48 @@ odin_primitives := [?]Primitive {
     // c types
     Primitive{name = "void*", odin_name = "rawptr"},
     Primitive{name = "int8_t", odin_name = "i8"},
-    Primitive{name = "int8_t*", odin_name = "i8", pointer = 1},
-    Primitive{name = "int8_t **", odin_name = "i8", pointer = 2},
+    // Primitive{name = "int8_t*", odin_name = "i8", pointer = 1},
+    // Primitive{name = "int8_t **", odin_name = "i8", pointer = 2},
     Primitive{name = "int16_t", odin_name = "i16"},
-    Primitive{name = "int16_t*", odin_name = "i16", pointer = 1},
-    Primitive{name = "int16_t **", odin_name = "i16", pointer = 2},
+    // Primitive{name = "int16_t*", odin_name = "i16", pointer = 1},
+    // Primitive{name = "int16_t **", odin_name = "i16", pointer = 2},
     Primitive{name = "int32_t", odin_name = "i32"},
-    Primitive{name = "int32_t*", odin_name = "i32", pointer = 1},
-    Primitive{name = "int32_t **", odin_name = "i32", pointer = 2},
+    // Primitive{name = "int32_t*", odin_name = "i32", pointer = 1},
+    // Primitive{name = "int32_t **", odin_name = "i32", pointer = 2},
     Primitive{name = "int64_t", odin_name = "i64"},
-    Primitive{name = "int64_t*", odin_name = "i64", pointer = 1},
-    Primitive{name = "int64_t **", odin_name = "i64", pointer = 2},
+    // Primitive{name = "int64_t*", odin_name = "i64", pointer = 1},
+    // Primitive{name = "int64_t **", odin_name = "i64", pointer = 2},
     Primitive{name = "uint8_t", odin_name = "u8"},
-    Primitive{name = "uint8_t*", odin_name = "u8", pointer = 1},
-    Primitive{name = "uint8_t **", odin_name = "u8", pointer = 2},
+    // Primitive{name = "uint8_t*", odin_name = "u8", pointer = 1},
+    // Primitive{name = "uint8_t **", odin_name = "u8", pointer = 2},
     Primitive{name = "uint16_t", odin_name = "u16"},
-    Primitive{name = "uint16_t*", odin_name = "u16", pointer = 1},
-    Primitive{name = "uint16_t **", odin_name = "u16", pointer = 2},
+    // Primitive{name = "uint16_t*", odin_name = "u16", pointer = 1},
+    // Primitive{name = "uint16_t **", odin_name = "u16", pointer = 2},
     Primitive{name = "uint32_t", odin_name = "u32"},
-    Primitive{name = "uint32_t*", odin_name = "u32", pointer = 1},
-    Primitive{name = "uint32_t **", odin_name = "u32", pointer = 2},
+    // Primitive{name = "uint32_t*", odin_name = "u32", pointer = 1},
+    // Primitive{name = "uint32_t **", odin_name = "u32", pointer = 2},
     Primitive{name = "uint64_t", odin_name = "u64"},
-    Primitive{name = "uint64_t*", odin_name = "u64", pointer = 1},
-    Primitive{name = "uint64_t **", odin_name = "u64", pointer = 2},
-    Primitive{name = "float*", odin_name = "Float", pointer = 1},
+    // Primitive{name = "uint64_t*", odin_name = "u64", pointer = 1},
+    // Primitive{name = "uint64_t **", odin_name = "u64", pointer = 2},
+    // Primitive{name = "float*", odin_name = "Float", pointer = 1},
     Primitive{name = "const void*", odin_name = "rawptr"},
-    Primitive{name = "const int8_t*", odin_name = "i8", pointer = 1},
-    Primitive{name = "const int8_t **", odin_name = "i8", pointer = 2},
-    Primitive{name = "const int16_t*", odin_name = "i16", pointer = 1},
-    Primitive{name = "const int16_t **", odin_name = "i16", pointer = 2},
-    Primitive{name = "const int32_t*", odin_name = "i32", pointer = 1},
-    Primitive{name = "const int32_t **", odin_name = "i32", pointer = 2},
-    Primitive{name = "const int64_t*", odin_name = "i64", pointer = 1},
-    Primitive{name = "const int64_t **", odin_name = "i64", pointer = 2},
-    Primitive{name = "const uint8_t*", odin_name = "u8", pointer = 1},
-    Primitive{name = "const uint8_t **", odin_name = "u8", pointer = 2},
-    Primitive{name = "const uint16_t*", odin_name = "u16", pointer = 1},
-    Primitive{name = "const uint16_t **", odin_name = "u16", pointer = 2},
-    Primitive{name = "const uint32_t*", odin_name = "u32", pointer = 1},
-    Primitive{name = "const uint32_t **", odin_name = "u32", pointer = 2},
-    Primitive{name = "const uint64_t*", odin_name = "u64", pointer = 1},
-    Primitive{name = "const uint64_t **", odin_name = "u64", pointer = 2},
-    Primitive{name = "const float*", odin_name = "Float", pointer = 1},
+    // Primitive{name = "const int8_t*", odin_name = "i8", pointer = 1},
+    // Primitive{name = "const int8_t **", odin_name = "i8", pointer = 2},
+    // Primitive{name = "const int16_t*", odin_name = "i16", pointer = 1},
+    // Primitive{name = "const int16_t **", odin_name = "i16", pointer = 2},
+    // Primitive{name = "const int32_t*", odin_name = "i32", pointer = 1},
+    // Primitive{name = "const int32_t **", odin_name = "i32", pointer = 2},
+    // Primitive{name = "const int64_t*", odin_name = "i64", pointer = 1},
+    // Primitive{name = "const int64_t **", odin_name = "i64", pointer = 2},
+    // Primitive{name = "const uint8_t*", odin_name = "u8", pointer = 1},
+    // Primitive{name = "const uint8_t **", odin_name = "u8", pointer = 2},
+    // Primitive{name = "const uint16_t*", odin_name = "u16", pointer = 1},
+    // Primitive{name = "const uint16_t **", odin_name = "u16", pointer = 2},
+    // Primitive{name = "const uint32_t*", odin_name = "u32", pointer = 1},
+    // Primitive{name = "const uint32_t **", odin_name = "u32", pointer = 2},
+    // Primitive{name = "const uint64_t*", odin_name = "u64", pointer = 1},
+    // Primitive{name = "const uint64_t **", odin_name = "u64", pointer = 2},
+    // Primitive{name = "const float*", odin_name = "Float", pointer = 1},
 }
 
 @(private = "file")
@@ -152,6 +153,23 @@ Any_Type :: union {
     ^Native_Struct,
     ^Primitive,
     ^Typed_Array,
+    ^Pointer,
+}
+
+Pointable_Type :: union {
+    ^Class_Enum(Builtin_Class),
+    ^Class_Bit_Field(Builtin_Class),
+    ^Class_Enum(Engine_Class),
+    ^Class_Bit_Field(Engine_Class),
+    ^Enum,
+    ^Bit_Field,
+    ^Native_Struct,
+    ^Primitive,
+}
+
+Pointer :: struct {
+    type:  Pointable_Type,
+    depth: int,
 }
 
 Builtin_Class :: struct {
@@ -246,14 +264,14 @@ Bit_Field :: struct {
 }
 
 Native_Struct :: struct {
-    name:   names.Godot_Name,
-    fields: []Struct_Field,
+    name:    names.Godot_Name,
+    fields:  []Struct_Field,
+    pointer: int,
 }
 
 Struct_Field :: struct {
     name:    string,
     type:    Any_Type,
-    pointer: int,
     default: Maybe(string),
 }
 
@@ -610,6 +628,52 @@ graph_builtins_structure_pass :: proc(graph: ^Graph, api: ^Api) {
     }
 }
 
+pointable_to_any :: proc(pointable_type: Pointable_Type) -> Any_Type {
+    switch type in pointable_type {
+        case ^Class_Enum(Builtin_Class):
+            return type
+        case ^Class_Bit_Field(Builtin_Class):
+            return type
+        case ^Class_Enum(Engine_Class):
+            return type
+        case ^Class_Bit_Field(Engine_Class):
+            return type
+        case ^Enum:
+            return type
+        case ^Bit_Field:
+            return type
+        case ^Native_Struct:
+            return type
+        case ^Primitive:
+            return type
+    }
+
+    panic("Couldn't match pointable type to any type")
+}
+
+any_to_pointable :: proc(any_type: Any_Type) -> Pointable_Type {
+    #partial switch type in any_type {
+    case ^Class_Enum(Builtin_Class):
+        return type
+    case ^Class_Bit_Field(Builtin_Class):
+        return type
+    case ^Class_Enum(Engine_Class):
+        return type
+    case ^Class_Bit_Field(Engine_Class):
+        return type
+    case ^Enum:
+        return type
+    case ^Bit_Field:
+        return type
+    case ^Native_Struct:
+        return type
+    case ^Primitive:
+        return type
+    }
+
+    panic("Couldn't match any type to pointable type")
+}
+
 @(private = "file")
 _root_to_any :: proc(root_type: Root_Type) -> Any_Type {
     switch type in root_type {
@@ -652,7 +716,7 @@ _graph_resolve_type :: proc(graph: ^Graph, type_specifier: Type_Specifier) -> An
 
     if !is_godot_name {
         type_string := type_specifier.(string)
-        
+
         // used later if we fall through the colon check
         godot_name = cast(names.Godot_Name)type_string
 
@@ -777,11 +841,27 @@ _graph_resolve_type :: proc(graph: ^Graph, type_specifier: Type_Specifier) -> An
 
                     typed_array := new(Typed_Array)
                     typed_array.element_type = _root_to_any(element_type)
+
+                    return typed_array
                 }
             case:
                 panic("Unexpected type prefix before ::")
             }
         }
+    }
+
+    ptr_idx := strings.index_rune(cast(string)godot_name, '*')
+    // void pointers are primitives since they map to rawptr, so we skip over them here
+    if ptr_idx != -1 && !strings.contains(cast(string)godot_name, "void") {
+        // its a pointer!
+        ptr_count := len(godot_name) - ptr_idx
+        type_string := strings.trim_right_space(cast(string)godot_name[:ptr_idx])
+        if strings.has_prefix(type_string, "const") {
+            type_string = type_string[6:]
+        }
+
+        type := any_to_pointable(_graph_resolve_type(graph, type_string))
+        return new_clone(Pointer{type = type, depth = ptr_count})
     }
 
     switch type in graph.types[godot_name] {
@@ -905,6 +985,8 @@ _graph_engine_method :: proc(graph: ^Graph, api_method: ApiClassMethod) -> Metho
         return_type = nil,
         args        = make([]Method_Arg, len(api_method.arguments)),
     }
+
+    // assert(api_method.name != "get_char_from_glyph_index")
 
     if return_value, ok := api_method.return_value.(ApiClassMethodReturnValue); ok {
         return_type_string := return_value.meta.(string) or_else return_value.type
@@ -1095,17 +1177,18 @@ _graph_native_struct_fields :: proc(graph: ^Graph, format: string) -> []Struct_F
         split_idx := strings.index_proc(field_format, strings.is_space)
         assert(split_idx > -1)
 
-        field.type = _graph_native_struct_field_type(graph, field_format[:split_idx])
         split_idx = strings.index_proc(field_format[split_idx:], strings.is_space, truth = false)
 
         remainder := field_format[split_idx:]
         for remainder[split_idx] == '*' {
-            field.pointer += 1
             split_idx += 1
         }
 
-        remainder = field_format[split_idx:]
+        // we want to include the pointer in the type specifier
+        field.type = _graph_native_struct_field_type(graph, field_format[:split_idx])
 
+        // remainder contains the field's name and the default value
+        remainder = field_format[split_idx:]
         space_idx := strings.index_proc(remainder, strings.is_space)
         if space_idx > -1 {
             field.name = remainder[:space_idx]

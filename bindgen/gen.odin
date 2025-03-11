@@ -47,6 +47,24 @@ open_write_template :: proc(file_path: string, view: $T, template: temple.Compil
     }
 }
 
+codgen_engine_class :: proc(task: thread.Task) {
+    class := cast(^g.Engine_Class)task.data
+
+    tracking_alloc: mem.Tracking_Allocator
+    mem.tracking_allocator_init(&tracking_alloc, context.allocator)
+
+    allocator := mem.tracking_allocator(&tracking_alloc)
+    if view, should_render := views.engine_class(class, allocator = allocator); should_render {
+        package_dir := fmt.aprintf("%v/%v", class.api_type, view.snake_name, allocator = allocator)
+        os.make_directory(package_dir, UNIX_ALLOW_READ_WRITE_ALL)
+
+        file_path := fmt.aprintf("%v/%v.gen.odin", package_dir, view.snake_name, allocator = allocator)
+        open_write_template(file_path, view, engine_template)
+    }
+
+    free_all(allocator)
+}
+
 codegen_variant :: proc(task: thread.Task) {
     class := cast(^g.Builtin_Class)task.data
 
@@ -55,9 +73,7 @@ codegen_variant :: proc(task: thread.Task) {
 
     allocator := mem.tracking_allocator(&tracking_alloc)
     if view, should_render := views.variant(class, allocator = allocator); should_render {
-        file_path := fmt.tprintf("variant/%v.gen.odin", view.name)
-        defer delete(file_path, allocator = context.temp_allocator)
-
+        file_path := fmt.aprintf("variant/%v.gen.odin", view.name, allocator = allocator)
         open_write_template(file_path, view, variant_template)
     }
 
@@ -71,6 +87,10 @@ generate_bindings :: proc(graph: g.Graph, options: Options) {
     thread.pool_init(&thread_pool, context.allocator, options.job_count)
     for &builtin_class in graph.builtin_classes {
         thread.pool_add_task(&thread_pool, context.allocator, codegen_variant, &builtin_class)
+    }
+
+    for &engine_class in graph.engine_classes {
+        thread.pool_add_task(&thread_pool, context.allocator, codgen_engine_class, &engine_class)
     }
 
     thread.pool_start(&thread_pool)

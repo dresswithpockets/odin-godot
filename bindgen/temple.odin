@@ -6,6 +6,7 @@ import "core:strings"
 import "views"
 
 variant_template := temple_compiled("../templates/bindgen_view_variant.temple.twig", views.Variant)
+engine_template := temple_compiled("../templates/bindgen_view_engine.temple.twig", views.Engine_Class)
 
 /*
     Copyright 2023 Dresses Digital

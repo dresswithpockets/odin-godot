@@ -1,0 +1,139 @@
+#+feature dynamic-literals
+package views
+
+import g "../graph"
+import "../names"
+import "core:fmt"
+import "core:mem"
+import "core:strings"
+
+Engine_Class :: struct {
+    imports:          map[string]Import,
+    name:             string,
+    snake_name:       string,
+    derives:          string,
+    enums:            []Enum,
+    file_constants:   []File_Constant,
+    static_methods:   []Method,
+    instance_methods: []Method,
+}
+
+@(private = "file")
+default_imports := map[string]Import {
+    "__bindgen_gde" = Import{name = "__bindgen_gde", path = "godot:gdextension"},
+    "__bindgen_var" = Import{name = "__bindgen_var", path = "godot:variant"},
+}
+
+_constant_constructor :: proc(initializer: g.Initialize_By_Constructor, current_package: string) -> (result: string) {
+    sb := strings.builder_make()
+
+    fmt.sbprint(&sb, resolve_qualified_type(initializer.type, current_package))
+    fmt.sbprint(&sb, "{ ")
+    for arg in initializer.arg_values {
+        fmt.sbprint(&sb, arg)
+        fmt.sbprint(&sb, ", ")
+    }
+    fmt.sbprint(&sb, " }")
+
+    result = strings.clone(strings.to_string(sb))
+    strings.builder_destroy(&sb)
+    return
+}
+
+engine_class :: proc(class: ^g.Engine_Class, allocator: mem.Allocator) -> (engine_class: Engine_Class, render: bool) {
+    context.allocator = allocator
+
+    static_method_count := 0
+    instance_method_count := 0
+    for method in class.methods {
+        if method.static {
+            static_method_count += 1
+        } else {
+            instance_method_count += 1
+        }
+    }
+
+    engine_class = Engine_Class {
+        imports          = default_imports,
+        name             = cast(string)names.to_odin(class.name),
+        snake_name       = cast(string)names.to_snake(class.name),
+        enums            = make([]Enum, len(class.enums)),
+        file_constants   = make([]File_Constant, len(class.constants)),
+        static_methods   = make([]Method, static_method_count),
+        instance_methods = make([]Method, instance_method_count),
+    }
+
+    package_name := fmt.aprintf("godot:core/%v", engine_class.snake_name)
+    engine_class.derives = resolve_qualified_type(class.inherits, package_name)
+
+    for class_enum, enum_idx in class.enums {
+        new_enum := Enum {
+            name   = strings.clone(cast(string)class_enum.name),
+            values = make([]Enum_Value, len(class_enum.values)),
+        }
+
+        for value, value_idx in class_enum.values {
+            new_enum.values[value_idx] = Enum_Value {
+                name  = cast(string)names.to_odin(value.name),
+                value = strings.clone(value.value),
+            }
+        }
+
+        engine_class.enums[enum_idx] = new_enum
+    }
+
+    for constant, constant_idx in class.constants {
+        file_constant := File_Constant {
+            name = strings.clone(cast(string)constant.name),
+            type = resolve_qualified_type(constant.type, package_name),
+        }
+
+        switch v in constant.initializer {
+        case string:
+            file_constant.value = strings.clone(v)
+        case g.Initialize_By_Constructor:
+            // TODO: some types can be file constants, while others require initialization
+            file_constant.value = _constant_constructor(v, package_name)
+        }
+
+        engine_class.file_constants[constant_idx] = file_constant
+    }
+
+    static_method_idx := 0
+    instance_method_idx := 0
+    for class_method, method_idx in class.methods {
+        method := Method {
+            name        = strings.clone(class_method.name),
+            hash        = class_method.hash,
+            args        = make([]Method_Arg, len(class_method.args)),
+            vararg      = class_method.vararg,
+            return_type = nil,
+        }
+
+        if class_method.return_type != nil {
+            method.return_type = resolve_qualified_type(class_method.return_type, package_name) // TODO: other package modes
+            ensure_imports(&engine_class.imports, class_method.return_type, package_name) // TODO: other package modes
+        }
+
+        for class_method_arg, arg_idx in class_method.args {
+            method.args[arg_idx] = Method_Arg {
+                name = strings.clone(class_method_arg.name),
+                type = resolve_qualified_type(class_method_arg.type, package_name), // TODO: other package modes
+                // TODO: defaults?
+            }
+
+            ensure_imports(&engine_class.imports, class_method_arg.type, package_name) // TODO: other package modes
+        }
+
+        if class_method.static {
+            engine_class.static_methods[static_method_idx] = method
+            static_method_idx += 1
+        } else {
+            engine_class.instance_methods[instance_method_idx] = method
+            instance_method_idx += 1
+        }
+    }
+
+    render = true
+    return
+}

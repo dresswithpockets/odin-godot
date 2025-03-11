@@ -66,34 +66,6 @@ Render_Flags :: bit_set[enum {
 Render_Flags_Native: Render_Flags : {.Methods, .Operators}
 Render_Flags_Opaque: Render_Flags : {.Constructors, .Destructor, .Members, .Methods, .Operators}
 
-Import :: struct {
-    name: string,
-    path: string,
-}
-
-Enum :: struct {
-    name:   string,
-    values: []Enum_Value,
-}
-
-Enum_Value :: struct {
-    name:  string,
-    value: string,
-}
-
-File_Constant :: struct {
-    name:  string,
-    type:  string,
-    value: string,
-}
-
-Init_Constant :: struct {
-    name:        string,
-    type:        string,
-    constructor: string,
-    args:        []string,
-}
-
 Constructor :: struct {
     name:  string,
     index: u64,
@@ -106,19 +78,6 @@ Constructor_Arg :: struct {
 }
 
 Member :: struct {
-    name: string,
-    type: string,
-}
-
-Method :: struct {
-    name:        string,
-    vararg:      bool,
-    hash:        i64,
-    return_type: Maybe(string),
-    args:        []Method_Arg,
-}
-
-Method_Arg :: struct {
     name: string,
     type: string,
 }
@@ -183,7 +142,7 @@ _class_constructor_name :: proc(snake_name: string, args: []g.Constructor_Arg) -
     }
 
     for arg in args {
-        type_name := _any_to_name(arg.type)
+        type_name := _any_to_name(arg.type, "godot:variant") // TODO: other package modes
         if type_name == cast(names.Odin_Name)"Float" {
             type_name = cast(names.Odin_Name)"float"
         }
@@ -351,7 +310,7 @@ variant :: proc(class: ^g.Builtin_Class, allocator: mem.Allocator) -> (variant: 
 
             for class_method_arg, arg_idx in class_method.args {
                 method.args[arg_idx] = Method_Arg {
-                    name = class_method_arg.name,
+                    name = strings.clone(class_method_arg.name),
                     type = resolve_qualified_type(class_method_arg.type, "godot:variant"), // TODO: other package modes
                     // TODO: defaults?
                 }
@@ -392,13 +351,13 @@ variant :: proc(class: ^g.Builtin_Class, allocator: mem.Allocator) -> (variant: 
             if class_operator.right_type != nil {
                 ensure_imports(&variant.imports, class_operator.right_type, "godot:variant") // TODO: other package modes
 
-                overload.right_type = cast(string)_any_to_name(class_operator.right_type)
+                overload.right_type = cast(string)_any_to_name(class_operator.right_type, "godot:variant") // TODO: other package modes
                 overload.right_variant_type = cast(string)_any_to_variant_type(class_operator.right_type)
                 overload.proc_name = fmt.aprintf(
                     "%v_%v_%v",
                     variant.snake_name,
                     class_operator.name,
-                    names.to_snake(_any_to_name(class_operator.right_type)),
+                    names.to_snake(_any_to_name(class_operator.right_type, "godot:variant")), // TODO: other package modes
                 )
             } else {
                 overload.proc_name = fmt.aprintf("%v_%v_default", variant.snake_name, class_operator.name)

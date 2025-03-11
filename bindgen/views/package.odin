@@ -3,6 +3,7 @@ package views
 import g "../graph"
 import "../names"
 import "core:fmt"
+import "core:strings"
 
 Package_Map_Mode :: enum {
     // generates `core`, `editor`, and `variant` packages with all classes.
@@ -18,6 +19,12 @@ Type_Import :: union {
 }
 
 No_Import :: struct {}
+
+@(private = "file")
+_array_import := Import{
+    name = "__bindgen_var",
+    path = "godot:variant",
+}
 
 @(private = "file")
 _api_type_to_import_name := [2]string{"__bindgen_core", "__bindgen_editor"}
@@ -97,23 +104,23 @@ map_types_to_imports :: proc(graph: g.Graph, map_mode: Package_Map_Mode) {
                     path = "godot:core",
                 }
             case ^g.Bit_Field:
-                import_map[cast(rawptr)root_type] = Import {
+                import_map[root_type] = Import {
                     name = "__bindgen_core",
                     path = "godot:core",
                 }
             case ^g.Native_Struct:
-                import_map[cast(rawptr)root_type] = Import {
+                import_map[root_type] = Import {
                     name = "__bindgen_var",
                     path = "godot:variant",
                 }
             case ^g.Primitive:
                 if root_type.odin_name == "Float" {
-                    import_map[cast(rawptr)root_type] = Import {
+                    import_map[root_type] = Import {
                         name = "__bindgen_gde",
                         path = "godot:gdextension",
                     }
                 } else {
-                    import_map[cast(rawptr)root_type] = No_Import{}
+                    import_map[root_type] = No_Import{}
                 }
             }
         }
@@ -149,9 +156,11 @@ _any_to_rawptr :: proc(type: g.Any_Type) -> rawptr {
         return as_type
     case ^g.Typed_Array:
         return as_type
+    case ^g.Pointer:
+        return as_type
     }
 
-    unimplemented("type is nil")
+    panic("type is nil")
 }
 
 _any_to_variant_type :: proc(type: g.Any_Type) -> names.Odin_Name {
@@ -185,13 +194,15 @@ _any_to_variant_type :: proc(type: g.Any_Type) -> names.Odin_Name {
         return "Int"
     case ^g.Typed_Array:
         return "Array"
+    case ^g.Pointer:
+        panic("Pointers cant be used as Variant")
     }
 
     unimplemented("type is nil")
 }
 
 @(private)
-_any_to_name :: proc(type: g.Any_Type) -> names.Odin_Name {
+_any_to_name :: proc(type: g.Any_Type, current_package: string) -> names.Odin_Name {
     switch as_type in type {
     case ^g.Builtin_Class:
         return names.to_odin(as_type.name)
@@ -214,13 +225,31 @@ _any_to_name :: proc(type: g.Any_Type) -> names.Odin_Name {
     case ^g.Primitive:
         return cast(names.Odin_Name)as_type.odin_name
     case ^g.Typed_Array:
-        unimplemented("See TODO in map_type_to_imports")
+        return cast(names.Odin_Name)fmt.aprintf("Typed_Array(%v)", _any_to_name(as_type.element_type, current_package))
+    case ^g.Pointer:
+        ptr_prefix := strings.repeat("^", as_type.depth)
+        resolved_type := resolve_qualified_type(g.pointable_to_any(as_type.type), current_package)
+        return cast(names.Odin_Name)fmt.aprintf("%v%v", ptr_prefix, resolved_type)
     }
 
-    unimplemented("type is nil")
+    panic("type is nil")
 }
 
 ensure_imports :: proc(imports: ^map[string]Import, type: g.Any_Type, current_package: string) {
+    if typed_array, is_typed_array := type.(^g.Typed_Array); is_typed_array {
+        if _array_import.path != current_package {
+            imports[_array_import.name] = _array_import
+        }
+
+        ensure_imports(imports, typed_array.element_type, current_package)
+        return
+    }
+
+    if pointer, is_pointer := type.(^g.Pointer); is_pointer {
+        ensure_imports(imports, g.pointable_to_any(pointer.type), current_package)
+        return
+    }
+
     type_import, ok := import_map[_any_to_rawptr(type)]
     assert(ok, "Couldn't find mapped import for type.")
 
@@ -233,15 +262,27 @@ ensure_imports :: proc(imports: ^map[string]Import, type: g.Any_Type, current_pa
 }
 
 resolve_qualified_type :: proc(type: g.Any_Type, current_package: string) -> string {
+    if typed_array, is_typed_array := type.(^g.Typed_Array); is_typed_array {
+        if _array_import.path != current_package {
+            return fmt.aprintf("%v.%v", _array_import.name, _any_to_name(typed_array, current_package))
+        }
+
+        return fmt.aprintf("Typed_Array(%v)", _any_to_name(typed_array, current_package))
+    }
+
+    if pointer, is_pointer := type.(^g.Pointer); is_pointer {
+        return cast(string)_any_to_name(pointer, current_package)
+    }
+
     type_import, ok := import_map[_any_to_rawptr(type)]
-    assert(ok, "Couldn't find mapped import for type.")
+    assert(ok, fmt.tprintfln("Couldn't find mapped import for type: %v", _any_to_name(type, current_package)))
 
     import_, is_import := type_import.(Import)
     if !is_import || import_.path == current_package {
-        return cast(string)_any_to_name(type)
+        return cast(string)_any_to_name(type, current_package)
     }
 
-    return fmt.aprintf("%v.%v", import_.name, _any_to_name(type))
+    return fmt.aprintf("%v.%v", import_.name, _any_to_name(type, current_package))
 }
 
 resolve_constructor_proc_name :: proc(type: g.Any_Type, current_package: string) -> string {
