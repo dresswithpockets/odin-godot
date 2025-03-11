@@ -116,6 +116,8 @@ clean:
 	rm -f bindgen/templates.odin
 	rm -f $(OUT_DIR)/*
 	rm -f editor/*.gen.odin
+	rm -rf core/**/
+	rm -rf editor/**/
 	rm -f core/*.gen.odin
 	rm -f variant/*.gen.odin
 	rm -f $(examples_hello_dir)bin/*
