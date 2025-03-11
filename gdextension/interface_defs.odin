@@ -224,7 +224,7 @@ ExtensionInterfaceVariantDestroy :: #type proc "c" (p_self: VariantPtr)
 ExtensionInterfaceVariantCall :: #type proc "c" (
     p_self: VariantPtr,
     p_method: StringNamePtr,
-    p_args: ^VariantPtr,
+    p_args: [^]VariantPtr,
     p_argument_count: i64,
     r_return: VariantPtr,
     r_error: ^CallError,
@@ -248,7 +248,7 @@ ExtensionInterfaceVariantCall :: #type proc "c" (
 ExtensionInterfaceVariantCallStatic :: #type proc "c" (
     p_type: VariantType,
     p_method: StringNamePtr,
-    p_args: ^VariantPtr,
+    p_args: [^]VariantPtr,
     p_argument_count: i64,
     r_return: VariantPtr,
     r_error: ^CallError,
@@ -789,7 +789,7 @@ ExtensionInterfaceVariantGetPtrDestructor :: #type proc "c" (p_type: VariantType
 ExtensionInterfaceVariantConstruct :: #type proc "c" (
     p_type: VariantType,
     r_base: VariantPtr,
-    p_args: ^VariantPtr,
+    p_args: [^]VariantPtr,
     p_argument_count: i32,
     r_error: ^CallError,
 )
@@ -1835,7 +1835,7 @@ ExtensionInterfaceDictionarySetTyped :: #type proc "c" (
 ExtensionInterfaceObjectMethodBindCall :: #type proc "c" (
     p_method_bind: MethodBindPtr,
     p_instance: ObjectPtr,
-    p_args: ^VariantPtr,
+    p_args: [^]VariantPtr,
     p_arg_count: i64,
     r_ret: VariantPtr,
     r_error: ^CallError,
@@ -1855,7 +1855,7 @@ ExtensionInterfaceObjectMethodBindCall :: #type proc "c" (
 ExtensionInterfaceObjectMethodBindPtrcall :: #type proc "c" (
     p_method_bind: MethodBindPtr,
     p_instance: ObjectPtr,
-    p_args: ^TypePtr,
+    p_args: [^]TypePtr,
     r_ret: TypePtr,
 )
 
@@ -2031,7 +2031,7 @@ ExtensionInterfaceObjectHasScriptMethod :: #type proc "c" (p_object: ObjectPtr, 
 ExtensionInterfaceObjectCallScriptMethod :: #type proc "c" (
     p_object: ObjectPtr,
     p_method: StringNamePtr,
-    p_args: ^VariantPtr,
+    p_args: [^]VariantPtr,
     p_argument_count: i64,
     r_return: VariantPtr,
     r_error: ^CallError,
