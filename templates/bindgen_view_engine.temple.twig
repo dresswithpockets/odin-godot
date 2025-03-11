@@ -1,0 +1,127 @@
+package {{ this.snake_name }}
+
+{% for name, import_ in this.imports %}
+import {{ name }} "{{ import_.path }}"
+{% end %}
+
+{{ this.name }} :: {{ this.derives }}
+
+{% for constant in this.file_constants %}
+{{ constant.name }} :: {{ constant.value }}
+{% end %}
+
+{% for enum_ in this.enums %}
+{% embed "bindgen_view_enum.temple.twig" with enum_ %}
+{% end %}
+
+@(private = "file")
+__class_name: __bindgen_var.String_Name
+
+name_ref :: proc "contextless" () -> ^__bindgen_var.String_Name {
+    return &__class_name
+}
+
+name :: proc "contextless" () -> __bindgen_var.String_Name {
+    return __class_name
+}
+
+new_{{ this.snake_name }} :: proc "contextless" () -> {{ this.name }} {
+    return cast({{ this.name }})__bindgen_gde.classdb_construct_object(&__class_name)
+}
+
+// methods
+{% for method in this.static_methods %}
+{% if return_type, has_return_type := method.return_type.(string); has_return_type %}
+{{ this.snake_name }}_{{ method.name }} :: proc "contextless" (
+{% for arg in method.args %}
+    {{ arg.name }}_: {{ arg.type }},
+{% end %}
+) -> (ret: {{ return_type }}) {
+    @(static) __ptr: __bindgen_gde.MethodBindPtr
+    if __ptr == nil {
+        __name := __bindgen_var.new_string_name_cstring("{{ method.name }}", true)
+        __ptr = __bindgen_gde.classdb_get_method_bind(&__class_name, &__name, {{ i64(method.hash) }})
+    }
+{% for arg in method.args %}
+    {{ arg.name }}_ := {{ arg.name }}_
+{% end %}
+    args := []__bindgen_gde.TypePtr {
+{% for arg in method.args %}
+        &{{ arg.name }}_,
+{% end %}
+    }
+    object_method_bind_ptrcall(__ptr, nil, raw_data(args), &ret)
+    return
+}
+{% else %}
+{{ this.snake_name }}_{{ method.name }} :: proc "contextless" (
+{% for arg in method.args %}
+    {{ arg.name }}_: {{ arg.type }},
+{% end %}
+) {
+    @(static) __ptr: __bindgen_gde.MethodBindPtr
+    if __ptr == nil {
+        __name := __bindgen_var.new_string_name_cstring("{{ method.name }}", true)
+        __ptr = __bindgen_gde.classdb_get_method_bind(&__class_name, &__name, {{ i64(method.hash) }})
+    }
+{% for arg in method.args %}
+    {{ arg.name }}_ := {{ arg.name }}_
+{% end %}
+    args := []__bindgen_gde.TypePtr {
+{% for arg in method.args %}
+        &{{ arg.name }}_,
+{% end %}
+    }
+    object_method_bind_ptrcall(__ptr, nil, raw_data(args), nil)
+}
+{% end %}
+{% end %}
+
+{% for method in this.instance_methods %}
+{% if return_type, has_return_type := method.return_type.(string); has_return_type %}
+{{ this.snake_name }}_{{ method.name }} :: proc "contextless" (
+    self: ^{{ this.name }},
+{% for arg in method.args %}
+    {{ arg.name }}_: {{ arg.type }},
+{% end %}
+) -> (ret: {{ return_type }}) {
+    @(static) __ptr: __bindgen_gde.MethodBindPtr
+    if __ptr == nil {
+        __name := __bindgen_var.new_string_name_cstring("{{ method.name }}", true)
+        __ptr = __bindgen_gde.classdb_get_method_bind(&__class_name, &__name, {{ i64(method.hash) }})
+    }
+{% for arg in method.args %}
+    {{ arg.name }}_ := {{ arg.name }}_
+{% end %}
+    args := []__bindgen_gde.TypePtr {
+{% for arg in method.args %}
+        &{{ arg.name }}_,
+{% end %}
+    }
+    object_method_bind_ptrcall(__ptr, self, raw_data(args), &ret)
+    return
+}
+{% else %}
+{{ this.snake_name }}_{{ method.name }} :: proc "contextless" (
+    self: ^{{ this.name }},
+{% for arg in method.args %}
+    {{ arg.name }}_: {{ arg.type }},
+{% end %}
+) {
+    @(static) __ptr: __bindgen_gde.MethodBindPtr
+    if __ptr == nil {
+        __name := __bindgen_var.new_string_name_cstring("{{ method.name }}", true)
+        __ptr = __bindgen_gde.classdb_get_method_bind(&__class_name, &__name, {{ i64(method.hash) }})
+    }
+{% for arg in method.args %}
+    {{ arg.name }}_ := {{ arg.name }}_
+{% end %}
+    args := []__bindgen_gde.TypePtr {
+{% for arg in method.args %}
+        &{{ arg.name }}_,
+{% end %}
+    }
+    object_method_bind_ptrcall(__ptr, self, raw_data(args), nil)
+}
+{% end %}
+{% end %}
