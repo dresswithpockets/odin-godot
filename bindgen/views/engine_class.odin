@@ -10,6 +10,7 @@ import "core:strings"
 Engine_Class :: struct {
     imports:          map[string]Import,
     name:             string,
+    godot_name:       string,
     snake_name:       string,
     derives:          string,
     enums:            []Enum,
@@ -56,6 +57,7 @@ engine_class :: proc(class: ^g.Engine_Class, allocator: mem.Allocator) -> (engin
     engine_class = Engine_Class {
         imports          = default_imports,
         name             = cast(string)names.to_odin(class.name),
+        godot_name       = strings.clone(cast(string)class.name),
         snake_name       = cast(string)names.to_snake(class.name),
         enums            = make([]Enum, len(class.enums)),
         file_constants   = make([]File_Constant, len(class.constants)),
