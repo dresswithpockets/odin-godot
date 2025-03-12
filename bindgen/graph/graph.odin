@@ -641,22 +641,22 @@ graph_builtins_structure_pass :: proc(graph: ^Graph, api: ^Api) {
 
 pointable_to_any :: proc(pointable_type: Pointable_Type) -> Any_Type {
     switch type in pointable_type {
-        case ^Class_Enum(Builtin_Class):
-            return type
-        case ^Class_Bit_Field(Builtin_Class):
-            return type
-        case ^Class_Enum(Engine_Class):
-            return type
-        case ^Class_Bit_Field(Engine_Class):
-            return type
-        case ^Enum:
-            return type
-        case ^Bit_Field:
-            return type
-        case ^Native_Struct:
-            return type
-        case ^Primitive:
-            return type
+    case ^Class_Enum(Builtin_Class):
+        return type
+    case ^Class_Bit_Field(Builtin_Class):
+        return type
+    case ^Class_Enum(Engine_Class):
+        return type
+    case ^Class_Bit_Field(Engine_Class):
+        return type
+    case ^Enum:
+        return type
+    case ^Bit_Field:
+        return type
+    case ^Native_Struct:
+        return type
+    case ^Primitive:
+        return type
     }
 
     panic("Couldn't match pointable type to any type")
