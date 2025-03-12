@@ -1,14 +1,144 @@
-package gdextension
+package classdb
 
-// called by Godot the first time i calls a virtual func, it caches the result per object instance.
-// So, it can happen from different threads at once. 
-// N.B. ported from godot-cpp/src/core/class_db.cpp
-//
-// for our implementation, we dont support virtual method binding (yet), so this will always return
-// nil
-class_db_get_virtual_func :: proc "c" (user_data: rawptr, name: StringNamePtr) -> ExtensionClassCallVirtual {
-    return nil
+import "base:intrinsics"
+import gd "godot:gdextension"
+import var "godot:variant"
+
+simple_property_info :: proc "contextless" (type: gd.VariantType, name: ^var.String_Name) -> gd.PropertyInfo {
+    return gd.PropertyInfo {
+        name        = name,
+        type        = type,
+        hint        = 0, // .None
+        hint_string = var.string_empty_ref(),
+        class_name  = var.string_name_empty_ref(),
+        usage       = 0, // .Default
+    }
 }
+
+expect_args :: proc "contextless" (
+    args: [^]gd.VariantPtr,
+    arg_count: i64,
+    error: ^gd.CallError,
+    arg_types: ..gd.VariantType,
+) -> bool {
+    if arg_count < cast(i64)len(arg_types) {
+        error.error = .Too_Few_Arguments
+        error.expected = cast(i32)len(arg_types)
+        return false
+    }
+
+    if arg_count > cast(i64)len(arg_types) {
+        error.error = .Too_Many_Arguments
+        error.expected = cast(i32)len(arg_types)
+        return false
+    }
+
+    for arg_type, arg_idx in arg_types {
+        type := gd.variant_get_type(cast(^var.Variant)args[arg_idx])
+        if type != arg_type {
+            error.error = .Invalid_Argument
+            error.expected = cast(i32)arg_type
+            error.argument = cast(i32)arg_idx
+            return false
+        }
+    }
+
+    return true
+}
+
+bind_property_and_methods :: proc(
+    class_name: ^var.String_Name,
+    name: ^var.String_Name,
+    getter_name: ^var.String_Name,
+    setter_name: ^var.String_Name,
+    getter: proc "contextless" (self: ^$Self) -> $Value,
+    setter: proc "contextless" (self: ^Self, value: Value),
+) {
+    bind_returning_method_0_args(class_name, getter_name, getter)
+    bind_void_method_1_args(class_name, setter_name, setter, name)
+
+    type := var.variant_type(Value)
+    info := simple_property_info(type, name)
+    gd.classdb_register_extension_class_property(gd.library, class_name, &info, setter_name, getter_name)
+}
+
+bind_property :: proc(
+    class_name: ^var.String_Name,
+    name: ^var.String_Name,
+    type: gd.VariantType,
+    getter: ^var.String_Name,
+    setter: ^var.String_Name,
+) {
+    info := simple_property_info(type, name)
+    gd.classdb_register_extension_class_property(gd.library, class_name, &info, setter, getter)
+}
+
+// bind_void_method :: proc {
+//     bind_void_method_1_args,
+// }
+
+// bind_void_method_1_args :: proc(
+//     class_name: ^var.String_Name,
+//     method_name: ^var.String_Name,
+//     function: $P/proc(self: $Self, arg0: $Arg0),
+//     arg0_name: string,
+// ) {
+//     ptrcall, call := get_void_calls(Self, Arg0)
+//     method_info := gd.ExtensionClassMethodInfo {
+//         name                   = method_name,
+//         method_user_data       = function,
+//         call_func              = call,
+//         ptr_call_func          = ptrcall,
+//         method_flags           = 0,
+//         has_return_value       = false,
+//         return_value_metadata  = .None,
+//         argument_count         = 1,
+//         default_argument_count = 0,
+//     }
+
+//     args_info := [0]gd.PropertyInfo{simple_property_info(var.variant_type(Arg0), arg0_name),}
+//     args_metadata := [0]gd.ExtensionClassMethodArgumentMetadata{.None}
+
+//     method_info.arguments_info = &args_info[0]
+//     method_info.arguments_metadata = &args_metadata[0]
+
+//     gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+// }
+
+// bind_returning_method :: proc {
+//     bind_returning_method_1_args,
+// }
+
+// bind_returning_method_1_args :: proc(
+//     class_name: ^var.String_Name,
+//     method_name: ^var.String_Name,
+//     function: $P/proc(self: $Self, arg0: $Arg0) -> $Ret,
+//     arg0_name: string,
+// ) {
+//     return_info := simple_property_info(var.variant_type(Ret), var.string_name_empty_ref())
+
+//     ptrcall, call := get_void_calls(Self, Arg0)
+//     method_info := gd.ExtensionClassMethodInfo {
+//         name                   = method_name,
+//         method_user_data       = function,
+//         call_func              = call,
+//         ptr_call_func          = ptrcall,
+//         method_flags           = 0,
+//         has_return_value       = true,
+//         return_value_info      = return_info,
+//         return_value_metadata  = .None,
+//         argument_count         = 1,
+//         default_argument_count = 0,
+//     }
+
+//     args_info := [0]gd.PropertyInfo{simple_property_info(var.variant_type(Arg0), arg0_name)}
+//     args_metadata := [0]gd.ExtensionClassMethodArgumentMetadata{.None}
+
+//     method_info.arguments_info = &args_info[0]
+//     method_info.arguments_metadata = &args_metadata[0]
+
+//     gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+// }
 
 /*
     Copyright 2023 Dresses Digital
