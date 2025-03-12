@@ -685,8 +685,7 @@ any_to_pointable :: proc(any_type: Any_Type) -> Pointable_Type {
     panic("Couldn't match any type to pointable type")
 }
 
-@(private = "file")
-_root_to_any :: proc(root_type: Root_Type) -> Any_Type {
+root_to_any :: proc(root_type: Root_Type) -> Any_Type {
     switch type in root_type {
     case ^Builtin_Class:
         return type
@@ -851,7 +850,7 @@ _graph_resolve_type :: proc(graph: ^Graph, type_specifier: Type_Specifier) -> An
                     )
 
                     typed_array := new(Typed_Array)
-                    typed_array.element_type = _root_to_any(element_type)
+                    typed_array.element_type = root_to_any(element_type)
 
                     return typed_array
                 }
