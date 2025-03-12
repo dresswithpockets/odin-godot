@@ -107,7 +107,9 @@ cexamples: examples/game/cbin/game.dll
 
 check:
 	odin check bindgen/
-	odin check gdextension/ -no-entry-point
+	odin check core/ -no-entry-point -collection:godot=. -define:BUILD_CONFIG=$(GD_BUILD_CONFIG)
+	odin check editor/ -no-entry-point -collection:godot=. -define:BUILD_CONFIG=$(GD_BUILD_CONFIG)
+	odin check gdextension/ -no-entry-point -collection:godot=. -define:BUILD_CONFIG=$(GD_BUILD_CONFIG)
 	odin check examples/tests/src -no-entry-point -collection:godot=. -define:BUILD_CONFIG=$(GD_BUILD_CONFIG)
 
 .PHONY: clean
