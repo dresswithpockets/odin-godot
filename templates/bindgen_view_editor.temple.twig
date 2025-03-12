@@ -1,0 +1,9 @@
+package editor
+
+import __bindgen_core "godot:core"
+import __bindgen_gde "godot:gdextension"
+import __bindgen_var "godot:variant"
+
+{% for class in this.classes %}
+{{ class.name }} :: {{ class.derives }}
+{% end %}

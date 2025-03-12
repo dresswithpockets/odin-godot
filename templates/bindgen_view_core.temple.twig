@@ -1,0 +1,58 @@
+package core
+
+import __bindgen_gde "godot:gdextension"
+import __bindgen_var "godot:variant"
+
+{% for class in this.classes %}
+{{ class.name }} :: {{ class.derives }}
+{% end %}
+
+{% for function in this.functions %}
+{% if return_type, has_return_type := function.return_type.(string); has_return_type %}
+{{ function.name }} :: proc "contextless" (
+{% for arg in function.args %}
+    {{ arg.name }}_: {{ arg.type }},
+{% end %}
+) -> (ret: {{ return_type }}) {
+{% for arg in function.args %}
+    {{ arg.name }}_ := {{ arg.name }}_
+{% end %}
+    args := []__bindgen_gde.TypePtr {
+{% for arg in function.args %}
+        &{{ arg.name }}_,
+{% end %}
+    }
+    __{{ function.name }}_ptr(&ret, raw_data(args), len(args))
+    return
+}
+{% else %}
+{{ function.name }} :: proc "contextless" (
+{% for arg in function.args %}
+    {{ arg.name }}_: {{ arg.type }},
+{% end %}
+) {
+{% for arg in function.args %}
+    {{ arg.name }}_ := {{ arg.name }}_
+{% end %}
+    args := []__bindgen_gde.TypePtr {
+{% for arg in function.args %}
+        &{{ arg.name }}_,
+{% end %}
+    }
+    __{{ function.name }}_ptr(nil, raw_data(args), len(args))
+}
+{% end %}
+{% end %}
+
+init_util_procs :: proc "contextless" () {
+    __name: __bindgen_var.String_Name
+{% for function in this.functions %}
+    __name = __bindgen_var.new_string_name_cstring("{{ function.godot_name }}", true)
+    __{{ function.name }}_ptr = __bindgen_gde.variant_get_ptr_utility_function(&__name, {{ i64(function.hash) }})
+{% end %}
+}
+
+{% for function in this.functions %}
+@(private="file")
+__{{ function.name }}_ptr: __bindgen_gde.PtrUtilityFunction
+{% end %}

@@ -6,11 +6,11 @@ import "core:fmt"
 import "core:strings"
 
 Package_Map_Mode :: enum {
+    // generates `core/class_name`, `editor/class_name`, and `variant` packages with all classes
+    Nested,
+
     // generates `core`, `editor`, and `variant` packages with all classes.
     Flat,
-
-    // generates `core/ClassName`, `editor/ClassName`, and `variant` packages with all classes
-    Nested,
 }
 
 Type_Import :: union {
@@ -49,7 +49,7 @@ import_map: map[rawptr]Type_Import
 
 map_types_to_imports :: proc(graph: g.Graph, map_mode: Package_Map_Mode) {
     switch map_mode {
-    case .Flat:
+    case .Nested:
         for _, type in graph.types {
             switch root_type in type {
             case ^g.Builtin_Class:
@@ -80,23 +80,29 @@ map_types_to_imports :: proc(graph: g.Graph, map_mode: Package_Map_Mode) {
                     continue
                 }
 
-                import_map[root_type] = Import {
+                // any_type := g.root_to_any(root_type)
+                // // TODO: refactor pointer resolution out of _any_to_name, to get rid of the current_package dependency
+                // // N.B. we can safely provide "" for current_package; we know that any_type will never be a ^g.Pointer,
+                // //      because we casted it from Root_Type - which is never a ^g.Pointer
+                // root_type_snake_name := cast(string)names.to_snake(_any_to_name(any_type, ""))
+                // root_type_import := Import {
+                //     name = root_type_snake_name,
+                //     path = fmt.aprintf("%v/%v", _api_type_to_import_path[root_type.api_type], root_type_snake_name),
+                // }
+
+                root_type_import := Import {
                     name = _api_type_to_import_name[root_type.api_type],
                     path = _api_type_to_import_path[root_type.api_type],
                 }
 
+                import_map[root_type] = root_type_import
+
                 for &class_enum in root_type.enums {
-                    import_map[&class_enum] = Import {
-                        name = _api_type_to_import_name[root_type.api_type],
-                        path = _api_type_to_import_path[root_type.api_type],
-                    }
+                    import_map[&class_enum] = root_type_import
                 }
 
                 for &class_bit_field in root_type.bit_fields {
-                    import_map[&class_bit_field] = Import {
-                        name = _api_type_to_import_name[root_type.api_type],
-                        path = _api_type_to_import_path[root_type.api_type],
-                    }
+                    import_map[&class_bit_field] = root_type_import
                 }
             case ^g.Enum:
                 import_map[root_type] = Import {
@@ -124,8 +130,8 @@ map_types_to_imports :: proc(graph: g.Graph, map_mode: Package_Map_Mode) {
                 }
             }
         }
-    case .Nested:
-        unimplemented("Nested mode not implemented yet")
+    case .Flat:
+        unimplemented("Flat mode not implemented yet")
     }
 
     // TODO: we need a list of all TypedArray pointers that we can map against

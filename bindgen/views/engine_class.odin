@@ -9,10 +9,10 @@ import "core:strings"
 
 Engine_Class :: struct {
     imports:          map[string]Import,
+    parent_package:   string,
     name:             string,
     godot_name:       string,
     snake_name:       string,
-    derives:          string,
     enums:            []Enum,
     file_constants:   []File_Constant,
     static_methods:   []Method,
@@ -20,9 +20,9 @@ Engine_Class :: struct {
 }
 
 @(private = "file")
-default_imports := map[string]Import {
-    "__bindgen_gde" = Import{name = "__bindgen_gde", path = "godot:gdextension"},
-    "__bindgen_var" = Import{name = "__bindgen_var", path = "godot:variant"},
+default_imports := []Import {
+    {name = "__bindgen_gde", path = "godot:gdextension"},
+    {name = "__bindgen_var", path = "godot:variant"},
 }
 
 _constant_constructor :: proc(initializer: g.Initialize_By_Constructor, current_package: string) -> (result: string) {
@@ -55,7 +55,7 @@ engine_class :: proc(class: ^g.Engine_Class, allocator: mem.Allocator) -> (engin
     }
 
     engine_class = Engine_Class {
-        imports          = default_imports,
+        parent_package   = g.to_string(class.api_type),
         name             = cast(string)names.to_odin(class.name),
         godot_name       = strings.clone(cast(string)class.name),
         snake_name       = cast(string)names.to_snake(class.name),
@@ -65,8 +65,13 @@ engine_class :: proc(class: ^g.Engine_Class, allocator: mem.Allocator) -> (engin
         instance_methods = make([]Method, instance_method_count),
     }
 
-    package_name := fmt.aprintf("godot:core/%v", engine_class.snake_name)
-    engine_class.derives = resolve_qualified_type(class.inherits, package_name)
+    for default_import in default_imports {
+        engine_class.imports[default_import.name] = default_import
+    }
+
+    // package_name := fmt.aprintf("godot:core/%v", engine_class.snake_name)
+    package_name := fmt.aprintf("godot:%v", g.to_string(class.api_type))
+    // engine_class.derives = resolve_qualified_type(class.inherits, package_name)
 
     for class_enum, enum_idx in class.enums {
         new_enum := Enum {

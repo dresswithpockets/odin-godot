@@ -16,7 +16,7 @@ Options :: struct {
 }
 
 default_options :: proc() -> Options {
-    return Options{api_file = "", job_count = 0, map_mode = .Flat}
+    return Options{api_file = "", job_count = 0, map_mode = .Nested}
 }
 
 print_usage :: proc() {

@@ -113,9 +113,7 @@ Variant :: struct {
 }
 
 @(private = "file")
-default_imports := map[string]Import {
-    "__bindgen_gde" = Import{name = "__bindgen_gde", path = "../gdextension"},
-}
+default_import := Import{name = "__bindgen_gde", path = "../gdextension"}
 
 @(private = "file")
 imports_with_math := []Import {
@@ -200,7 +198,6 @@ variant :: proc(class: ^g.Builtin_Class, allocator: mem.Allocator) -> (variant: 
     }
 
     variant = Variant {
-        imports             = default_imports,
         name                = cast(string)names.to_odin(class.name),
         snake_name          = cast(string)names.to_snake(class.name),
         enums               = make([]Enum, len(class.enums)),
@@ -213,6 +210,8 @@ variant :: proc(class: ^g.Builtin_Class, allocator: mem.Allocator) -> (variant: 
         instance_methods    = make([]Method, instance_method_count),
         operators           = make([]Operator, operator_count),
     }
+
+    variant.imports[default_import.name] = default_import
 
     if Render_Flags.Destructor in render_flags && class.destructor {
         variant.destructor = fmt.tprintf("free_%v", snake_name)

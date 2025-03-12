@@ -1,13 +1,13 @@
 #+private
 package bindgen
 
+import "../temple"
 import "base:runtime"
 import "core:fmt"
 import "core:io"
+import "core:mem"
 import "core:os"
 import "core:thread"
-import "core:mem"
-import "../temple"
 
 import g "graph"
 import "views"
@@ -47,7 +47,67 @@ open_write_template :: proc(file_path: string, view: $T, template: temple.Compil
     }
 }
 
-codgen_engine_class :: proc(task: thread.Task) {
+codegen_core :: proc(task: thread.Task) {
+    graph := cast(^g.Graph)task.data
+
+    tracking_alloc: mem.Tracking_Allocator
+    mem.tracking_allocator_init(&tracking_alloc, context.allocator)
+
+    allocator := mem.tracking_allocator(&tracking_alloc)
+
+    view := views.core_package(graph, allocator = allocator)
+    open_write_template("core/core.gen.odin", view, core_template)
+
+    free_all(allocator)
+}
+
+codegen_editor :: proc(task: thread.Task) {
+    graph := cast(^g.Graph)task.data
+
+    tracking_alloc: mem.Tracking_Allocator
+    mem.tracking_allocator_init(&tracking_alloc, context.allocator)
+
+    allocator := mem.tracking_allocator(&tracking_alloc)
+
+    view := views.editor_package(graph, allocator = allocator)
+    open_write_template("editor/editor.gen.odin", view, editor_template)
+
+    free_all(allocator)
+}
+
+codegen_core_init :: proc(task: thread.Task) {
+    graph := cast(^g.Graph)task.data
+
+    os.make_directory("core/init", UNIX_ALLOW_READ_WRITE_ALL)
+
+    tracking_alloc: mem.Tracking_Allocator
+    mem.tracking_allocator_init(&tracking_alloc, context.allocator)
+
+    allocator := mem.tracking_allocator(&tracking_alloc)
+
+    view := views.engine_init(graph, .Core, allocator = allocator)
+    open_write_template("core/init/init.gen.odin", view, engine_init_template)
+
+    free_all(allocator)
+}
+
+codegen_editor_init :: proc(task: thread.Task) {
+    graph := cast(^g.Graph)task.data
+
+    os.make_directory("editor/init", UNIX_ALLOW_READ_WRITE_ALL)
+
+    tracking_alloc: mem.Tracking_Allocator
+    mem.tracking_allocator_init(&tracking_alloc, context.allocator)
+
+    allocator := mem.tracking_allocator(&tracking_alloc)
+
+    view := views.engine_init(graph, .Editor, allocator = allocator)
+    open_write_template("editor/init/init.gen.odin", view, engine_init_template)
+
+    free_all(allocator)
+}
+
+codegen_engine_class :: proc(task: thread.Task) {
     class := cast(^g.Engine_Class)task.data
 
     tracking_alloc: mem.Tracking_Allocator
@@ -55,11 +115,11 @@ codgen_engine_class :: proc(task: thread.Task) {
 
     allocator := mem.tracking_allocator(&tracking_alloc)
     if view, should_render := views.engine_class(class, allocator = allocator); should_render {
-        package_dir := fmt.aprintf("%v/%v", class.api_type, view.snake_name, allocator = allocator)
+        package_dir := fmt.aprintf("%v/%v", g.to_string(class.api_type), view.snake_name, allocator = allocator)
         os.make_directory(package_dir, UNIX_ALLOW_READ_WRITE_ALL)
 
         file_path := fmt.aprintf("%v/%v.gen.odin", package_dir, view.snake_name, allocator = allocator)
-        open_write_template(file_path, view, engine_template)
+        open_write_template(file_path, view, engine_class_template)
     }
 
     free_all(allocator)
@@ -81,16 +141,38 @@ codegen_variant :: proc(task: thread.Task) {
 }
 
 generate_bindings :: proc(graph: g.Graph, options: Options) {
+    graph := graph
+
     views.map_types_to_imports(graph, options.map_mode)
+
+    if options.job_count == 1 {
+        codegen_core(thread.Task{data = &graph})
+        codegen_core_init(thread.Task{data = &graph})
+        codegen_editor(thread.Task{data = &graph})
+        codegen_editor_init(thread.Task{data = &graph})
+        for &builtin_class in graph.builtin_classes {
+            codegen_variant(thread.Task{data = &builtin_class})
+        }
+    
+        for &engine_class in graph.engine_classes {
+            codegen_engine_class(thread.Task{data = &engine_class})
+        }
+
+        return
+    }
 
     thread_pool: thread.Pool
     thread.pool_init(&thread_pool, context.allocator, options.job_count)
+    thread.pool_add_task(&thread_pool, context.allocator, codegen_core, &graph)
+    thread.pool_add_task(&thread_pool, context.allocator, codegen_core_init, &graph)
+    thread.pool_add_task(&thread_pool, context.allocator, codegen_editor, &graph)
+    thread.pool_add_task(&thread_pool, context.allocator, codegen_editor_init, &graph)
     for &builtin_class in graph.builtin_classes {
         thread.pool_add_task(&thread_pool, context.allocator, codegen_variant, &builtin_class)
     }
 
     for &engine_class in graph.engine_classes {
-        thread.pool_add_task(&thread_pool, context.allocator, codgen_engine_class, &engine_class)
+        thread.pool_add_task(&thread_pool, context.allocator, codegen_engine_class, &engine_class)
     }
 
     thread.pool_start(&thread_pool)

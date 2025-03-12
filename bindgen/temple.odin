@@ -6,7 +6,10 @@ import "core:strings"
 import "views"
 
 variant_template := temple_compiled("../templates/bindgen_view_variant.temple.twig", views.Variant)
-engine_template := temple_compiled("../templates/bindgen_view_engine.temple.twig", views.Engine_Class)
+engine_class_template := temple_compiled("../templates/bindgen_view_engine.temple.twig", views.Engine_Class)
+engine_init_template := temple_compiled("../templates/bindgen_view_init.temple.twig", views.Engine_Init)
+core_template := temple_compiled("../templates/bindgen_view_core.temple.twig", views.Core_Package)
+editor_template := temple_compiled("../templates/bindgen_view_editor.temple.twig", views.Editor_Package)
 
 /*
     Copyright 2023 Dresses Digital
