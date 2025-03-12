@@ -353,6 +353,17 @@ Util_Proc :: struct {
     args:        []Method_Arg,
 }
 
+to_string :: proc(type: Engine_Api_Type) -> string {
+    switch type {
+    case .Core:
+        return "core"
+    case .Editor:
+        return "editor"
+    }
+
+    panic("unexpected engine api type")
+}
+
 /*
 Allocate a Graph based on an Api, using the provided allocator.
 
