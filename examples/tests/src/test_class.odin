@@ -1,6 +1,7 @@
 package test
 
 import gd "godot:gdextension"
+import "godot:gdextension/classdb"
 import var "godot:variant"
 
 @(private = "file")
@@ -18,32 +19,32 @@ Test_Class :: struct {
 }
 
 @(private = "file")
-set_vector :: proc "c" (self: ^Test_Class, vector: var.Vector2) {
+set_vector :: proc "contextless" (self: ^Test_Class, vector: var.Vector2) {
     self.vector = vector
 }
 
 @(private = "file")
-get_vector :: proc "c" (self: ^Test_Class) -> var.Vector2 {
+get_vector :: proc "contextless" (self: ^Test_Class) -> var.Vector2 {
     return self.vector
 }
 
 @(private = "file")
-vector_eq :: proc "c" (self: ^Test_Class, other: var.Vector2) -> bool {
+vector_eq :: proc "contextless" (self: ^Test_Class, other: var.Vector2) -> bool {
     return self.vector == other
 }
 
 @(private = "file")
-vector_neq :: proc "c" (self: ^Test_Class, other: var.Vector2) -> bool {
+vector_neq :: proc "contextless" (self: ^Test_Class, other: var.Vector2) -> bool {
     return self.vector != other
 }
 
 @(private = "file")
-vector_add :: proc "c" (self: ^Test_Class, other: var.Vector2) -> var.Vector2 {
+vector_add :: proc "contextless" (self: ^Test_Class, other: var.Vector2) -> var.Vector2 {
     return self.vector + other
 }
 
 @(private = "file")
-vector_sub :: proc "c" (self: ^Test_Class, other: var.Vector2) -> var.Vector2 {
+vector_sub :: proc "contextless" (self: ^Test_Class, other: var.Vector2) -> var.Vector2 {
     return self.vector - other
 }
 
@@ -126,72 +127,25 @@ test_class_register :: proc() {
     get_vector_name := var.new_string_name_cstring("get_vector", true)
     set_vector_name := var.new_string_name_cstring("set_vector", true)
     vector_name := var.new_string_name_cstring("vector", true)
-    get_vector_ptrcall, get_vector_call := method_ret(Test_Class, var.Vector2)
-    set_vector_ptrcall, set_vector_call := method_no_ret(Test_Class, var.Vector2)
-    bind_method_return(
+    classdb.bind_property_and_methods(
         &test_class_name,
+        &vector_name,
         &get_vector_name,
-        cast(rawptr)get_vector,
-        .Vector2,
-        get_vector_call,
-        get_vector_ptrcall,
-    )
-    bind_method_no_return(
-        &test_class_name,
         &set_vector_name,
-        cast(rawptr)set_vector,
-        set_vector_call,
-        set_vector_ptrcall,
-        MethodBindArgument{name = &vector_name, type = .Vector2},
+        get_vector,
+        set_vector,
     )
-    bind_property(&test_class_name, &vector_name, .Vector2, &get_vector_name, &set_vector_name)
 
     other_name := var.new_string_name_cstring("other", true)
     vector_eq_name := var.new_string_name_cstring("vector_eq", true)
-    vector_eq_ptrcall, vector_eq_call := method_ret_1(Test_Class, var.Vector2, bool)
-    bind_method_return(
-        &test_class_name,
-        &vector_eq_name,
-        cast(rawptr)vector_eq,
-        .Bool,
-        vector_eq_call,
-        vector_eq_ptrcall,
-        MethodBindArgument{name = &other_name, type = .Vector2},
-    )
+    classdb.bind_returning_method(&test_class_name, &vector_eq_name, vector_eq, &other_name)
 
     vector_neq_name := var.new_string_name_cstring("vector_neq", true)
-    vector_neq_ptrcall, vector_neq_call := method_ret_1(Test_Class, var.Vector2, bool)
-    bind_method_return(
-        &test_class_name,
-        &vector_neq_name,
-        cast(rawptr)vector_neq,
-        .Bool,
-        vector_neq_call,
-        vector_neq_ptrcall,
-        MethodBindArgument{name = &other_name, type = .Vector2},
-    )
+    classdb.bind_returning_method(&test_class_name, &vector_neq_name, vector_neq, &other_name)
 
     vector_add_name := var.new_string_name_cstring("vector_add", true)
-    vector_add_ptrcall, vector_add_call := method_ret_1(Test_Class, var.Vector2, var.Vector2)
-    bind_method_return(
-        &test_class_name,
-        &vector_add_name,
-        cast(rawptr)vector_add,
-        .Bool,
-        vector_add_call,
-        vector_add_ptrcall,
-        MethodBindArgument{name = &other_name, type = .Vector2},
-    )
+    classdb.bind_returning_method(&test_class_name, &vector_add_name, vector_add, &other_name)
 
     vector_sub_name := var.new_string_name_cstring("vector_sub", true)
-    vector_sub_ptrcall, vector_sub_call := method_ret_1(Test_Class, var.Vector2, var.Vector2)
-    bind_method_return(
-        &test_class_name,
-        &vector_sub_name,
-        cast(rawptr)vector_sub,
-        .Bool,
-        vector_sub_call,
-        vector_sub_ptrcall,
-        MethodBindArgument{name = &other_name, type = .Vector2},
-    )
+    classdb.bind_returning_method(&test_class_name, &vector_sub_name, vector_sub, &other_name)
 }
