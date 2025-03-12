@@ -1103,6 +1103,18 @@ _graph_util_proc :: proc(graph: ^Graph, api_util_func: ApiUtilityFunction) -> Ut
         args        = make([]Method_Arg, len(api_util_func.arguments)),
     }
 
+    if return_type, has_return_type := api_util_func.return_type.(string); has_return_type {
+        util_proc.return_type = _graph_resolve_type(graph, return_type)
+    }
+
+    for api_arg, arg_idx in api_util_func.arguments {
+        util_proc.args[arg_idx] = Method_Arg {
+            default = api_arg.default_value,
+            name    = api_arg.name,
+            type    = _graph_resolve_type(graph, api_arg.type),
+        }
+    }
+
     return util_proc
 }
 
