@@ -129,9 +129,6 @@ const_to_odin :: proc(name: Const_Name) -> (s: Odin_Name) {
     fmt.sbprint(&sb, runes[0])
     for i := 1; i < len(runes); i += 1 {
         r := runes[i]
-        if r == '_' {
-            continue
-        }
 
         previous := runes[i - 1]
         if previous == '_' {
