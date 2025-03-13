@@ -15,6 +15,11 @@ Enum_Value :: struct {
     value: string,
 }
 
+Bit_Field :: struct {
+    name:   string,
+    values: []Enum_Value,
+}
+
 File_Constant :: struct {
     name:  string,
     type:  string,

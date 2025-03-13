@@ -4,7 +4,17 @@ import __bindgen_gde "godot:gdextension"
 import __bindgen_var "godot:variant"
 
 {% for class in this.classes %}
+{% if class.name != "Object" %}
 {{ class.name }} :: {{ class.derives }}
+{% end %}
+{% end %}
+
+{% for enum_ in this.enums %}
+{% embed "bindgen_view_enum.temple.twig" with enum_ %}
+{% end %}
+
+{% for bit_field_ in this.bit_fields %}
+{% embed "bindgen_view_bit_field.temple.twig" with bit_field_ %}
 {% end %}
 
 {% for function in this.functions %}
@@ -25,6 +35,7 @@ import __bindgen_var "godot:variant"
     __{{ function.name }}_ptr(&ret, raw_data(args), len(args))
     return
 }
+
 {% else %}
 {{ function.name }} :: proc "contextless" (
 {% for arg in function.args %}
@@ -41,6 +52,7 @@ import __bindgen_var "godot:variant"
     }
     __{{ function.name }}_ptr(nil, raw_data(args), len(args))
 }
+
 {% end %}
 {% end %}
 

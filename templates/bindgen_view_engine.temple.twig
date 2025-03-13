@@ -1,6 +1,10 @@
 package {{ this.snake_name }}
 
+{% if this.name == "Object" %}
+import __bindgen_pkg "godot:variant"
+{% else %}
 import __bindgen_pkg "godot:{{ this.parent_package }}"
+{% end %}
 {% for name, import_ in this.imports %}
 import {{ name }} "{{ import_.path }}"
 {% end %}
@@ -11,6 +15,10 @@ import {{ name }} "{{ import_.path }}"
 
 {% for enum_ in this.enums %}
 {% embed "bindgen_view_enum.temple.twig" with enum_ %}
+{% end %}
+
+{% for bit_field_ in this.bit_fields %}
+{% embed "bindgen_view_bit_field.temple.twig" with bit_field_ %}
 {% end %}
 
 name_ref :: proc "contextless" () -> ^__bindgen_var.String_Name {
@@ -41,9 +49,10 @@ new_{{ this.snake_name }} :: proc "contextless" () -> __bindgen_pkg.{{ this.name
         &{{ arg.name }}_,
 {% end %}
     }
-    object_method_bind_ptrcall(__{{ method.name }}_method_ptr, nil, raw_data(args), &ret)
+    __bindgen_gde.object_method_bind_ptrcall(__{{ method.name }}_method_ptr, nil, raw_data(args), &ret)
     return
 }
+
 {% else %}
 {{ method.name }} :: proc "contextless" (
 {% for arg in method.args %}
@@ -58,8 +67,9 @@ new_{{ this.snake_name }} :: proc "contextless" () -> __bindgen_pkg.{{ this.name
         &{{ arg.name }}_,
 {% end %}
     }
-    object_method_bind_ptrcall(__{{ method.name }}_method_ptr, nil, raw_data(args), nil)
+    __bindgen_gde.object_method_bind_ptrcall(__{{ method.name }}_method_ptr, nil, raw_data(args), nil)
 }
+
 {% end %}
 {% end %}
 
@@ -79,9 +89,10 @@ new_{{ this.snake_name }} :: proc "contextless" () -> __bindgen_pkg.{{ this.name
         &{{ arg.name }}_,
 {% end %}
     }
-    object_method_bind_ptrcall(__{{ method.name }}_method_ptr, self, raw_data(args), &ret)
+    __bindgen_gde.object_method_bind_ptrcall(__{{ method.name }}_method_ptr, self, raw_data(args), &ret)
     return
 }
+
 {% else %}
 {{ method.name }} :: proc "contextless" (
     self: ^__bindgen_pkg.{{ this.name }},
@@ -97,8 +108,9 @@ new_{{ this.snake_name }} :: proc "contextless" () -> __bindgen_pkg.{{ this.name
         &{{ arg.name }}_,
 {% end %}
     }
-    object_method_bind_ptrcall(__{{ method.name }}_method_ptr, self, raw_data(args), nil)
+    __bindgen_gde.object_method_bind_ptrcall(__{{ method.name }}_method_ptr, self, raw_data(args), nil)
 }
+
 {% end %}
 {% end %}
 

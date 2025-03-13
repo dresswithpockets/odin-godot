@@ -125,6 +125,20 @@ codegen_engine_class :: proc(task: thread.Task) {
     free_all(allocator)
 }
 
+codegen_native_structs :: proc(task: thread.Task) {
+    graph := cast(^g.Graph)task.data
+
+    tracking_alloc: mem.Tracking_Allocator
+    mem.tracking_allocator_init(&tracking_alloc, context.allocator)
+
+    allocator := mem.tracking_allocator(&tracking_alloc)
+
+    view := views.native_structs(graph, allocator = allocator)
+    open_write_template("structs/structs.gen.odin", view, structs_template)
+
+    free_all(allocator)
+}
+
 codegen_variant :: proc(task: thread.Task) {
     class := cast(^g.Builtin_Class)task.data
 
@@ -150,6 +164,7 @@ generate_bindings :: proc(graph: g.Graph, options: Options) {
         codegen_core_init(thread.Task{data = &graph})
         codegen_editor(thread.Task{data = &graph})
         codegen_editor_init(thread.Task{data = &graph})
+        codegen_native_structs(thread.Task{data = &graph})
         for &builtin_class in graph.builtin_classes {
             codegen_variant(thread.Task{data = &builtin_class})
         }
@@ -167,6 +182,7 @@ generate_bindings :: proc(graph: g.Graph, options: Options) {
     thread.pool_add_task(&thread_pool, context.allocator, codegen_core_init, &graph)
     thread.pool_add_task(&thread_pool, context.allocator, codegen_editor, &graph)
     thread.pool_add_task(&thread_pool, context.allocator, codegen_editor_init, &graph)
+    thread.pool_add_task(&thread_pool, context.allocator, codegen_native_structs, &graph)
     for &builtin_class in graph.builtin_classes {
         thread.pool_add_task(&thread_pool, context.allocator, codegen_variant, &builtin_class)
     }

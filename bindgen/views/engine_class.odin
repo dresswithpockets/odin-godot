@@ -14,6 +14,7 @@ Engine_Class :: struct {
     godot_name:       string,
     snake_name:       string,
     enums:            []Enum,
+    bit_fields:       []Bit_Field,
     file_constants:   []File_Constant,
     static_methods:   []Method,
     instance_methods: []Method,
@@ -60,6 +61,7 @@ engine_class :: proc(class: ^g.Engine_Class, allocator: mem.Allocator) -> (engin
         godot_name       = strings.clone(cast(string)class.name),
         snake_name       = cast(string)names.to_snake(class.name),
         enums            = make([]Enum, len(class.enums)),
+        bit_fields       = make([]Bit_Field, len(class.bit_fields)),
         file_constants   = make([]File_Constant, len(class.constants)),
         static_methods   = make([]Method, static_method_count),
         instance_methods = make([]Method, instance_method_count),
@@ -69,13 +71,13 @@ engine_class :: proc(class: ^g.Engine_Class, allocator: mem.Allocator) -> (engin
         engine_class.imports[default_import.name] = default_import
     }
 
-    // package_name := fmt.aprintf("godot:core/%v", engine_class.snake_name)
-    package_name := fmt.aprintf("godot:%v", g.to_string(class.api_type))
+    package_name := fmt.aprintf("godot:%v/%v", g.to_string(class.api_type), engine_class.snake_name)
+    // package_name := fmt.aprintf("godot:%v", g.to_string(class.api_type))
     // engine_class.derives = resolve_qualified_type(class.inherits, package_name)
 
     for class_enum, enum_idx in class.enums {
         new_enum := Enum {
-            name   = strings.clone(cast(string)class_enum.name),
+            name   = cast(string)names.to_odin(class_enum.name),
             values = make([]Enum_Value, len(class_enum.values)),
         }
 
@@ -87,6 +89,22 @@ engine_class :: proc(class: ^g.Engine_Class, allocator: mem.Allocator) -> (engin
         }
 
         engine_class.enums[enum_idx] = new_enum
+    }
+
+    for class_bit_field, bit_field_idx in class.bit_fields {
+        new_bit_field := Bit_Field {
+            name   = cast(string)names.to_odin(class_bit_field.name),
+            values = make([]Enum_Value, len(class_bit_field.values)),
+        }
+
+        for value, value_idx in class_bit_field.values {
+            new_bit_field.values[value_idx] = Enum_Value {
+                name  = cast(string)names.to_odin(value.name),
+                value = strings.clone(value.value),
+            }
+        }
+
+        engine_class.bit_fields[bit_field_idx] = new_bit_field
     }
 
     for constant, constant_idx in class.constants {

@@ -140,7 +140,7 @@ _class_constructor_name :: proc(snake_name: string, args: []g.Constructor_Arg) -
     }
 
     for arg in args {
-        type_name := _any_to_name(arg.type, "godot:variant") // TODO: other package modes
+        type_name := _any_to_name(arg.type) // TODO: other package modes
         if type_name == cast(names.Odin_Name)"Float" {
             type_name = cast(names.Odin_Name)"float"
         }
@@ -350,13 +350,13 @@ variant :: proc(class: ^g.Builtin_Class, allocator: mem.Allocator) -> (variant: 
             if class_operator.right_type != nil {
                 ensure_imports(&variant.imports, class_operator.right_type, "godot:variant") // TODO: other package modes
 
-                overload.right_type = cast(string)_any_to_name(class_operator.right_type, "godot:variant") // TODO: other package modes
+                overload.right_type = cast(string)_any_to_name(class_operator.right_type) // TODO: other package modes
                 overload.right_variant_type = cast(string)_any_to_variant_type(class_operator.right_type)
                 overload.proc_name = fmt.aprintf(
                     "%v_%v_%v",
                     variant.snake_name,
                     class_operator.name,
-                    names.to_snake(_any_to_name(class_operator.right_type, "godot:variant")), // TODO: other package modes
+                    names.to_snake(_any_to_name(class_operator.right_type)), // TODO: other package modes
                 )
             } else {
                 overload.proc_name = fmt.aprintf("%v_%v_default", variant.snake_name, class_operator.name)

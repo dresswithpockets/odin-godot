@@ -4,6 +4,7 @@ package graph
 import "../names"
 import "core:fmt"
 import "core:mem"
+import "core:strconv"
 import "core:strings"
 import "core:text/scanner"
 
@@ -21,9 +22,11 @@ odin_primitives := [?]Primitive {
     Primitive{name = "uint64", odin_name = "u64"},
     Primitive{name = "float", odin_name = "Float"},
     Primitive{name = "double", odin_name = "f64"},
+    Primitive{name = "Object *", odin_name = "ObjectPtr"},
 
     // c types
     Primitive{name = "void*", odin_name = "rawptr"},
+    Primitive{name = "real_t", odin_name = "Float"},
     Primitive{name = "int8_t", odin_name = "i8"},
     // Primitive{name = "int8_t*", odin_name = "i8", pointer = 1},
     // Primitive{name = "int8_t **", odin_name = "i8", pointer = 2},
@@ -154,6 +157,7 @@ Any_Type :: union {
     ^Primitive,
     ^Typed_Array,
     ^Pointer,
+    ^Sized_Array,
 }
 
 Pointable_Type :: union {
@@ -170,6 +174,11 @@ Pointable_Type :: union {
 Pointer :: struct {
     type:  Pointable_Type,
     depth: int,
+}
+
+Sized_Array :: struct {
+    type: Any_Type,
+    size: int,
 }
 
 Builtin_Class :: struct {
@@ -264,9 +273,8 @@ Bit_Field :: struct {
 }
 
 Native_Struct :: struct {
-    name:    names.Godot_Name,
-    fields:  []Struct_Field,
-    pointer: int,
+    name:   names.Godot_Name,
+    fields: []Struct_Field,
 }
 
 Struct_Field :: struct {
@@ -726,6 +734,9 @@ _graph_resolve_type :: proc(graph: ^Graph, type_specifier: Type_Specifier) -> An
 
     if !is_godot_name {
         type_string := type_specifier.(string)
+        if type_string == "Object *" {
+            return _graph_resolve_type(graph, cast(string)"Object")
+        }
 
         // used later if we fall through the colon check
         godot_name = cast(names.Godot_Name)type_string
@@ -1190,27 +1201,43 @@ field_list := field (';' WS format)?
 */
 @(private = "file")
 _graph_native_struct_fields :: proc(graph: ^Graph, format: string) -> []Struct_Field {
-    fields := make([]Struct_Field, strings.count(format, ";"))
+    fields := make([]Struct_Field, strings.count(format, ";") + 1)
     format := format
     field_idx := 0
     for field_format in strings.split_iterator(&format, ";") {
         field := Struct_Field{}
 
-        split_idx := strings.index_proc(field_format, strings.is_space)
-        assert(split_idx > -1)
+        end_of_type_idx := strings.index_proc(field_format, strings.is_space)
+        assert(end_of_type_idx > -1)
 
-        split_idx = strings.index_proc(field_format[split_idx:], strings.is_space, truth = false)
+        // field_format[:first_space_idx] could be:
+        // type
+        // type*
+        // type**
+        // 
+        // if we're just "type" with no '*' then the correct type could be `type *` or `type **` with a space.
+        type_string := field_format[:end_of_type_idx]
+        if !strings.has_suffix(type_string, "*") {
+            non_space_idx := strings.index_proc(field_format[end_of_type_idx:], strings.is_space, truth = false)
+            if field_format[end_of_type_idx + non_space_idx] == '*' {
+                // correct type is either `type *` or `type **`
+                if field_format[end_of_type_idx + non_space_idx + 1] == '*' {
+                    end_of_type_idx += non_space_idx + 2
+                } else {
+                    end_of_type_idx += non_space_idx + 1
+                }
 
-        remainder := field_format[split_idx:]
-        for remainder[split_idx] == '*' {
-            split_idx += 1
+                type_string = field_format[:end_of_type_idx]
+            }
         }
 
-        // we want to include the pointer in the type specifier
-        field.type = _graph_native_struct_field_type(graph, field_format[:split_idx])
+        field.type = _graph_native_struct_field_type(graph, type_string)
+
+        // skip any spaces
+        end_of_type_idx += strings.index_proc(field_format[end_of_type_idx:], strings.is_space, truth = false)
 
         // remainder contains the field's name and the default value
-        remainder = field_format[split_idx:]
+        remainder := field_format[end_of_type_idx:]
         space_idx := strings.index_proc(remainder, strings.is_space)
         if space_idx > -1 {
             field.name = remainder[:space_idx]
@@ -1223,6 +1250,21 @@ _graph_native_struct_fields :: proc(graph: ^Graph, format: string) -> []Struct_F
             field.name = remainder
         }
 
+        if strings.has_suffix(field.name, "]") {
+            array_spec_idx := strings.last_index(field.name, "[")
+            
+            array_size_string := field.name[array_spec_idx + 1:len(field.name) - 1]
+            array_size, ok := strconv.parse_int(array_size_string)
+            assert(ok, "invalid size in array specifier")
+
+            field.name = field.name[:array_spec_idx]
+            field.type = new_clone(Sized_Array {
+                size = array_size,
+                type = field.type,
+            })
+        }
+
+        fields[field_idx] = field
         field_idx += 1
     }
 
