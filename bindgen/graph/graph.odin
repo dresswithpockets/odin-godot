@@ -450,16 +450,8 @@ graph_type_info_pass :: proc(graph: ^Graph, api: ^Api) {
     context.allocator = graph.allocator
 
     // variant isn't included in the api, but it always exists
-    {
-        variant := new_clone(Builtin_Class{name = "Variant", enums = make([]Class_Enum(Builtin_Class), 1)})
-
-        variant.enums[0] = Class_Enum(Builtin_Class) {
-            name  = "Type",
-            class = variant,
-        }
-
-        graph.types["Variant"] = variant
-    }
+    // TODO: Variant.Type and Variant.Operator
+    graph.types["Variant"] = new_clone(Builtin_Class{name = "Variant"})
 
     for api_builtin_class, class_idx in api.builtin_classes {
         enum_count := 0
