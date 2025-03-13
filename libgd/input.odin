@@ -1,5 +1,6 @@
 package libgd
 
+import "godot:core/input"
 import core "../core"
 import var "../variant"
 
@@ -24,5 +25,5 @@ get_input_vector :: proc "contextless" (negative_x: cstring, positive_x: cstring
         var.free_string_name(positive_y_name)
     }
 
-    return core.input_get_vector(core.singleton_input(), negative_x_name, positive_x_name, negative_y_name, positive_y_name, -1.0)
+    return input.get_vector(core.singleton_input(), negative_x_name, positive_x_name, negative_y_name, positive_y_name, -1.0)
 }

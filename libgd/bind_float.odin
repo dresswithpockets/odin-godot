@@ -1,9 +1,9 @@
 package libgd
 
-import gd "../gdextension"
+import gd "godot:gdextension"
 
-GetterFloat :: proc(instance: rawptr) -> gd.float
-SetterFloat :: proc(instance: rawptr, value: gd.float)
+GetterFloat :: proc(instance: rawptr) -> gd.Float
+SetterFloat :: proc(instance: rawptr, value: gd.Float)
 
 ptrcall_getter_float :: proc "c" (
     method_user_data: rawptr,
@@ -13,7 +13,7 @@ ptrcall_getter_float :: proc "c" (
 ) {
     context = gd.godot_context()
     method := cast(GetterFloat)method_user_data
-    (cast(^gd.float)call_return)^ = method(instance)
+    (cast(^gd.Float)call_return)^ = method(instance)
 }
 
 ptrcall_setter_float :: proc "c" (
@@ -24,7 +24,7 @@ ptrcall_setter_float :: proc "c" (
 ) {
     context = gd.godot_context()
     method := cast(SetterFloat)method_user_data
-    method(instance, (cast(^gd.float)args[0])^)
+    method(instance, (cast(^gd.Float)args[0])^)
 }
 
 call_getter_float :: proc "c" (
@@ -36,7 +36,7 @@ call_getter_float :: proc "c" (
     error: ^gd.CallError,
 ) {
     if arg_count != 0 {
-        error.error = .TooManyArguments
+        error.error = .Too_Many_Arguments
         error.expected = 0
         return
     }
@@ -57,21 +57,21 @@ call_setter_float :: proc "c" (
     error: ^gd.CallError,
 ) {
     if arg_count < 1 {
-        error.error = .TooFewArguments
+        error.error = .Too_Few_Arguments
         error.expected = 1
         return
     }
 
     if arg_count > 1 {
-        error.error = .TooManyArguments
+        error.error = .Too_Many_Arguments
         error.expected = 1
         return
     }
 
     type := gd.variant_get_type(args[0])
     if type != .Float {
-        error.error = .InvalidArgument
-        error.expected = cast(i32)gd.VariantType.Float
+        error.error = .Invalid_Argument
+        error.expected = cast(i32)gd.Variant_Type.Float
         error.argument = 0
         return
     }

@@ -5,23 +5,23 @@ import gd "../gdextension"
 import var "../variant"
 
 @(private = "file")
-new_property :: proc(type: gd.VariantType, name: ^var.StringName) -> gd.PropertyInfo {
+new_property :: proc(type: gd.Variant_Type, name: ^var.String_Name) -> gd.PropertyInfo {
     return gd.PropertyInfo {
         name = name,
         type = type,
-        hint = cast(u32)core.PropertyHint.None,
+        hint = cast(u32)core.Property_Hint.Property_Hint_None,
         hint_string = var.string_empty_ref(),
         class_name = var.string_name_empty_ref(),
-        usage = cast(u32)core.PropertyUsageFlags.Default,
+        usage = cast(u32)core.Property_Usage_Flags.Property_Usage_Default,
     }
 }
 
 MethodBindArgument :: struct {
     name: string,
-    type: gd.VariantType,
+    type: gd.Variant_Type,
 }
 
-bind_signal :: proc(class_name: ^var.StringName, name: string, args: ..MethodBindArgument) {
+bind_signal :: proc(class_name: ^var.String_Name, name: string, args: ..MethodBindArgument) {
     signal_name := var.new_string_name_odin(name)
     defer var.free_string_name(signal_name)
 
@@ -38,7 +38,7 @@ bind_signal :: proc(class_name: ^var.StringName, name: string, args: ..MethodBin
         args_info[idx] = new_property(arg.type, &arg_name)
     }
     defer for arg in args_info {
-        arg_name := cast(^var.StringName)arg.name
+        arg_name := cast(^var.String_Name)arg.name
         var.free_string_name(arg_name^)
     }
 
@@ -53,7 +53,7 @@ bind_signal :: proc(class_name: ^var.StringName, name: string, args: ..MethodBin
 
 @(private = "file")
 get_prop_ptrcall :: proc($V: typeid) -> (get: gd.ExtensionClassMethodPtrCall, set: gd.ExtensionClassMethodPtrCall) {
-    if V == gd.float {
+    if V == gd.Float {
         return ptrcall_getter_float, ptrcall_setter_float
     } else if V == i64 {
         return ptrcall_getter_i64, ptrcall_setter_i64
@@ -64,7 +64,7 @@ get_prop_ptrcall :: proc($V: typeid) -> (get: gd.ExtensionClassMethodPtrCall, se
 
 @(private = "file")
 get_prop_call :: proc($V: typeid) -> (get: gd.ExtensionClassMethodCall, set: gd.ExtensionClassMethodCall) {
-    if V == gd.float {
+    if V == gd.Float {
         return call_getter_float, call_setter_float
     } else if V == i64 {
         return call_getter_i64, call_setter_i64
@@ -74,8 +74,8 @@ get_prop_call :: proc($V: typeid) -> (get: gd.ExtensionClassMethodCall, set: gd.
 }
 
 @(private = "file")
-get_prop_type :: proc($V: typeid) -> gd.VariantType {
-    if V == gd.float {
+get_prop_type :: proc($V: typeid) -> gd.Variant_Type {
+    if V == gd.Float {
         return .Float
     } else if V == i64 {
         return .Int
@@ -84,7 +84,7 @@ get_prop_type :: proc($V: typeid) -> gd.VariantType {
     return .Object
 }
 
-bind_property_group :: proc(class_name: ^var.StringName, name: string, prefix: string) {
+bind_property_group :: proc(class_name: ^var.String_Name, name: string, prefix: string) {
     name_str := var.new_string_odin(name)
     defer var.free_string(name_str)
 
@@ -94,7 +94,7 @@ bind_property_group :: proc(class_name: ^var.StringName, name: string, prefix: s
     gd.classdb_register_extension_class_property_group(gd.library, class_name, &name_str, &prefix_str)
 }
 
-bind_property_subgroup :: proc(class_name: ^var.StringName, name: string, prefix: string) {
+bind_property_subgroup :: proc(class_name: ^var.String_Name, name: string, prefix: string) {
     name_str := var.new_string_odin(name)
     defer var.free_string(name_str)
 
@@ -105,7 +105,7 @@ bind_property_subgroup :: proc(class_name: ^var.StringName, name: string, prefix
 }
 
 bind_auto_property :: proc(
-    class_name: ^var.StringName,
+    class_name: ^var.String_Name,
     prop_name: string,
     getter_name: string,
     getter_proc: proc(self: ^$T) -> $V,

@@ -39,7 +39,7 @@ call_getter_i64 :: proc "c" (
     error: ^gd.CallError,
 ) {
     if arg_count != 0 {
-        error.error = .TooManyArguments
+        error.error = .Too_Many_Arguments
         error.expected = 0
         return
     }
@@ -61,21 +61,21 @@ call_setter_i64 :: proc "c" (
     error: ^gd.CallError,
 ) {
     if arg_count < 1 {
-        error.error = .TooFewArguments
+        error.error = .Too_Few_Arguments
         error.expected = 1
         return
     }
 
     if arg_count > 1 {
-        error.error = .TooManyArguments
+        error.error = .Too_Many_Arguments
         error.expected = 1
         return
     }
 
     type := gd.variant_get_type(args[0])
     if type != .Int {
-        error.error = .InvalidArgument
-        error.expected = cast(i32)gd.VariantType.Int
+        error.error = .Invalid_Argument
+        error.expected = cast(i32)gd.Variant_Type.Int
         error.argument = 0
         return
     }
