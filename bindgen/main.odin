@@ -52,7 +52,7 @@ parse_args :: proc(options: ^Options) -> (ok: bool) {
                         }
                         options.job_count = result
                     } else {
-                        fmt.eprintf("Expected an integer for job count, but got '%v' instead\n", right)
+                        fmt.eprintfln("Expected an integer for job count, but got '%v' instead", right)
                         ok = false
                         continue
                     }
@@ -61,7 +61,7 @@ parse_args :: proc(options: ^Options) -> (ok: bool) {
                 }
             }
             // we don't yet have any options which are just flags
-            fmt.eprintf("Invalid option: %v", arg)
+            fmt.eprintfln("Invalid option: %v", arg)
             ok = false
         }
     }
