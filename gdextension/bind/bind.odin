@@ -1,10 +1,10 @@
-package classdb
+package bind
 
 import "base:intrinsics"
 import gd "godot:gdextension"
 import var "godot:variant"
 
-simple_property_info :: proc "contextless" (type: gd.VariantType, name: ^var.String_Name) -> gd.PropertyInfo {
+simple_property_info :: proc "contextless" (type: gd.Variant_Type, name: ^var.String_Name) -> gd.PropertyInfo {
     return gd.PropertyInfo {
         name        = name,
         type        = type,
@@ -19,7 +19,7 @@ expect_args :: proc "contextless" (
     args: [^]gd.VariantPtr,
     arg_count: i64,
     error: ^gd.CallError,
-    arg_types: ..gd.VariantType,
+    arg_types: ..gd.Variant_Type,
 ) -> bool {
     if arg_count < cast(i64)len(arg_types) {
         error.error = .Too_Few_Arguments
@@ -65,7 +65,7 @@ bind_property_and_methods :: proc(
 bind_property :: proc(
     class_name: ^var.String_Name,
     name: ^var.String_Name,
-    type: gd.VariantType,
+    type: gd.Variant_Type,
     getter: ^var.String_Name,
     setter: ^var.String_Name,
 ) {
