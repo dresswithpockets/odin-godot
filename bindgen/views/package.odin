@@ -2,7 +2,9 @@ package views
 
 import g "../graph"
 import "../names"
+import "base:intrinsics"
 import "core:fmt"
+import "core:slice"
 import "core:strings"
 
 Package_Map_Mode :: enum {
@@ -19,6 +21,12 @@ Type_Import :: union {
 }
 
 No_Import :: struct {}
+
+@(private)
+declared_builtins := []string{"Object", "RefCounted"}
+
+@(private)
+gdextension_enums := []string{"Variant.Type", "Variant.Operator"}
 
 @(private = "file")
 _array_import := Import {
@@ -72,7 +80,7 @@ map_types_to_imports :: proc(graph: g.Graph, map_mode: Package_Map_Mode) {
                     }
                 }
             case ^g.Engine_Class:
-                if root_type.name == "Object" {
+                if slice.contains(declared_builtins, cast(string)root_type.name) {
                     import_map[root_type] = Import {
                         name = "__bindgen_var",
                         path = "godot:variant",
@@ -93,11 +101,7 @@ map_types_to_imports :: proc(graph: g.Graph, map_mode: Package_Map_Mode) {
                     root_type_snake_name := cast(string)names.to_snake(_any_to_name(any_type))
                     packaged_type_import := Import {
                         name = root_type_snake_name,
-                        path = fmt.aprintf(
-                            "godot:%v/%v",
-                            g.to_string(root_type.api_type),
-                            root_type_snake_name,
-                        ),
+                        path = fmt.aprintf("godot:%v/%v", g.to_string(root_type.api_type), root_type_snake_name),
                     }
 
                     for &class_enum in root_type.enums {
@@ -110,6 +114,14 @@ map_types_to_imports :: proc(graph: g.Graph, map_mode: Package_Map_Mode) {
                 }
 
             case ^g.Enum:
+                if slice.contains(gdextension_enums, cast(string)root_type.name) {
+                    import_map[root_type] = Import {
+                        name = "__bindgen_gde",
+                        path = "godot:gdextension",
+                    }
+                    continue
+                }
+
                 import_map[root_type] = Import {
                     name = "__bindgen_core",
                     path = "godot:core",
@@ -133,7 +145,7 @@ map_types_to_imports :: proc(graph: g.Graph, map_mode: Package_Map_Mode) {
                 } else if root_type.odin_name == "ObjectPtr" {
                     import_map[root_type] = Import {
                         name = "__bindgen_var",
-                        path = "godot:variant"
+                        path = "godot:variant",
                     }
                 } else {
                     import_map[root_type] = No_Import{}
@@ -231,9 +243,13 @@ _any_to_name :: proc(type: g.Any_Type, location := #caller_location) -> names.Od
     case ^g.Engine_Class:
         return names.to_odin(as_type.name)
     case ^g.Class_Enum(g.Builtin_Class):
-        return names.to_odin(as_type.name)
+        return(
+            cast(names.Odin_Name)fmt.aprintf("%v_%v", names.to_odin(as_type.class.name), names.to_odin(as_type.name)) \
+        )
     case ^g.Class_Bit_Field(g.Builtin_Class):
-        return names.to_odin(as_type.name)
+        return(
+            cast(names.Odin_Name)fmt.aprintf("%v_%v", names.to_odin(as_type.class.name), names.to_odin(as_type.name)) \
+        )
     case ^g.Class_Enum(g.Engine_Class):
         return names.to_odin(as_type.name)
     case ^g.Class_Bit_Field(g.Engine_Class):
@@ -251,11 +267,19 @@ _any_to_name :: proc(type: g.Any_Type, location := #caller_location) -> names.Od
         fmt.eprintln("WARN! _any_to_name called on Typed_Array: ", name, location)
         return name
     case ^g.Pointer:
-        name := cast(names.Odin_Name)fmt.aprintf("!!DEBUG Pointer(%v, %v)", as_type.depth, _any_to_name(g.pointable_to_any(as_type.type)))
+        name := cast(names.Odin_Name)fmt.aprintf(
+            "!!DEBUG Pointer(%v, %v)",
+            as_type.depth,
+            _any_to_name(g.pointable_to_any(as_type.type)),
+        )
         fmt.eprintln("WARN! _any_to_name called on Pointer: ", name, location)
         return name
     case ^g.Sized_Array:
-        name := cast(names.Odin_Name)fmt.aprintf("!!DEBUG Sized_Array(%v, %v)", as_type.size, _any_to_name(as_type.type))
+        name := cast(names.Odin_Name)fmt.aprintf(
+            "!!DEBUG Sized_Array(%v, %v)",
+            as_type.size,
+            _any_to_name(as_type.type),
+        )
         fmt.eprintln("WARN! _any_to_name called on Sized_Array: ", name, location)
         return name
     }
@@ -293,6 +317,20 @@ ensure_imports :: proc(imports: ^map[string]Import, type: g.Any_Type, current_pa
 
     imports[import_.name] = import_
 }
+
+// resolve_class_enum :: proc(type: g.Class_Enum($P), current_package: string) -> string where C == Builtin_Class || C == Engine_Class {
+//     type_import, ok := import_map[_any_to_rawptr(type)]
+//     assert(ok, fmt.tprintfln("Couldn't find mapped import for type: %v", _any_to_name(type)))
+
+//     import_, is_import := type_import.(Import)
+//     assert(is_import, "class_enum inner type_import must be Import")
+
+//     if import_.path == current_package {
+//         return cast(string)_any_to_name(type)
+//     }
+
+//     return fmt.aprintf("%v_%v", names.to_odin(class_enum.class.name), names.to_odin(class_enum.name)),
+// }
 
 resolve_qualified_type :: proc(type: g.Any_Type, current_package: string) -> string {
     if typed_array, is_typed_array := type.(^g.Typed_Array); is_typed_array {

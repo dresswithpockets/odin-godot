@@ -214,7 +214,7 @@ variant :: proc(class: ^g.Builtin_Class, allocator: mem.Allocator) -> (variant: 
     variant.imports[default_import.name] = default_import
 
     if Render_Flags.Destructor in render_flags && class.destructor {
-        variant.destructor = fmt.tprintf("free_%v", snake_name)
+        variant.destructor = fmt.aprintf("free_%v", snake_name)
     }
 
     // N.B. some builtin classes have specialized constructors that aren't automatically generated
@@ -224,7 +224,7 @@ variant :: proc(class: ^g.Builtin_Class, allocator: mem.Allocator) -> (variant: 
 
     for class_enum, enum_idx in class.enums {
         variant_enum := Enum {
-            name   = fmt.tprintf("%v_%v", names.to_odin(class_enum.class.name), names.to_odin(class_enum.name)),
+            name   = fmt.aprintf("%v_%v", names.to_odin(class_enum.class.name), names.to_odin(class_enum.name)),
             values = make([]Enum_Value, len(class_enum.values)),
         }
 

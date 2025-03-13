@@ -4,9 +4,7 @@ import __bindgen_gde "godot:gdextension"
 import __bindgen_var "godot:variant"
 
 {% for class in this.classes %}
-{% if class.name != "Object" %}
 {{ class.name }} :: {{ class.derives }}
-{% end %}
 {% end %}
 
 {% for enum_ in this.enums %}

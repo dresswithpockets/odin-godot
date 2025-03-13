@@ -1,10 +1,5 @@
-package {{ this.snake_name }}
+package gd_{{ this.snake_name }}
 
-{% if this.name == "Object" %}
-import __bindgen_pkg "godot:variant"
-{% else %}
-import __bindgen_pkg "godot:{{ this.parent_package }}"
-{% end %}
 {% for name, import_ in this.imports %}
 import {{ name }} "{{ import_.path }}"
 {% end %}
