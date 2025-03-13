@@ -1,8 +1,9 @@
 package game
 
-import gd "../../../gdextension"
-import var "../../../variant"
-import core "../../../core"
+import "godot:core"
+import "godot:core/init"
+import gd "godot:gdextension"
+import var "godot:variant"
 import "core:strings"
 import "core:c"
 import "core:fmt"
@@ -14,7 +15,7 @@ game_init :: proc "c" (
     initialization: ^gd.Initialization,
 ) -> bool {
     gd.init(library, get_proc_address)
-    var.init()
+    init.init()
 
     initialization.initialize = initialize_game_module
     initialization.deinitialize = uninitialize_game_module
@@ -31,7 +32,6 @@ initialize_game_module :: proc "c" (user_data: rawptr, level: gd.InitializationL
 
     context = gd.godot_context()
 
-    core.init()
     player_class_register()
 }
 
