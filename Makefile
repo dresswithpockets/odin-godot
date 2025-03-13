@@ -5,6 +5,7 @@ endif
 
 OUT_DIR := bin/
 GD_BUILD_CONFIG := float_64
+JOBS := 0
 
 temple_cli_dir := temple/cli/
 temple_cli_deps := $(wildcard $(temple_cli_dir)*.odin)
@@ -20,11 +21,11 @@ temple_deps := $(wildcard templates/*.temple.twig) $(bindgen_dir)temple.odin
 
 gdextension_api := ./godot-cpp/gdextension/extension_api.json
 
-bindings: core/init.gen.odin
+bindings: core/init/init.gen.odin
 
 # hack: we don't need to regenerate if core/init is up to date!
-core/init.gen.odin: $(bindgen_out) $(gdextension_api)
-	$(bindgen_out) $(gdextension_api)
+core/init/init.gen.odin: $(bindgen_out) $(gdextension_api)
+	$(bindgen_out) $(gdextension_api) -jobs:$(JOBS)
 
 debug_bindings: $(debug_bindgen_out) $(gdextension_api)
 	$(debug_bindgen_out) $(gdextension_api)
