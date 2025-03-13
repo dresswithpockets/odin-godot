@@ -9,7 +9,7 @@ import "core:strings"
 
 Engine_Class :: struct {
     imports:          map[string]Import,
-    parent_package:   string,
+    self: string,
     name:             string,
     godot_name:       string,
     snake_name:       string,
@@ -56,7 +56,6 @@ engine_class :: proc(class: ^g.Engine_Class, allocator: mem.Allocator) -> (engin
     }
 
     engine_class = Engine_Class {
-        parent_package   = g.to_string(class.api_type),
         name             = cast(string)names.to_odin(class.name),
         godot_name       = strings.clone(cast(string)class.name),
         snake_name       = cast(string)names.to_snake(class.name),
@@ -74,6 +73,9 @@ engine_class :: proc(class: ^g.Engine_Class, allocator: mem.Allocator) -> (engin
     package_name := fmt.aprintf("godot:%v/%v", g.to_string(class.api_type), engine_class.snake_name)
     // package_name := fmt.aprintf("godot:%v", g.to_string(class.api_type))
     // engine_class.derives = resolve_qualified_type(class.inherits, package_name)
+
+    ensure_imports(&engine_class.imports, class, package_name)
+    engine_class.self = resolve_qualified_type(class, package_name)
 
     for class_enum, enum_idx in class.enums {
         new_enum := Enum {
