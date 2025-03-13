@@ -714,7 +714,7 @@ _graph_resolve_type :: proc(graph: ^Graph, type_specifier: Type_Specifier) -> An
             case "enum":
                 {
                     dot_idx := strings.index_rune(suffix, '.')
-                    if dot_idx > -1 {
+                    if dot_idx > -1 && suffix != "Variant.Type" && suffix != "Variant.Operator" {
                         class_type, class_type_ok := graph.types[cast(names.Godot_Name)suffix[:dot_idx]]
                         assert(
                             class_type_ok,
