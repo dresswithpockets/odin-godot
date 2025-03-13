@@ -4,7 +4,7 @@ ifeq ($(OS),Windows_NT)
 endif
 
 OUT_DIR := bin/
-GD_BUILD_CONFIG := float_32
+GD_BUILD_CONFIG := float_64
 
 temple_cli_dir := temple/cli/
 temple_cli_deps := $(wildcard $(temple_cli_dir)*.odin)
@@ -61,7 +61,7 @@ examples_game_dir := examples/game/
 examples_game_deps := $(wildcard $(examples_game_dir)src/*.odin)
 examples_game_out := $(examples_game_dir)bin/game$(shared_suffix)
 
-$(examples_hello_out): core/init.gen.odin $(examples_hello_deps)
+$(examples_hello_out): core/init/init.gen.odin $(examples_hello_deps)
 	odin build $(examples_hello_dir)src/ \
 		-define:BUILD_CONFIG=$(GD_BUILD_CONFIG) \
 		-build-mode:shared \
@@ -73,7 +73,7 @@ $(examples_hello_out): core/init.gen.odin $(examples_hello_deps)
 		-show-timings \
 		-collection:godot=.
 
-$(examples_game_out): core/init.gen.odin $(examples_game_deps)
+$(examples_game_out): core/init/init.gen.odin $(examples_game_deps)
 	odin build $(examples_game_dir)src/ \
 		-define:BUILD_CONFIG=$(GD_BUILD_CONFIG) \
 		-build-mode:shared \
@@ -85,7 +85,7 @@ $(examples_game_out): core/init.gen.odin $(examples_game_deps)
 		-show-timings \
 		-collection:godot=.
 
-examples/tests/bin/tests$(shared_suffix): core/init.gen.odin $(wildcard examples/tests/src/*.odin)
+examples/tests/bin/tests$(shared_suffix): core/init/init.gen.odin $(wildcard examples/tests/src/*.odin)
 	odin build examples/tests/src/ \
 		-define:BUILD_CONFIG=$(GD_BUILD_CONFIG) \
 		-build-mode:shared \
@@ -97,7 +97,7 @@ examples/tests/bin/tests$(shared_suffix): core/init.gen.odin $(wildcard examples
 		-show-timings \
 		-collection:godot=.
 
-examples: core/init.gen.odin $(examples_hello_out) $(examples_game_out)
+examples: examples/tests/bin/tests$(shared_suffix) $(examples_hello_out) $(examples_game_out)
 
 examples/game/cbin/game.dll: $(wildcard examples/game/csrc/*)
 	cl.exe /std:clatest /ZI /D_USRDLL /D_WINDLL $(wildcard examples/game/csrc/*.c) /link /DLL /OUT:examples/game/cbin/game.dll
@@ -109,6 +109,7 @@ check:
 	odin check bindgen/
 	odin check core/ -no-entry-point -collection:godot=. -define:BUILD_CONFIG=$(GD_BUILD_CONFIG)
 	odin check editor/ -no-entry-point -collection:godot=. -define:BUILD_CONFIG=$(GD_BUILD_CONFIG)
+	odin check structs/ -no-entry-point -collection:godot=. -define:BUILD_CONFIG=$(GD_BUILD_CONFIG)
 	odin check gdextension/ -no-entry-point -collection:godot=. -define:BUILD_CONFIG=$(GD_BUILD_CONFIG)
 	odin check examples/tests/src -no-entry-point -collection:godot=. -define:BUILD_CONFIG=$(GD_BUILD_CONFIG)
 
