@@ -1218,16 +1218,13 @@ _graph_native_struct_fields :: proc(graph: ^Graph, format: string) -> []Struct_F
 
         if strings.has_suffix(field.name, "]") {
             array_spec_idx := strings.last_index(field.name, "[")
-            
+
             array_size_string := field.name[array_spec_idx + 1:len(field.name) - 1]
             array_size, ok := strconv.parse_int(array_size_string)
             assert(ok, "invalid size in array specifier")
 
             field.name = field.name[:array_spec_idx]
-            field.type = new_clone(Sized_Array {
-                size = array_size,
-                type = field.type,
-            })
+            field.type = new_clone(Sized_Array{size = array_size, type = field.type})
         }
 
         fields[field_idx] = field
