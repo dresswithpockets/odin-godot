@@ -327,6 +327,14 @@ Util_Proc :: struct {
     args:        []Method_Arg,
 }
 
+class_is_core :: proc(class: ^Engine_Class) -> bool {
+    return class.api_type == .Core
+}
+
+class_is_editor :: proc(class: ^Engine_Class) -> bool {
+    return class.api_type == .Editor
+}
+
 to_string :: proc(type: Engine_Api_Type) -> string {
     switch type {
     case .Core:
