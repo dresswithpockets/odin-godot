@@ -72,13 +72,12 @@ Signal :: distinct Opaque(4)
 Dictionary :: distinct Opaque(1)
 Array :: distinct Opaque(1)
 
-Typed_Array :: struct($T: typeid,) where intrinsics.type_is_specialization_of(Packed_Array, T) ||
+Typed_Array :: struct($T: typeid) where intrinsics.type_is_specialization_of(Packed_Array, T) ||
     intrinsics.type_is_variant_of(Some_Vector, T) ||
     intrinsics.type_is_variant_of(Some_Primitive, T) ||
     intrinsics.type_is_variant_of(Some_Godot_Unique, T)
 {
-    using untyped:
-    Array,
+    using untyped: Array,
 }
 
 Packed_Array :: struct($T: typeid) where intrinsics.type_is_variant_of(Some_Packable, T) {
@@ -139,6 +138,8 @@ Some_Primitive :: union {
 }
 
 Some_Godot_Unique :: union {
+    Object,
+    RefCounted,
     String,
     String_Name,
     Node_Path,
