@@ -65,6 +65,7 @@ examples_game_out := $(examples_game_dir)bin/game$(shared_suffix)
 $(examples_hello_out): core/init/init.gen.odin $(examples_hello_deps)
 	odin build $(examples_hello_dir)src/ \
 		-define:BUILD_CONFIG=$(GD_BUILD_CONFIG) \
+		-collection:godot=. \
 		-build-mode:shared \
 		-out:$(examples_hello_out) \
 		-warnings-as-errors \
@@ -72,11 +73,12 @@ $(examples_hello_out): core/init/init.gen.odin $(examples_hello_deps)
 		-target:windows_amd64 \
 		-debug \
 		-show-timings \
-		-collection:godot=.
+		-use-single-module
 
 $(examples_game_out): core/init/init.gen.odin $(examples_game_deps)
 	odin build $(examples_game_dir)src/ \
 		-define:BUILD_CONFIG=$(GD_BUILD_CONFIG) \
+		-collection:godot=. \
 		-build-mode:shared \
 		-out:$(examples_game_out) \
 		-warnings-as-errors \
@@ -84,11 +86,12 @@ $(examples_game_out): core/init/init.gen.odin $(examples_game_deps)
 		-target:windows_amd64 \
 		-debug \
 		-show-timings \
-		-collection:godot=.
+		-use-single-module
 
 examples/tests/bin/tests$(shared_suffix): core/init/init.gen.odin $(wildcard examples/tests/src/*.odin)
 	odin build examples/tests/src/ \
 		-define:BUILD_CONFIG=$(GD_BUILD_CONFIG) \
+		-collection:godot=. \
 		-build-mode:shared \
 		-out:examples/tests/bin/tests$(shared_suffix) \
 		-warnings-as-errors \
@@ -96,7 +99,7 @@ examples/tests/bin/tests$(shared_suffix): core/init/init.gen.odin $(wildcard exa
 		-target:windows_amd64 \
 		-debug \
 		-show-timings \
-		-collection:godot=.
+		-use-single-module
 
 examples: examples/tests/bin/tests$(shared_suffix) $(examples_hello_out) $(examples_game_out)
 
