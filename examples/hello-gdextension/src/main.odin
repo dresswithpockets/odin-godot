@@ -1,5 +1,6 @@
 package example
 
+import core_init "godot:core/init"
 import gd "godot:gdextension"
 import var "godot:variant"
 import "core:strings"
@@ -17,7 +18,7 @@ example_library_init :: proc "c" (
     gd.init(library, get_proc_address)
 
     // MUST be called before using any core classes, singletons, or utility functions
-    // core.init()
+    core_init.init()
 
     initialization.initialize = initialize_example_module
     initialization.deinitialize = uninitialize_example_module

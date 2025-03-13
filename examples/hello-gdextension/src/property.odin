@@ -3,7 +3,7 @@ package example
 import gd "godot:gdextension"
 import var "godot:variant"
 
-new_property :: proc(type: gd.VariantType, name: ^var.String_Name) -> gd.PropertyInfo {
+new_property :: proc(type: gd.Variant_Type, name: ^var.String_Name) -> gd.PropertyInfo {
     return gd.PropertyInfo {
         name = name,
         type = type,
@@ -18,10 +18,10 @@ new_property :: proc(type: gd.VariantType, name: ^var.String_Name) -> gd.Propert
 
 MethodBindArgument :: struct {
     name: ^var.String_Name,
-    type: gd.VariantType,
+    type: gd.Variant_Type,
 }
 
-bind_method_return :: proc(class_name: ^var.String_Name, method_name: ^var.String_Name, function: rawptr, return_type: gd.VariantType, call_func: gd.ExtensionClassMethodCall, ptr_call_func: gd.ExtensionClassMethodPtrCall, args: ..MethodBindArgument) {
+bind_method_return :: proc(class_name: ^var.String_Name, method_name: ^var.String_Name, function: rawptr, return_type: gd.Variant_Type, call_func: gd.ExtensionClassMethodCall, ptr_call_func: gd.ExtensionClassMethodPtrCall, args: ..MethodBindArgument) {
     return_info := new_property(return_type, var.string_name_empty_ref())
 
     method_info := gd.ExtensionClassMethodInfo{
@@ -81,7 +81,7 @@ bind_method_no_return :: proc(class_name: ^var.String_Name, method_name: ^var.St
     gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
 }
 
-bind_property :: proc(class_name: ^var.String_Name, name: ^var.String_Name, type: gd.VariantType, getter: ^var.String_Name, setter: ^var.String_Name) {
+bind_property :: proc(class_name: ^var.String_Name, name: ^var.String_Name, type: gd.Variant_Type, getter: ^var.String_Name, setter: ^var.String_Name) {
     info := new_property(type, name)
     gd.classdb_register_extension_class_property(gd.library, class_name, &info, setter, getter)
 }
@@ -144,12 +144,12 @@ call_setter_float :: proc "c" (method_user_data: rawptr, instance: gd.ExtensionC
     type := gd.variant_get_type(args[0])
     if type != .Float {
         error.error = .Invalid_Argument
-        error.expected = cast(i32)gd.VariantType.Float
+        error.expected = cast(i32)gd.Variant_Type.Float
         error.argument = 0
         return
     }
 
-    arg1: f64
+    arg1: gd.Float
     float_from_var_constructor := gd.get_variant_to_type_constructor(.Float)
     float_from_var_constructor(cast(gd.TypePtr)&arg1, args[0])
 
