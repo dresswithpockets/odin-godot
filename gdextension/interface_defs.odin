@@ -246,7 +246,7 @@ ExtensionInterfaceVariantCall :: #type proc "c" (
  * @see Variant::call_static()
  */
 ExtensionInterfaceVariantCallStatic :: #type proc "c" (
-    p_type: VariantType,
+    p_type: Variant_Type,
     p_method: StringNamePtr,
     p_args: [^]VariantPtr,
     p_argument_count: i64,
@@ -571,7 +571,7 @@ ExtensionInterfaceVariantStringify :: #type proc "c" (p_self: VariantPtr, r_ret:
  *
  * @return The variant type.
  */
-ExtensionInterfaceVariantGetType :: #type proc "c" (p_self: VariantPtr) -> VariantType
+ExtensionInterfaceVariantGetType :: #type proc "c" (p_self: VariantPtr) -> Variant_Type
 
 /**
  * @name variant_has_method
@@ -597,7 +597,7 @@ ExtensionInterfaceVariantHasMethod :: #type proc "c" (p_self: VariantPtr, p_meth
  *
  * @return
  */
-ExtensionInterfaceVariantHasMember :: #type proc "c" (p_type: VariantType, p_member: StringNamePtr) -> bool
+ExtensionInterfaceVariantHasMember :: #type proc "c" (p_type: Variant_Type, p_member: StringNamePtr) -> bool
 
 /**
  * @name variant_has_key
@@ -637,7 +637,7 @@ ExtensionInterfaceVariantGetObjectInstanceId :: #type proc "c" (p_self: VariantP
  * @param p_type The Variant type.
  * @param r_name A pointer to a String to store the Variant type name.
  */
-ExtensionInterfaceVariantGetTypeName :: #type proc "c" (p_type: VariantType, r_name: StringPtr)
+ExtensionInterfaceVariantGetTypeName :: #type proc "c" (p_type: Variant_Type, r_name: StringPtr)
 
 /**
  * @name variant_can_convert
@@ -650,7 +650,7 @@ ExtensionInterfaceVariantGetTypeName :: #type proc "c" (p_type: VariantType, r_n
  *
  * @return true if the conversion is possible; otherwise false.
  */
-ExtensionInterfaceVariantCanConvert :: #type proc "c" (p_from: VariantType, p_to: VariantType) -> bool
+ExtensionInterfaceVariantCanConvert :: #type proc "c" (p_from: Variant_Type, p_to: Variant_Type) -> bool
 
 /**
  * @name variant_can_convert_strict
@@ -663,7 +663,7 @@ ExtensionInterfaceVariantCanConvert :: #type proc "c" (p_from: VariantType, p_to
  *
  * @return true if the conversion is possible; otherwise false.
  */
-ExtensionInterfaceVariantCanConvertStrict :: #type proc "c" (p_from: VariantType, p_to: VariantType) -> bool
+ExtensionInterfaceVariantCanConvertStrict :: #type proc "c" (p_from: Variant_Type, p_to: Variant_Type) -> bool
 
 /**
  * @name get_variant_from_type_constructor
@@ -676,7 +676,7 @@ ExtensionInterfaceVariantCanConvertStrict :: #type proc "c" (p_from: VariantType
  * @return A pointer to a function that can create a Variant of the given type from a raw value.
  */
 ExtensionInterfaceGetVariantFromTypeConstructor :: #type proc "c" (
-    p_type: VariantType,
+    p_type: Variant_Type,
 ) -> VariantFromTypeConstructorProc
 
 /**
@@ -689,7 +689,7 @@ ExtensionInterfaceGetVariantFromTypeConstructor :: #type proc "c" (
  *
  * @return A pointer to a function that can get the raw value from a Variant of the given type.
  */
-ExtensionInterfaceGetVariantToTypeConstructor :: #type proc "c" (p_type: VariantType) -> TypeFromVariantConstructorProc
+ExtensionInterfaceGetVariantToTypeConstructor :: #type proc "c" (p_type: Variant_Type) -> TypeFromVariantConstructorProc
 
 /**
  * @name variant_get_ptr_internal_getter
@@ -707,7 +707,7 @@ ExtensionInterfaceGetVariantToTypeConstructor :: #type proc "c" (p_type: Variant
  * @return A pointer to a type-specific function that returns a pointer to the internal value of a variant. Check the implementation of this function (gdextension_variant_get_ptr_internal_getter) for pointee type info of each variant type.
  */
 ExtensionInterfaceGetVariantGetInternalPtrFunc :: #type proc "c" (
-    p_type: VariantType,
+    p_type: Variant_Type,
 ) -> VariantGetInternalPtrFunc
 
 /**
@@ -724,8 +724,8 @@ ExtensionInterfaceGetVariantGetInternalPtrFunc :: #type proc "c" (
  */
 ExtensionInterfaceVariantGetPtrOperatorEvaluator :: #type proc "c" (
     p_operator: VariantOperator,
-    p_type_a: VariantType,
-    p_type_b: VariantType,
+    p_type_a: Variant_Type,
+    p_type_b: Variant_Type,
 ) -> PtrOperatorEvaluator
 
 /**
@@ -741,7 +741,7 @@ ExtensionInterfaceVariantGetPtrOperatorEvaluator :: #type proc "c" (
  * @return A pointer to a function that can call a builtin method on a type of Variant.
  */
 ExtensionInterfaceVariantGetPtrBuiltinMethod :: #type proc "c" (
-    p_type: VariantType,
+    p_type: Variant_Type,
     p_method: StringNamePtr,
     p_hash: i64,
 ) -> PtrBuiltInMethod
@@ -758,7 +758,7 @@ ExtensionInterfaceVariantGetPtrBuiltinMethod :: #type proc "c" (
  * @return A pointer to a function that can call one of the constructors for a type of Variant.
  */
 ExtensionInterfaceVariantGetPtrConstructor :: #type proc "c" (
-    p_type: VariantType,
+    p_type: Variant_Type,
     p_constructor: i32,
 ) -> PtrConstructor
 
@@ -772,7 +772,7 @@ ExtensionInterfaceVariantGetPtrConstructor :: #type proc "c" (
  *
  * @return A pointer to a function than can call the destructor for a type of Variant.
  */
-ExtensionInterfaceVariantGetPtrDestructor :: #type proc "c" (p_type: VariantType) -> PtrDestructor
+ExtensionInterfaceVariantGetPtrDestructor :: #type proc "c" (p_type: Variant_Type) -> PtrDestructor
 
 /**
  * @name variant_construct
@@ -787,7 +787,7 @@ ExtensionInterfaceVariantGetPtrDestructor :: #type proc "c" (p_type: VariantType
  * @param r_error A pointer the structure which will be updated with error information.
  */
 ExtensionInterfaceVariantConstruct :: #type proc "c" (
-    p_type: VariantType,
+    p_type: Variant_Type,
     r_base: VariantPtr,
     p_args: [^]VariantPtr,
     p_argument_count: i32,
@@ -805,7 +805,7 @@ ExtensionInterfaceVariantConstruct :: #type proc "c" (
  *
  * @return A pointer to a function that can call a member's setter on the given Variant type.
  */
-ExtensionInterfaceVariantGetPtrSetter :: #type proc "c" (p_type: VariantType, p_member: StringNamePtr) -> PtrSetter
+ExtensionInterfaceVariantGetPtrSetter :: #type proc "c" (p_type: Variant_Type, p_member: StringNamePtr) -> PtrSetter
 
 /**
  * @name variant_get_ptr_getter
@@ -818,7 +818,7 @@ ExtensionInterfaceVariantGetPtrSetter :: #type proc "c" (p_type: VariantType, p_
  *
  * @return A pointer to a function that can call a member's getter on the given Variant type.
  */
-ExtensionInterfaceVariantGetPtrGetter :: #type proc "c" (p_type: VariantType, p_member: StringNamePtr) -> PtrGetter
+ExtensionInterfaceVariantGetPtrGetter :: #type proc "c" (p_type: Variant_Type, p_member: StringNamePtr) -> PtrGetter
 
 /**
  * @name variant_get_ptr_indexed_setter
@@ -830,7 +830,7 @@ ExtensionInterfaceVariantGetPtrGetter :: #type proc "c" (p_type: VariantType, p_
  *
  * @return A pointer to a function that can set an index on the given Variant type.
  */
-ExtensionInterfaceVariantGetPtrIndexedSetter :: #type proc "c" (p_type: VariantType) -> PtrIndexedSetter
+ExtensionInterfaceVariantGetPtrIndexedSetter :: #type proc "c" (p_type: Variant_Type) -> PtrIndexedSetter
 
 /**
  * @name variant_get_ptr_indexed_getter
@@ -842,7 +842,7 @@ ExtensionInterfaceVariantGetPtrIndexedSetter :: #type proc "c" (p_type: VariantT
  *
  * @return A pointer to a function that can get an index on the given Variant type.
  */
-ExtensionInterfaceVariantGetPtrIndexedGetter :: #type proc "c" (p_type: VariantType) -> PtrIndexedGetter
+ExtensionInterfaceVariantGetPtrIndexedGetter :: #type proc "c" (p_type: Variant_Type) -> PtrIndexedGetter
 
 /**
  * @name variant_get_ptr_keyed_setter
@@ -854,7 +854,7 @@ ExtensionInterfaceVariantGetPtrIndexedGetter :: #type proc "c" (p_type: VariantT
  *
  * @return A pointer to a function that can set a key on the given Variant type.
  */
-ExtensionInterfaceVariantGetPtrKeyedSetter :: #type proc "c" (p_type: VariantType) -> PtrKeyedSetter
+ExtensionInterfaceVariantGetPtrKeyedSetter :: #type proc "c" (p_type: Variant_Type) -> PtrKeyedSetter
 
 /**
  * @name variant_get_ptr_keyed_getter
@@ -866,7 +866,7 @@ ExtensionInterfaceVariantGetPtrKeyedSetter :: #type proc "c" (p_type: VariantTyp
  *
  * @return A pointer to a function that can get a key on the given Variant type.
  */
-ExtensionInterfaceVariantGetPtrKeyedGetter :: #type proc "c" (p_type: VariantType) -> PtrKeyedGetter
+ExtensionInterfaceVariantGetPtrKeyedGetter :: #type proc "c" (p_type: Variant_Type) -> PtrKeyedGetter
 
 /**
  * @name variant_get_ptr_keyed_checker
@@ -878,7 +878,7 @@ ExtensionInterfaceVariantGetPtrKeyedGetter :: #type proc "c" (p_type: VariantTyp
  *
  * @return A pointer to a function that can check a key on the given Variant type.
  */
-ExtensionInterfaceVariantGetPtrKeyedChecker :: #type proc "c" (p_type: VariantType) -> PtrKeyedGetter
+ExtensionInterfaceVariantGetPtrKeyedChecker :: #type proc "c" (p_type: Variant_Type) -> PtrKeyedGetter
 
 /**
  * @name variant_get_constant_value
@@ -891,7 +891,7 @@ ExtensionInterfaceVariantGetPtrKeyedChecker :: #type proc "c" (p_type: VariantTy
  * @param r_ret A pointer to a Variant to store the value.
  */
 ExtensionInterfaceVariantGetConstantValue :: #type proc "c" (
-    p_type: VariantType,
+    p_type: Variant_Type,
     p_constant: StringNamePtr,
     r_ret: VariantPtr,
 )
@@ -1764,7 +1764,7 @@ ExtensionInterfaceArrayRef :: #type proc "c" (p_self: TypePtr, p_from: TypePtr)
  */
 ExtensionInterfaceArraySetTyped :: #type proc "c" (
     p_self: TypePtr,
-    p_type: VariantType,
+    p_type: Variant_Type,
     p_class_name: StringNamePtr,
     p_script: VariantPtr,
 )
@@ -1811,10 +1811,10 @@ ExtensionInterfaceDictionaryOperatorIndexConst :: #type proc "c" (p_self: TypePt
  */
 ExtensionInterfaceDictionarySetTyped :: #type proc "c" (
     p_self: TypePtr,
-    p_key_type: VariantType,
+    p_key_type: Variant_Type,
     p_key_class_name: StringNamePtr,
     p_key_script: VariantPtr,
-    p_value_type: VariantType,
+    p_value_type: Variant_Type,
     p_value_class_name: StringNamePtr,
     p_value_script: VariantPtr,
 )

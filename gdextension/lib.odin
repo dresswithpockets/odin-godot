@@ -35,7 +35,7 @@ ObjectInstanceId :: u64
 MethodBindPtr :: rawptr
 RefPtr :: rawptr
 
-VariantType :: enum u64 {
+Variant_Type :: enum u64 {
     Nil,
 
     /* atomic types */
@@ -183,7 +183,7 @@ ExtensionClassGet :: #type proc "c" (instance: ExtensionClassInstancePtr, name: 
 ExtensionClassGetRid :: #type proc "c" (instance: ExtensionClassInstancePtr) -> u64
 
 PropertyInfo :: struct {
-    type:        VariantType,
+    type:        Variant_Type,
     name:        StringNamePtr,
     class_name:  StringNamePtr,
     // bitfield of PropertyHint (defined in extension_api.json)
@@ -573,7 +573,7 @@ ExtensionScriptInstanceGetPropertyType :: #type proc "c" (
     instance: ExtensionScriptInstanceDataPtr,
     name: StringNamePtr,
     is_valid: ^bool,
-) -> VariantType
+) -> Variant_Type
 ExtensionScriptInstanceValidateProperty :: #type proc "c" (
     instance: ExtensionScriptInstanceDataPtr,
     property: ^PropertyInfo,

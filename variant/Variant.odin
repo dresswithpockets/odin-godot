@@ -13,7 +13,7 @@ Opaque :: struct(I: int) {
 }
 
 Variant :: struct {
-    type:   gd.VariantType,
+    type:   gd.Variant_Type,
     opaque: Opaque(4),
 }
 
@@ -72,10 +72,7 @@ Signal :: distinct Opaque(4)
 Dictionary :: distinct Opaque(1)
 Array :: distinct Opaque(1)
 
-Typed_Array :: struct($T: typeid) where intrinsics.type_is_specialization_of(Packed_Array, T) ||
-    intrinsics.type_is_variant_of(Some_Vector, T) ||
-    intrinsics.type_is_variant_of(Some_Primitive, T) ||
-    intrinsics.type_is_variant_of(Some_Godot_Unique, T)
+Typed_Array :: struct($T: typeid) where intrinsics.type_is_variant_of(Variantable_Type, T) || intrinsics.type_is_specialization_of(T, Packed_Array)
 {
     using untyped: Array,
 }
@@ -97,7 +94,7 @@ Packed_Vector4_Array :: Packed_Array(Vector4)
 Packed_Color_Array :: Packed_Array(Color)
 
 Object :: gd.ObjectPtr
-RefCounted :: ^Object
+Ref_Counted :: ^Object
 
 Some_Packable :: union {
     byte,
@@ -112,16 +109,16 @@ Some_Packable :: union {
     Color,
 }
 
-Some_Vector :: union {
+Variantable_Type :: union {
+    // vectors
     Vector2,
     Vector2i,
     Vector3,
     Vector3i,
     Vector4,
     Vector4i,
-}
 
-Some_Primitive :: union {
+    // primitives
     bool,
     i64,
     gd.Float,
@@ -135,11 +132,10 @@ Some_Primitive :: union {
     Transform3d,
     Projection,
     Color,
-}
 
-Some_Godot_Unique :: union {
+    // unique/opaque types
     Object,
-    RefCounted,
+    Ref_Counted,
     String,
     String_Name,
     Node_Path,
@@ -393,9 +389,7 @@ COLOR_YELLOW_GREEN :: Color{0.603922, 0.803922, 0.196078, 1}
 type_is_some_variant :: proc "contextless" (
     $T: typeid,
 ) -> bool where intrinsics.type_is_specialization_of(Packed_Array, T) ||
-    intrinsics.type_is_variant_of(Some_Vector, T) ||
-    intrinsics.type_is_variant_of(Some_Primitive, T) ||
-    intrinsics.type_is_variant_of(Some_Godot_Unique, T) {
+    intrinsics.type_is_variant_of(Variantable_Type, T) {
     return true
 }
 
@@ -824,9 +818,7 @@ variant_into_ptr :: proc "contextless" (
     value: ^$V,
     ret: ^Variant,
 ) where intrinsics.type_is_specialization_of(Packed_Array, V) ||
-    intrinsics.type_is_variant_of(Some_Vector, V) ||
-    intrinsics.type_is_variant_of(Some_Primitive, V) ||
-    intrinsics.type_is_variant_of(Some_Godot_Unique, V) {
+    intrinsics.type_is_variant_of(Variantable_Type, V) {
     constructor := gd.get_variant_from_type_constructor(variant_type(V))
     constructor(cast(gd.UninitializedVariantPtr)ret, cast(gd.TypePtr)value)
 }
@@ -879,9 +871,7 @@ variant_to :: proc "contextless" (
 ) -> (
     ret: T,
 ) where intrinsics.type_is_specialization_of(Packed_Array, T) ||
-    intrinsics.type_is_variant_of(Some_Vector, T) ||
-    intrinsics.type_is_variant_of(Some_Primitive, T) ||
-    intrinsics.type_is_variant_of(Some_Godot_Unique, T) {
+    intrinsics.type_is_variant_of(Variantable_Type, T) {
     when T == bool {
         return variant_to_bool(from)
     } else when T == i64 {
@@ -1345,10 +1335,8 @@ variant_to_packed_vector4_array :: proc "contextless" (from: ^Variant) -> (ret: 
 
 variant_type :: proc "contextless" (
     $T: typeid,
-) -> gd.VariantType where intrinsics.type_is_specialization_of(Packed_Array, T) ||
-    intrinsics.type_is_variant_of(Some_Vector, T) ||
-    intrinsics.type_is_variant_of(Some_Primitive, T) ||
-    intrinsics.type_is_variant_of(Some_Godot_Unique, T) {
+) -> gd.Variant_Type where intrinsics.type_is_specialization_of(Packed_Array, T) ||
+    intrinsics.type_is_variant_of(Variantable_Type, T) {
     when T == bool {
         return .Bool
     } else when T == i64 {
