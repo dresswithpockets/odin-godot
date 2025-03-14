@@ -1,4 +1,4 @@
-package bind
+package libgd_classdb
 
 import "base:intrinsics"
 import "godot:gdext"

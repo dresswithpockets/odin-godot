@@ -1,4 +1,4 @@
-package bind
+package libgd_classdb
 
 import "godot:gdext"
 import "godot:godot"
