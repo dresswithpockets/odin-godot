@@ -65,11 +65,6 @@ map_types_to_imports :: proc(graph: g.Graph, map_mode: Package_Map_Mode) {
                     import_map[&class_bit_field] = No_Import{}
                 }
             case ^g.Engine_Class:
-                if slice.contains(declared_builtins, cast(string)root_type.name) {
-                    import_map[root_type] = No_Import{}
-                    continue
-                }
-
                 import_map[root_type] = No_Import{}
 
                 for &class_enum in root_type.enums {
@@ -95,14 +90,7 @@ map_types_to_imports :: proc(graph: g.Graph, map_mode: Package_Map_Mode) {
             case ^g.Native_Struct:
                 import_map[root_type] = No_Import{}
             case ^g.Primitive:
-                if root_type.odin_name == "Float" {
-                    import_map[root_type] = Import {
-                        name = "__bindgen_gde",
-                        path = "godot:gdextension",
-                    }
-                } else {
-                    import_map[root_type] = No_Import{}
-                }
+                import_map[root_type] = No_Import{}
             }
         }
     case .Flat:
@@ -170,8 +158,8 @@ _any_to_variant_type :: proc(type: g.Any_Type) -> names.Odin_Name {
     case ^g.Native_Struct:
         panic("Native Structs cant be used as Variant")
     case ^g.Primitive:
-        if as_type.odin_name == "Float" {
-            return "Float"
+        if as_type.odin_name == "Real" {
+            return "Real"
         } else if as_type.odin_name == "ObjectPtr" {
             return "Object"
         }
