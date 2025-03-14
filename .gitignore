@@ -1,6 +1,7 @@
 .vscode/
 
 *.gen.odin
+!libgd/classdb/bind.gen.odin
 bindgen/templates.odin
 
 bin/
