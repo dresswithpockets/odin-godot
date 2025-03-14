@@ -2,7 +2,8 @@ package game
 
 import "core:math"
 import "godot:gdextension"
-import "godot:gdextension/bind"
+import "godot:libgd"
+import "godot:libgd/classdb"
 import "godot:godot"
 
 YawSpeed :: 0.022
@@ -438,9 +439,9 @@ player_class_register :: proc() {
         &class_info,
     )
 
-    bind.bind_property_group(PLAYER_CLASS_NAME, "Movement", "")
-    bind.bind_property_subgroup(PLAYER_CLASS_NAME, "On Ground", "")
-    bind.bind_property_and_methods(
+    classdb.bind_property_group(PLAYER_CLASS_NAME, "Movement", "")
+    classdb.bind_property_subgroup(PLAYER_CLASS_NAME, "On Ground", "")
+    classdb.bind_property_and_methods(
         PLAYER_CLASS_NAME,
         "ground_friction",
         "get_ground_friction",
@@ -449,7 +450,7 @@ player_class_register :: proc() {
         set_ground_friction,
         static_strings = true,
     )
-    bind.bind_property_and_methods(
+    classdb.bind_property_and_methods(
         PLAYER_CLASS_NAME,
         "ground_accel",
         "get_ground_accel",
@@ -458,7 +459,7 @@ player_class_register :: proc() {
         set_ground_accel,
         static_strings = true,
     )
-    bind.bind_property_and_methods(
+    classdb.bind_property_and_methods(
         PLAYER_CLASS_NAME,
         "ground_max_speed",
         "get_ground_max_speed",
@@ -467,7 +468,7 @@ player_class_register :: proc() {
         set_ground_max_speed,
         static_strings = true,
     )
-    bind.bind_property_and_methods(
+    classdb.bind_property_and_methods(
         PLAYER_CLASS_NAME,
         "max_step_height",
         "get_max_step_height",
@@ -476,7 +477,7 @@ player_class_register :: proc() {
         set_max_step_height,
         static_strings = true,
     )
-    bind.bind_property_and_methods(
+    classdb.bind_property_and_methods(
         PLAYER_CLASS_NAME,
         "max_step_up_slide_iterations",
         "get_max_step_up_slide_iterations",
@@ -486,8 +487,8 @@ player_class_register :: proc() {
         static_strings = true,
     )
 
-    bind.bind_property_subgroup(PLAYER_CLASS_NAME, "In Air", "")
-    bind.bind_property_and_methods(
+    classdb.bind_property_subgroup(PLAYER_CLASS_NAME, "In Air", "")
+    classdb.bind_property_and_methods(
         PLAYER_CLASS_NAME,
         "gravity_up_scale",
         "get_gravity_up_scale",
@@ -496,7 +497,7 @@ player_class_register :: proc() {
         set_gravity_up_scale,
         static_strings = true,
     )
-    bind.bind_property_and_methods(
+    classdb.bind_property_and_methods(
         PLAYER_CLASS_NAME,
         "gravity_down_scale",
         "get_gravity_down_scale",
@@ -505,7 +506,7 @@ player_class_register :: proc() {
         set_gravity_down_scale,
         static_strings = true,
     )
-    bind.bind_property_and_methods(
+    classdb.bind_property_and_methods(
         PLAYER_CLASS_NAME,
         "air_friction",
         "get_air_friction",
@@ -514,7 +515,7 @@ player_class_register :: proc() {
         set_air_friction,
         static_strings = true,
     )
-    bind.bind_property_and_methods(
+    classdb.bind_property_and_methods(
         PLAYER_CLASS_NAME,
         "air_accel",
         "get_air_accel",
@@ -523,7 +524,7 @@ player_class_register :: proc() {
         set_air_accel,
         static_strings = true,
     )
-    bind.bind_property_and_methods(
+    classdb.bind_property_and_methods(
         PLAYER_CLASS_NAME,
         "air_max_speed",
         "get_air_max_speed",
@@ -532,7 +533,7 @@ player_class_register :: proc() {
         set_air_max_speed,
         static_strings = true,
     )
-    bind.bind_property_and_methods(
+    classdb.bind_property_and_methods(
         PLAYER_CLASS_NAME,
         "max_vertical_speed",
         "get_max_vertical_speed",
@@ -543,15 +544,15 @@ player_class_register :: proc() {
     )
 
     distance_name := godot.new_string_name_cstring("distance", true)
-    bind.bind_signal(
+    classdb.bind_signal(
         &Player_ClassName,
         &Player_SteppedUp_SignalName,
-        bind.Signal_Arg{name = &distance_name, type = .Float},
+        classdb.Signal_Arg{name = &distance_name, type = .Float},
     )
-    bind.bind_signal(
+    classdb.bind_signal(
         &Player_ClassName,
         &Player_SteppedDown_SignalName,
-        bind.Signal_Arg{name = &distance_name, type = .Float},
+        classdb.Signal_Arg{name = &distance_name, type = .Float},
     )
 }
 

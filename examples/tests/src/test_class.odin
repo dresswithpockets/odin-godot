@@ -1,7 +1,7 @@
 package test
 
 import gdext "godot:gdextension"
-import "godot:gdextension/bind"
+import "godot:libgd/classdb"
 import "godot:godot"
 
 @(private = "file")
@@ -127,7 +127,7 @@ test_class_register :: proc() {
     get_vector_name := godot.new_string_name_cstring("get_vector", true)
     set_vector_name := godot.new_string_name_cstring("set_vector", true)
     vector_name := godot.new_string_name_cstring("vector", true)
-    bind.bind_property_and_methods(
+    classdb.bind_property_and_methods(
         &test_class_name,
         &vector_name,
         &get_vector_name,
@@ -138,14 +138,14 @@ test_class_register :: proc() {
 
     other_name := godot.new_string_name_cstring("other", true)
     vector_eq_name := godot.new_string_name_cstring("vector_eq", true)
-    bind.bind_returning_method(&test_class_name, &vector_eq_name, vector_eq, &other_name)
+    classdb.bind_returning_method(&test_class_name, &vector_eq_name, vector_eq, &other_name)
 
     vector_neq_name := godot.new_string_name_cstring("vector_neq", true)
-    bind.bind_returning_method(&test_class_name, &vector_neq_name, vector_neq, &other_name)
+    classdb.bind_returning_method(&test_class_name, &vector_neq_name, vector_neq, &other_name)
 
     vector_add_name := godot.new_string_name_cstring("vector_add", true)
-    bind.bind_returning_method(&test_class_name, &vector_add_name, vector_add, &other_name)
+    classdb.bind_returning_method(&test_class_name, &vector_add_name, vector_add, &other_name)
 
     vector_sub_name := godot.new_string_name_cstring("vector_sub", true)
-    bind.bind_returning_method(&test_class_name, &vector_sub_name, vector_sub, &other_name)
+    classdb.bind_returning_method(&test_class_name, &vector_sub_name, vector_sub, &other_name)
 }

@@ -1,7 +1,7 @@
 package example
 
 import gdext "godot:gdextension"
-import "godot:gdextension/bind"
+import "godot:libgd/classdb"
 import "godot:godot"
 
 @(private = "file")
@@ -166,7 +166,7 @@ example_class_register :: proc() {
     amplitdue_name := godot.new_string_name_cstring("amplitude", true)
     get_amplitdue_name := godot.new_string_name_cstring("get_amplitude", true)
     set_amplitdue_name := godot.new_string_name_cstring("set_amplitude", true)
-    bind.bind_property_and_methods(
+    classdb.bind_property_and_methods(
         &example_class_name,
         &amplitdue_name,
         &get_amplitdue_name,
@@ -178,7 +178,7 @@ example_class_register :: proc() {
     speed_name := godot.new_string_name_cstring("speed", true)
     get_speed_name := godot.new_string_name_cstring("get_speed", true)
     set_speed_name := godot.new_string_name_cstring("set_speed", true)
-    bind.bind_property_and_methods(
+    classdb.bind_property_and_methods(
         &example_class_name,
         &speed_name,
         &get_speed_name,
@@ -187,9 +187,9 @@ example_class_register :: proc() {
         set_speed,
     )
 
-    bind.bind_signal(
+    classdb.bind_signal(
         &example_class_name,
         &time_passed_name,
-        bind.Signal_Arg{name = &time_passed_name, type = .Float},
+        classdb.Signal_Arg{name = &time_passed_name, type = .Float},
     )
 }
