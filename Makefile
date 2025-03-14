@@ -72,8 +72,7 @@ $(examples_hello_out): godot/godot.gen.odin $(examples_hello_deps)
 		-default-to-nil-allocator \
 		-target:windows_amd64 \
 		-debug \
-		-show-timings \
-		-use-single-module
+		-show-timings
 
 $(examples_game_out): godot/godot.gen.odin $(examples_game_deps)
 	odin build $(examples_game_dir)src/ \
@@ -85,8 +84,7 @@ $(examples_game_out): godot/godot.gen.odin $(examples_game_deps)
 		-default-to-nil-allocator \
 		-target:windows_amd64 \
 		-debug \
-		-show-timings \
-		-use-single-module
+		-show-timings
 
 examples/tests/bin/tests$(shared_suffix): godot/godot.gen.odin $(wildcard examples/tests/src/*.odin)
 	odin build examples/tests/src/ \
@@ -98,8 +96,7 @@ examples/tests/bin/tests$(shared_suffix): godot/godot.gen.odin $(wildcard exampl
 		-default-to-nil-allocator \
 		-target:windows_amd64 \
 		-debug \
-		-show-timings \
-		-use-single-module
+		-show-timings
 
 examples: examples/tests/bin/tests$(shared_suffix) $(examples_hello_out) $(examples_game_out)
 
@@ -116,6 +113,8 @@ check:
 	odin check bindgen/
 	odin check gdextension/ -no-entry-point -collection:godot=. -vet
 	odin check godot/ -no-entry-point -collection:godot=. -define:REAL_PRECISION=$(REAL_PRECISION) -vet
+	odin check examples/game/src -no-entry-point -collection:godot=. -define:REAL_PRECISION=$(REAL_PRECISION) -vet
+	odin check examples/hello-gdextension/src -no-entry-point -collection:godot=. -define:REAL_PRECISION=$(REAL_PRECISION) -vet
 	odin check examples/tests/src -no-entry-point -collection:godot=. -define:REAL_PRECISION=$(REAL_PRECISION) -vet
 
 .PHONY: clean
