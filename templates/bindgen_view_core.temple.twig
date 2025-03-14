@@ -20,6 +20,9 @@ init :: proc "contextless" () {
     __name = new_string_name_cstring("{{ function.godot_name }}", true)
     __{{ function.name }}_ptr = __bindgen_gde.variant_get_ptr_utility_function(&__name, {{ i64(function.hash) }})
 {% end %}
+{% for singleton in this.singletons %}
+    __{{ singleton.name }}_name = new_string_name_cstring("{{ singleton.name }}", true)
+{% end %}
 {% for snake_name in this.inits %}
     {{ snake_name }}_init()
 {% end %}
@@ -64,7 +67,23 @@ gd_{{ function.name }} :: proc "contextless" (
 {% end %}
 {% end %}
 
+{% for singleton in this.singletons %}
+singleton_{{ singleton.snake_name }} :: proc "contextless" () -> {{ singleton.type }} {
+    @(static) __ptr: __bindgen_gde.ObjectPtr
+    if __ptr == nil {
+        __ptr = __bindgen_gde.global_get_singleton(&__{{ singleton.name }}_name)
+    }
+    
+    return __ptr
+}
+{% end %}
+
 {% for function in this.functions %}
 @(private="file")
 __{{ function.name }}_ptr: __bindgen_gde.PtrUtilityFunction
+{% end %}
+
+{% for singleton in this.singletons %}
+@(private="file")
+__{{ singleton.name }}_name: String_Name
 {% end %}

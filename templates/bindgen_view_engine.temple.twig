@@ -27,7 +27,11 @@ import {{ name }} "{{ import_.path }}"
 }
 
 new_{{ this.snake_name }} :: proc "contextless" () -> {{ this.self }} {
+{% if this.cast_on_new %}
     return cast({{ this.self }})__bindgen_gde.classdb_construct_object({{ this.snake_name }}_name_ref())
+{% else %}
+    return __bindgen_gde.classdb_construct_object({{ this.snake_name }}_name_ref())
+{% end %}
 }
 
 // methods
@@ -113,7 +117,9 @@ new_{{ this.snake_name }} :: proc "contextless" () -> {{ this.self }} {
 
 {{ this.snake_name}}_init :: proc "contextless" () {
     __class_name = new_string_name_cstring("{{ this.godot_name }}", true)
+    {% if len(this.instance_methods) + len(this.static_methods) > 0 %}
     __name: String_Name
+    {% end %}
 
     {% for method in this.instance_methods %}
     __name = new_string_name_cstring("{{ method.name }}", true)
