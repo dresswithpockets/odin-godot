@@ -33,6 +33,14 @@ to_const :: proc {
     odin_to_const,
 }
 
+is_upper_or_number :: proc(r: rune) -> bool {
+    return unicode.is_number(r) || unicode.is_upper(r)
+}
+
+is_lower_or_number :: proc(r: rune) -> bool {
+    return unicode.is_number(r) || unicode.is_lower(r)
+}
+
 // godot uses ACRONYMPascalCase, but we use AcronymPascalCase
 // return string must be freed
 godot_to_odin :: proc(name: Godot_Name) -> (s: Odin_Name) {
@@ -49,24 +57,54 @@ godot_to_odin :: proc(name: Godot_Name) -> (s: Odin_Name) {
         r := runes[i]
         previous := runes[i - 1]
         next := runes[i + 1]
+
         if r == '.' {
             fmt.sbprint(&sb, '_')
             continue
         }
 
-        // we're at a new word, prefix with underscore; but, only if it isnt already
-        // prefixed by an underscore, due to a dot
-        if unicode.is_upper(r) && !unicode.is_upper(next) && previous != '.' {
-            fmt.sbprint(&sb, '_')
-            fmt.sbprint(&sb, r)
-            continue
-        }
+        // if r is uppercase, there are some transformations:
+        // AAA -> Aaa
+        // AA1 -> Aa1
+        // AAa -> A_Aa
+        // aAA -> a_Aa
+        // aA1 -> a_A1
+        // aAa -> a_Aa
+        // 1AA -> 1aa
+        // 1A1 -> 1a1
+        // 1Aa -> 1aa
 
-        if unicode.is_upper(r) &&
-           (unicode.is_upper(previous) || unicode.is_number(previous)) &&
-           unicode.is_upper(next) {
-            fmt.sbprint(&sb, unicode.to_lower(r))
-            continue
+        // if r is lowercase, then there is no transformation to r:
+        // AaA -> Aa_A
+        // Aaa -> Aaa
+        // Aa1 -> Aa1
+        // aaA -> aa_A
+        // aa1 -> aa1
+        // aaa -> aaa
+        // 1aA -> 1a_A
+        // 1a1 -> 1a1
+        // 1aa -> 1aa
+
+        // if r is a number, then there is no transformation to r:
+        // A1A -> A1a
+        // A1a -> A1a
+        // A11 -> A11
+        // a1A -> a1a
+        // a11 -> a11
+        // a1a -> a1a
+        // 11A -> 11a
+        // 111 -> 111
+        // 11a -> 11a
+        if unicode.is_upper(r) {
+            if is_upper_or_number(previous) && is_upper_or_number(next) {
+                fmt.sbprint(&sb, unicode.to_lower(r))
+                continue
+            }
+
+            // only add _ prefix if not already prefixed with _ due to dot
+            if previous != '.' {
+                fmt.sbprint(&sb, '_')
+            }
         }
 
         fmt.sbprint(&sb, r)
@@ -83,13 +121,14 @@ godot_to_odin :: proc(name: Godot_Name) -> (s: Odin_Name) {
 
 godot_to_snake :: proc(name: Godot_Name) -> (s: Snake_Name) {
     // lol (:
-    s = odin_to_snake(godot_to_odin(name))
+    odin_name := godot_to_odin(name)
+    defer delete(cast(string)odin_name)
+    s = odin_to_snake(odin_name)
     return
 }
 
 odin_to_snake :: proc(name: Odin_Name) -> (s: Snake_Name) {
     assert(len(name) > 0)
-
     return cast(Snake_Name)strings.to_lower(cast(string)name)
 }
 
@@ -109,7 +148,7 @@ godot_to_const :: proc(name: Godot_Name) -> (s: Const_Name) {
         r := runes[i]
         peek := runes[i + 1]
         if i > 0 {
-            if !unicode.is_digit(r) && unicode.is_upper(r) && unicode.is_lower(peek) {
+            if !unicode.is_number(r) && unicode.is_upper(r) && unicode.is_lower(peek) {
                 fmt.sbprint(&sb, '_')
                 fmt.sbprint(&sb, r)
                 in_acronym = false
@@ -117,7 +156,7 @@ godot_to_const :: proc(name: Godot_Name) -> (s: Const_Name) {
             }
 
             if !in_acronym && unicode.is_upper(peek) {
-                if unicode.is_digit(r) {
+                if unicode.is_number(r) {
                     fmt.sbprint(&sb, r)
                     in_acronym = true
                     continue
