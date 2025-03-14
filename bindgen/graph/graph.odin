@@ -20,13 +20,13 @@ odin_primitives := [?]Primitive {
     Primitive{name = "uint16", odin_name = "u16"},
     Primitive{name = "uint32", odin_name = "u32"},
     Primitive{name = "uint64", odin_name = "u64"},
-    Primitive{name = "float", odin_name = "Float"},
+    Primitive{name = "float", odin_name = "f32"},
     Primitive{name = "double", odin_name = "f64"},
     Primitive{name = "Object *", odin_name = "ObjectPtr"},
 
     // c types
     Primitive{name = "void*", odin_name = "rawptr"},
-    Primitive{name = "real_t", odin_name = "Float"},
+    Primitive{name = "real_t", odin_name = "Real"},
     Primitive{name = "int8_t", odin_name = "i8"},
     Primitive{name = "int16_t", odin_name = "i16"},
     Primitive{name = "int32_t", odin_name = "i32"},
@@ -1141,7 +1141,6 @@ _graph_native_struct_field_type :: proc(graph: ^Graph, type_string: string) -> A
         class_name := type_string[:colon_idx]
         class_type := _graph_resolve_type(graph, type_string[:colon_idx])
         child_type_string := cast(names.Godot_Name)fmt.aprintf("%v%v", class_name, type_string[colon_idx + 2:])
-        fmt.println(class_name, child_type_string)
 
         #partial switch class in class_type {
         case ^Builtin_Class:
