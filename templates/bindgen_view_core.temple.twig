@@ -78,6 +78,25 @@ singleton_{{ singleton.snake_name }} :: proc "contextless" () -> {{ singleton.ty
 }
 {% end %}
 
+@(require_results)
+cast_class :: proc "contextless" (object: $T, $C: typeid) -> (result: C, ok: bool) {
+    class_tag := __bindgen_gde.classdb_get_class_tag(class_name_ref(C))
+    result_ptr := __bindgen_gde.object_cast_to(object, class_tag)
+    if result_ptr != nil {
+        return (cast(C)result_ptr), true
+    }
+    return C{}, false
+}
+
+class_name_ref :: proc "contextless" ($C: typeid) -> ^String_Name {
+    switch typeid_of(C) {
+{% for class in this.classes %}
+    case typeid_of({{ class.name }}): return {{ class.snake_name }}_name_ref()
+{% end %}
+    }
+    return nil
+}
+
 {% for function in this.functions %}
 @(private="file")
 __{{ function.name }}_ptr: __bindgen_gde.PtrUtilityFunction

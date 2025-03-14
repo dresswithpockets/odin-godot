@@ -7,8 +7,9 @@ import "core:slice"
 import "core:strings"
 
 Package_Class :: struct {
-    name:    string,
-    derives: string,
+    name:       string,
+    snake_name: string,
+    derives:    string,
 }
 
 Godot_Package :: struct {
@@ -66,8 +67,9 @@ godot_package :: proc(graph: ^g.Graph, allocator: mem.Allocator) -> (core: Godot
         }
 
         core.classes[class_idx] = Package_Class {
-            name    = names.clone_string(class.odin_name),
-            derives = resolve_qualified_type(class.inherits, "godot:core"),
+            name       = names.clone_string(class.odin_name),
+            snake_name = names.clone_string(class.snake_name),
+            derives    = resolve_qualified_type(class.inherits, "godot:core"),
         }
         class_idx += 1
     }
