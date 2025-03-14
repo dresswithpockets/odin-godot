@@ -109,6 +109,9 @@ examples/game/cbin/game.dll: $(wildcard examples/game/csrc/*)
 cexamples: examples/game/cbin/game.dll
 ###
 
+tests:
+	odin test bindgen/ -all-packages -debug -out:$(bindgen_out)
+
 check:
 	odin check bindgen/
 	odin check gdextension/ -no-entry-point -collection:godot=. -vet
