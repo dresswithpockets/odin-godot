@@ -1,4 +1,4 @@
-package variant
+package godot
 
 import gd "../gdextension"
 import "core:mem"

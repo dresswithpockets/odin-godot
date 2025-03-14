@@ -1,12 +1,14 @@
-package gd_{{ this.snake_name }}
+package godot
 
 {% for name, import_ in this.imports %}
 import {{ name }} "{{ import_.path }}"
 {% end %}
 
+{{ this.name }}_Constants :: enum {
 {% for constant in this.file_constants %}
-{{ constant.name }} :: {{ constant.value }}
+    {{ constant.name }} = {{ constant.value }},
 {% end %}
+}
 
 {% for enum_ in this.enums %}
 {% embed "bindgen_view_enum.temple.twig" with enum_ %}
@@ -16,22 +18,22 @@ import {{ name }} "{{ import_.path }}"
 {% embed "bindgen_view_bit_field.temple.twig" with bit_field_ %}
 {% end %}
 
-name_ref :: proc "contextless" () -> ^__bindgen_var.String_Name {
+{{ this.snake_name }}_name_ref :: proc "contextless" () -> ^String_Name {
     return &__class_name
 }
 
-name :: proc "contextless" () -> __bindgen_var.String_Name {
+{{ this.snake_name }}_name :: proc "contextless" () -> String_Name {
     return __class_name
 }
 
 new_{{ this.snake_name }} :: proc "contextless" () -> {{ this.self }} {
-    return cast({{ this.self }})__bindgen_gde.classdb_construct_object(name_ref())
+    return cast({{ this.self }})__bindgen_gde.classdb_construct_object({{ this.snake_name }}_name_ref())
 }
 
 // methods
 {% for method in this.static_methods %}
 {% if return_type, has_return_type := method.return_type.(string); has_return_type %}
-{{ method.name }} :: proc "contextless" (
+{{ this.snake_name }}_{{ method.name }} :: proc "contextless" (
 {% for arg in method.args %}
     {{ arg.name }}_: {{ arg.type }},
 {% end %}
@@ -49,7 +51,7 @@ new_{{ this.snake_name }} :: proc "contextless" () -> {{ this.self }} {
 }
 
 {% else %}
-{{ method.name }} :: proc "contextless" (
+{{ this.snake_name }}_{{ method.name }} :: proc "contextless" (
 {% for arg in method.args %}
     {{ arg.name }}_: {{ arg.type }},
 {% end %}
@@ -70,7 +72,7 @@ new_{{ this.snake_name }} :: proc "contextless" () -> {{ this.self }} {
 
 {% for method in this.instance_methods %}
 {% if return_type, has_return_type := method.return_type.(string); has_return_type %}
-{{ method.name }} :: proc "contextless" (
+{{ this.snake_name }}_{{ method.name }} :: proc "contextless" (
     self: ^{{ this.self }},
 {% for arg in method.args %}
     {{ arg.name }}_: {{ arg.type }},
@@ -89,7 +91,7 @@ new_{{ this.snake_name }} :: proc "contextless" () -> {{ this.self }} {
 }
 
 {% else %}
-{{ method.name }} :: proc "contextless" (
+{{ this.snake_name }}_{{ method.name }} :: proc "contextless" (
     self: ^{{ this.self }},
 {% for arg in method.args %}
     {{ arg.name }}_: {{ arg.type }},
@@ -109,26 +111,28 @@ new_{{ this.snake_name }} :: proc "contextless" () -> {{ this.self }} {
 {% end %}
 {% end %}
 
-init :: proc "contextless" () {
-    __class_name = __bindgen_var.new_string_name_cstring("{{ this.godot_name }}", true)
-    __name: __bindgen_var.String_Name
+{{ this.snake_name}}_init :: proc "contextless" () {
+    __class_name = new_string_name_cstring("{{ this.godot_name }}", true)
+    __name: String_Name
 
     {% for method in this.instance_methods %}
-    __name = __bindgen_var.new_string_name_cstring("{{ method.name }}", true)
+    __name = new_string_name_cstring("{{ method.name }}", true)
     __{{ method.name }}_method_ptr = __bindgen_gde.classdb_get_method_bind(&__class_name, &__name, {{ i64(method.hash) }})
     {% end %}
     {% for method in this.static_methods %}
-    __name = __bindgen_var.new_string_name_cstring("{{ method.name }}", true)
+    __name = new_string_name_cstring("{{ method.name }}", true)
     __{{ method.name }}_method_ptr = __bindgen_gde.classdb_get_method_bind(&__class_name, &__name, {{ i64(method.hash) }})
     {% end %}
 }
 
 @(private = "file")
-__class_name: __bindgen_var.String_Name
+__class_name: String_Name
 
 {% for method in this.instance_methods %}
+@(private = "file")
 __{{ method.name }}_method_ptr: __bindgen_gde.MethodBindPtr
 {% end %}
 {% for method in this.static_methods %}
+@(private = "file")
 __{{ method.name }}_method_ptr: __bindgen_gde.MethodBindPtr
 {% end %}

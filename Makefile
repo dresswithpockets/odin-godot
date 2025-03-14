@@ -21,10 +21,10 @@ temple_deps := $(wildcard templates/*.temple.twig) $(bindgen_dir)temple.odin
 
 gdextension_api := ./godot-cpp/gdextension/extension_api.json
 
-bindings: core/init/init.gen.odin
+bindings: godot/godot.gen.odin
 
 # hack: we don't need to regenerate if core/init is up to date!
-core/init/init.gen.odin: $(bindgen_out) $(gdextension_api)
+godot/godot.gen.odin: $(bindgen_out) $(gdextension_api)
 	$(bindgen_out) $(gdextension_api) -jobs:$(JOBS)
 
 debug_bindings: $(debug_bindgen_out) $(gdextension_api)
@@ -62,7 +62,7 @@ examples_game_dir := examples/game/
 examples_game_deps := $(wildcard $(examples_game_dir)src/*.odin)
 examples_game_out := $(examples_game_dir)bin/game$(shared_suffix)
 
-$(examples_hello_out): core/init/init.gen.odin $(examples_hello_deps)
+$(examples_hello_out): godot/godot.gen.odin $(examples_hello_deps)
 	odin build $(examples_hello_dir)src/ \
 		-define:BUILD_CONFIG=$(GD_BUILD_CONFIG) \
 		-collection:godot=. \
@@ -75,7 +75,7 @@ $(examples_hello_out): core/init/init.gen.odin $(examples_hello_deps)
 		-show-timings \
 		-use-single-module
 
-$(examples_game_out): core/init/init.gen.odin $(examples_game_deps)
+$(examples_game_out): godot/godot.gen.odin $(examples_game_deps)
 	odin build $(examples_game_dir)src/ \
 		-define:BUILD_CONFIG=$(GD_BUILD_CONFIG) \
 		-collection:godot=. \
@@ -88,7 +88,7 @@ $(examples_game_out): core/init/init.gen.odin $(examples_game_deps)
 		-show-timings \
 		-use-single-module
 
-examples/tests/bin/tests$(shared_suffix): core/init/init.gen.odin $(wildcard examples/tests/src/*.odin)
+examples/tests/bin/tests$(shared_suffix): godot/godot.gen.odin $(wildcard examples/tests/src/*.odin)
 	odin build examples/tests/src/ \
 		-define:BUILD_CONFIG=$(GD_BUILD_CONFIG) \
 		-collection:godot=. \
@@ -122,11 +122,7 @@ check:
 clean:
 	rm -f bindgen/templates.odin
 	rm -f $(OUT_DIR)/*
-	rm -f editor/*.gen.odin
-	rm -rf core/**/
-	rm -rf editor/**/
-	rm -f core/*.gen.odin
-	rm -f variant/*.gen.odin
+	rm -f godot/*.gen.odin
 	rm -f $(examples_hello_dir)bin/*
 	rm -f $(examples_game_dir)bin/*
 	rm -f examples/tests/bin/*

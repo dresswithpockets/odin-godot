@@ -412,13 +412,13 @@ _graph_class_enums :: proc(
         if api_enum.is_bitfield {
             new_bit_field := Class_Bit_Field(C) {
                 class  = class,
-                name   = api_enum.name,
+                name   = cast(names.Godot_Name)fmt.aprintf("%v%v", class.name, api_enum.name),
                 values = make([]Enum_Value, len(api_enum.values)),
             }
 
             for api_value, value_idx in api_enum.values {
                 new_bit_field.values[value_idx] = Enum_Value {
-                    name  = api_value.name,
+                    name  = cast(names.Const_Name)strings.trim_suffix(cast(string)api_value.name, cast(string)api_enum.name),
                     value = fmt.tprintf("%d", api_value.value),
                 }
             }
@@ -428,13 +428,13 @@ _graph_class_enums :: proc(
         } else {
             new_enum := Class_Enum(C) {
                 class  = class,
-                name   = api_enum.name,
+                name   = cast(names.Godot_Name)fmt.aprintf("%v%v", class.name, api_enum.name),
                 values = make([]Enum_Value, len(api_enum.values)),
             }
 
             for api_value, value_idx in api_enum.values {
                 new_enum.values[value_idx] = Enum_Value {
-                    name  = api_value.name,
+                    name  = cast(names.Const_Name)strings.trim_suffix(cast(string)api_value.name, cast(string)api_enum.name),
                     value = fmt.tprintf("%d", api_value.value),
                 }
             }
@@ -543,7 +543,7 @@ graph_type_info_pass :: proc(graph: ^Graph, api: ^Api) {
 
             for api_value, value_idx in api_enum.values {
                 new_bit_field.values[value_idx] = Enum_Value {
-                    name  = api_value.name,
+                    name  = cast(names.Const_Name)strings.trim_suffix(cast(string)api_value.name, cast(string)api_enum.name),
                     value = fmt.tprintf("%d", api_value.value),
                 }
             }
@@ -559,7 +559,7 @@ graph_type_info_pass :: proc(graph: ^Graph, api: ^Api) {
 
             for api_value, value_idx in api_enum.values {
                 new_enum.values[value_idx] = Enum_Value {
-                    name  = api_value.name,
+                    name  = cast(names.Const_Name)strings.trim_suffix(cast(string)api_value.name, cast(string)api_enum.name),
                     value = fmt.tprintf("%d", api_value.value),
                 }
             }
@@ -715,16 +715,18 @@ _graph_resolve_type :: proc(graph: ^Graph, type_specifier: Type_Specifier) -> An
                 {
                     dot_idx := strings.index_rune(suffix, '.')
                     if dot_idx > -1 && suffix != "Variant.Type" && suffix != "Variant.Operator" {
-                        class_type, class_type_ok := graph.types[cast(names.Godot_Name)suffix[:dot_idx]]
+                        class_name := suffix[:dot_idx]
+                        class_type, class_type_ok := graph.types[cast(names.Godot_Name)class_name]
                         assert(
                             class_type_ok,
                             fmt.tprintfln(
                                 "Couldn't find class_type in typestring '%v' (searched: '%v').",
                                 suffix,
-                                suffix[:dot_idx],
+                                class_name,
                             ),
                         )
-                        child_type_string := cast(names.Godot_Name)suffix[dot_idx + 1:]
+
+                        child_type_string := cast(names.Godot_Name)fmt.aprintf("%v%v", class_name, suffix[dot_idx + 1:])
 
                         #partial switch class in class_type {
                         case ^Builtin_Class:
@@ -768,8 +770,18 @@ _graph_resolve_type :: proc(graph: ^Graph, type_specifier: Type_Specifier) -> An
                 {
                     dot_idx := strings.index_rune(suffix, '.')
                     if dot_idx > -1 {
-                        class_type := graph.types[cast(names.Godot_Name)suffix[:dot_idx]]
-                        child_type_string := cast(names.Godot_Name)suffix[dot_idx + 1:]
+                        class_name := suffix[:dot_idx]
+                        class_type, class_type_ok := graph.types[cast(names.Godot_Name)class_name]
+                        assert(
+                            class_type_ok,
+                            fmt.tprintfln(
+                                "Couldn't find class_type in typestring '%v' (searched: '%v').",
+                                suffix,
+                                class_name,
+                            ),
+                        )
+
+                        child_type_string := cast(names.Godot_Name)fmt.aprintf("%v%v", class_name, suffix[dot_idx + 1:])
 
                         #partial switch class in class_type {
                         case ^Builtin_Class:
@@ -1126,8 +1138,10 @@ _graph_native_struct_field_type :: proc(graph: ^Graph, type_string: string) -> A
     colon_idx := strings.index(type_string, "::")
     if colon_idx > -1 {
         // type is a member of another type
+        class_name := type_string[:colon_idx]
         class_type := _graph_resolve_type(graph, type_string[:colon_idx])
-        child_type_string := cast(names.Godot_Name)type_string[colon_idx + 2:]
+        child_type_string := cast(names.Godot_Name)fmt.aprintf("%v%v", class_name, type_string[colon_idx + 2:])
+        fmt.println(class_name, child_type_string)
 
         #partial switch class in class_type {
         case ^Builtin_Class:

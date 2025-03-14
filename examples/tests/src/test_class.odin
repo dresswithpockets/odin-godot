@@ -1,88 +1,91 @@
 package test
 
-import gd "godot:gdextension"
+import "godot:godot"
+import gdext "godot:gdextension"
 import "godot:gdextension/bind"
-import var "godot:variant"
+import "core:fmt"
 
 @(private = "file")
-test_class_name: var.String_Name
+test_class_name: godot.String_Name
 
 @(private = "file")
-node_class_name: var.String_Name
+node_class_name: godot.String_Name
 
 @(private = "file")
-object_class_name: var.String_Name
+object_class_name: godot.String_Name
 
 Test_Class :: struct {
-    object: gd.ObjectPtr,
-    vector: var.Vector2,
+    object: gdext.ObjectPtr,
+    vector: godot.Vector2,
 }
 
 @(private = "file")
-set_vector :: proc "contextless" (self: ^Test_Class, vector: var.Vector2) {
+set_vector :: proc "contextless" (self: ^Test_Class, vector: godot.Vector2) {
     self.vector = vector
 }
 
 @(private = "file")
-get_vector :: proc "contextless" (self: ^Test_Class) -> var.Vector2 {
+get_vector :: proc "contextless" (self: ^Test_Class) -> godot.Vector2 {
     return self.vector
 }
 
 @(private = "file")
-vector_eq :: proc "contextless" (self: ^Test_Class, other: var.Vector2) -> bool {
+vector_eq :: proc "contextless" (self: ^Test_Class, other: godot.Vector2) -> bool {
     return self.vector == other
 }
 
 @(private = "file")
-vector_neq :: proc "contextless" (self: ^Test_Class, other: var.Vector2) -> bool {
+vector_neq :: proc "contextless" (self: ^Test_Class, other: godot.Vector2) -> bool {
     return self.vector != other
 }
 
 @(private = "file")
-vector_add :: proc "contextless" (self: ^Test_Class, other: var.Vector2) -> var.Vector2 {
+vector_add :: proc "contextless" (self: ^Test_Class, other: godot.Vector2) -> godot.Vector2 {
+    context = gdext.godot_context()
+    fmt.printfln("self.vector: %v, other: %v, sum: %v", self.vector, other, self.vector + other)
     return self.vector + other
 }
 
 @(private = "file")
-vector_sub :: proc "contextless" (self: ^Test_Class, other: var.Vector2) -> var.Vector2 {
+vector_sub :: proc "contextless" (self: ^Test_Class, other: godot.Vector2) -> godot.Vector2 {
     return self.vector - other
 }
 
 @(private = "file")
-get_virtual_with_data :: proc "c" (class_user_data: rawptr, name: gd.StringNamePtr) -> rawptr {
+get_virtual_with_data :: proc "c" (class_user_data: rawptr, name: gdext.StringNamePtr) -> rawptr {
     return nil
 }
 
 @(private = "file")
 call_virtual_with_data :: proc "c" (
-    instance: gd.ExtensionClassInstancePtr,
-    name: gd.StringNamePtr,
+    instance: gdext.ExtensionClassInstancePtr,
+    name: gdext.StringNamePtr,
     virtual_call_user_data: rawptr,
-    args: [^]gd.TypePtr,
-    ret: gd.TypePtr,
+    args: [^]gdext.TypePtr,
+    ret: gdext.TypePtr,
 ) {}
 
 @(private = "file")
-binding_callbacks := gd.InstanceBindingCallbacks{}
+binding_callbacks := gdext.InstanceBindingCallbacks{}
 
 @(private = "file")
-create_instance :: proc "c" (class_user_data: rawptr) -> gd.ObjectPtr {
-    context = gd.godot_context()
+create_instance :: proc "c" (class_user_data: rawptr) -> gdext.ObjectPtr {
+    context = gdext.godot_context()
 
-    object := gd.classdb_construct_object(&node_class_name)
+    object := gdext.classdb_construct_object(&node_class_name)
 
     self := new(Test_Class)
     self.object = object
 
-    gd.object_set_instance(object, &test_class_name, self)
-    gd.object_set_instance_binding(object, gd.library, self, &binding_callbacks)
+    gdext.object_set_instance(object, &test_class_name, self)
+    gdext.object_set_instance_binding(object, gdext.library, self, &binding_callbacks)
 
     return object
 }
 
 @(private = "file")
-free_instance :: proc "c" (class_user_data: rawptr, instance: gd.ExtensionClassInstancePtr) {
-    context = gd.godot_context()
+free_instance :: proc "c" (class_user_data: rawptr, instance: gdext.ExtensionClassInstancePtr) {
+    context = gdext.godot_context()
 
     if instance == nil {
         return
@@ -93,11 +96,11 @@ free_instance :: proc "c" (class_user_data: rawptr, instance: gd.ExtensionClassI
 }
 
 test_class_register :: proc() {
-    test_class_name = var.new_string_name_cstring("Test", true)
-    node_class_name = var.new_string_name_cstring("Node", true)
-    object_class_name = var.new_string_name_cstring("Object", true)
+    test_class_name = godot.new_string_name_cstring("Test", true)
+    node_class_name = godot.new_string_name_cstring("Node", true)
+    object_class_name = godot.new_string_name_cstring("Object", true)
 
-    class_info := gd.ExtensionClassCreationInfo2 {
+    class_info := gdext.ExtensionClassCreationInfo2 {
         is_virtual                  = false,
         is_abstract                 = false,
         is_exposed                  = true,
@@ -122,11 +125,11 @@ test_class_register :: proc() {
         class_userdata              = nil,
     }
 
-    gd.classdb_register_extension_class2(gd.library, &test_class_name, &node_class_name, &class_info)
+    gdext.classdb_register_extension_class2(gdext.library, &test_class_name, &node_class_name, &class_info)
 
-    get_vector_name := var.new_string_name_cstring("get_vector", true)
-    set_vector_name := var.new_string_name_cstring("set_vector", true)
-    vector_name := var.new_string_name_cstring("vector", true)
+    get_vector_name := godot.new_string_name_cstring("get_vector", true)
+    set_vector_name := godot.new_string_name_cstring("set_vector", true)
+    vector_name := godot.new_string_name_cstring("vector", true)
     bind.bind_property_and_methods(
         &test_class_name,
         &vector_name,
@@ -136,16 +139,16 @@ test_class_register :: proc() {
         set_vector,
     )
 
-    other_name := var.new_string_name_cstring("other", true)
-    vector_eq_name := var.new_string_name_cstring("vector_eq", true)
+    other_name := godot.new_string_name_cstring("other", true)
+    vector_eq_name := godot.new_string_name_cstring("vector_eq", true)
     bind.bind_returning_method(&test_class_name, &vector_eq_name, vector_eq, &other_name)
 
-    vector_neq_name := var.new_string_name_cstring("vector_neq", true)
+    vector_neq_name := godot.new_string_name_cstring("vector_neq", true)
     bind.bind_returning_method(&test_class_name, &vector_neq_name, vector_neq, &other_name)
 
-    vector_add_name := var.new_string_name_cstring("vector_add", true)
+    vector_add_name := godot.new_string_name_cstring("vector_add", true)
     bind.bind_returning_method(&test_class_name, &vector_add_name, vector_add, &other_name)
 
-    vector_sub_name := var.new_string_name_cstring("vector_sub", true)
+    vector_sub_name := godot.new_string_name_cstring("vector_sub", true)
     bind.bind_returning_method(&test_class_name, &vector_sub_name, vector_sub, &other_name)
 }

@@ -9,7 +9,7 @@ import "core:strings"
 
 Engine_Class :: struct {
     imports:          map[string]Import,
-    self: string,
+    self:             string,
     name:             string,
     godot_name:       string,
     snake_name:       string,
@@ -21,10 +21,7 @@ Engine_Class :: struct {
 }
 
 @(private = "file")
-default_imports := []Import {
-    {name = "__bindgen_gde", path = "godot:gdextension"},
-    {name = "__bindgen_var", path = "godot:variant"},
-}
+default_imports := []Import{{name = "__bindgen_gde", path = "godot:gdextension"}}
 
 _constant_constructor :: proc(initializer: g.Initialize_By_Constructor, current_package: string) -> (result: string) {
     sb := strings.builder_make()

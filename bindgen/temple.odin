@@ -7,9 +7,7 @@ import "views"
 
 variant_template := temple_compiled("../templates/bindgen_view_variant.temple.twig", views.Variant)
 engine_class_template := temple_compiled("../templates/bindgen_view_engine.temple.twig", views.Engine_Class)
-engine_init_template := temple_compiled("../templates/bindgen_view_init.temple.twig", views.Engine_Init)
-core_template := temple_compiled("../templates/bindgen_view_core.temple.twig", views.Core_Package)
-editor_template := temple_compiled("../templates/bindgen_view_editor.temple.twig", views.Editor_Package)
+core_template := temple_compiled("../templates/bindgen_view_core.temple.twig", views.Godot_Package)
 structs_template := temple_compiled("../templates/bindgen_view_structs.temple.twig", views.Structs)
 
 /*

@@ -1,7 +1,6 @@
-package core
+package godot
 
 import __bindgen_gde "godot:gdextension"
-import __bindgen_var "godot:variant"
 
 {% for class in this.classes %}
 {{ class.name }} :: {{ class.derives }}
@@ -15,9 +14,20 @@ import __bindgen_var "godot:variant"
 {% embed "bindgen_view_bit_field.temple.twig" with bit_field_ %}
 {% end %}
 
+init :: proc "contextless" () {
+    __name: String_Name
+{% for function in this.functions %}
+    __name = new_string_name_cstring("{{ function.godot_name }}", true)
+    __{{ function.name }}_ptr = __bindgen_gde.variant_get_ptr_utility_function(&__name, {{ i64(function.hash) }})
+{% end %}
+{% for class in this.classes %}
+    {{ class.snake_name }}_init()
+{% end %}
+}
+
 {% for function in this.functions %}
 {% if return_type, has_return_type := function.return_type.(string); has_return_type %}
-{{ function.name }} :: proc "contextless" (
+gd_{{ function.name }} :: proc "contextless" (
 {% for arg in function.args %}
     {{ arg.name }}_: {{ arg.type }},
 {% end %}
@@ -35,7 +45,7 @@ import __bindgen_var "godot:variant"
 }
 
 {% else %}
-{{ function.name }} :: proc "contextless" (
+gd_{{ function.name }} :: proc "contextless" (
 {% for arg in function.args %}
     {{ arg.name }}_: {{ arg.type }},
 {% end %}
@@ -53,14 +63,6 @@ import __bindgen_var "godot:variant"
 
 {% end %}
 {% end %}
-
-init_util_procs :: proc "contextless" () {
-    __name: __bindgen_var.String_Name
-{% for function in this.functions %}
-    __name = __bindgen_var.new_string_name_cstring("{{ function.godot_name }}", true)
-    __{{ function.name }}_ptr = __bindgen_gde.variant_get_ptr_utility_function(&__name, {{ i64(function.hash) }})
-{% end %}
-}
 
 {% for function in this.functions %}
 @(private="file")

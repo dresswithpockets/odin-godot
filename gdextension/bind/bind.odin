@@ -1,16 +1,16 @@
 package bind
 
 import "base:intrinsics"
+import "godot:godot"
 import gd "godot:gdextension"
-import var "godot:variant"
 
-simple_property_info :: proc "contextless" (type: gd.Variant_Type, name: ^var.String_Name) -> gd.PropertyInfo {
+simple_property_info :: proc "contextless" (type: gd.Variant_Type, name: ^godot.String_Name) -> gd.PropertyInfo {
     return gd.PropertyInfo {
         name        = name,
         type        = type,
         hint        = 0, // .None
-        hint_string = var.string_empty_ref(),
-        class_name  = var.string_name_empty_ref(),
+        hint_string = godot.string_empty_ref(),
+        class_name  = godot.string_name_empty_ref(),
         usage       = 0, // .Default
     }
 }
@@ -34,7 +34,7 @@ expect_args :: proc "contextless" (
     }
 
     for arg_type, arg_idx in arg_types {
-        type := gd.variant_get_type(cast(^var.Variant)args[arg_idx])
+        type := gd.variant_get_type(cast(^godot.Variant)args[arg_idx])
         if type != arg_type {
             error.error = .Invalid_Argument
             error.expected = cast(i32)arg_type
@@ -47,27 +47,27 @@ expect_args :: proc "contextless" (
 }
 
 bind_property_and_methods :: proc(
-    class_name: ^var.String_Name,
-    name: ^var.String_Name,
-    getter_name: ^var.String_Name,
-    setter_name: ^var.String_Name,
+    class_name: ^godot.String_Name,
+    name: ^godot.String_Name,
+    getter_name: ^godot.String_Name,
+    setter_name: ^godot.String_Name,
     getter: proc "contextless" (self: ^$Self) -> $Value,
     setter: proc "contextless" (self: ^Self, value: Value),
 ) {
     bind_returning_method_0_args(class_name, getter_name, getter)
     bind_void_method_1_args(class_name, setter_name, setter, name)
 
-    type := var.variant_type(Value)
+    type := godot.variant_type(Value)
     info := simple_property_info(type, name)
     gd.classdb_register_extension_class_property(gd.library, class_name, &info, setter_name, getter_name)
 }
 
 bind_property :: proc(
-    class_name: ^var.String_Name,
-    name: ^var.String_Name,
+    class_name: ^godot.String_Name,
+    name: ^godot.String_Name,
     type: gd.Variant_Type,
-    getter: ^var.String_Name,
-    setter: ^var.String_Name,
+    getter: ^godot.String_Name,
+    setter: ^godot.String_Name,
 ) {
     info := simple_property_info(type, name)
     gd.classdb_register_extension_class_property(gd.library, class_name, &info, setter, getter)
@@ -78,8 +78,8 @@ bind_property :: proc(
 // }
 
 // bind_void_method_1_args :: proc(
-//     class_name: ^var.String_Name,
-//     method_name: ^var.String_Name,
+//     class_name: ^godot.String_Name,
+//     method_name: ^godot.String_Name,
 //     function: $P/proc(self: $Self, arg0: $Arg0),
 //     arg0_name: string,
 // ) {
@@ -96,7 +96,7 @@ bind_property :: proc(
 //         default_argument_count = 0,
 //     }
 
-//     args_info := [0]gd.PropertyInfo{simple_property_info(var.variant_type(Arg0), arg0_name),}
+//     args_info := [0]gd.PropertyInfo{simple_property_info(godot.variant_type(Arg0), arg0_name),}
 //     args_metadata := [0]gd.ExtensionClassMethodArgumentMetadata{.None}
 
 //     method_info.arguments_info = &args_info[0]
@@ -110,12 +110,12 @@ bind_property :: proc(
 // }
 
 // bind_returning_method_1_args :: proc(
-//     class_name: ^var.String_Name,
-//     method_name: ^var.String_Name,
+//     class_name: ^godot.String_Name,
+//     method_name: ^godot.String_Name,
 //     function: $P/proc(self: $Self, arg0: $Arg0) -> $Ret,
 //     arg0_name: string,
 // ) {
-//     return_info := simple_property_info(var.variant_type(Ret), var.string_name_empty_ref())
+//     return_info := simple_property_info(godot.variant_type(Ret), godot.string_name_empty_ref())
 
 //     ptrcall, call := get_void_calls(Self, Arg0)
 //     method_info := gd.ExtensionClassMethodInfo {
@@ -131,7 +131,7 @@ bind_property :: proc(
 //         default_argument_count = 0,
 //     }
 
-//     args_info := [0]gd.PropertyInfo{simple_property_info(var.variant_type(Arg0), arg0_name)}
+//     args_info := [0]gd.PropertyInfo{simple_property_info(godot.variant_type(Arg0), arg0_name)}
 //     args_metadata := [0]gd.ExtensionClassMethodArgumentMetadata{.None}
 
 //     method_info.arguments_info = &args_info[0]

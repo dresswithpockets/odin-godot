@@ -29,12 +29,6 @@ declared_builtins := []string{"Object", "RefCounted"}
 gdextension_enums := []string{"Variant.Type", "Variant.Operator"}
 
 @(private = "file")
-_array_import := Import {
-    name = "__bindgen_var",
-    path = "godot:variant",
-}
-
-@(private = "file")
 _api_type_to_import_name := [2]string{"__bindgen_core", "__bindgen_editor"}
 
 @(private = "file")
@@ -61,56 +55,29 @@ map_types_to_imports :: proc(graph: g.Graph, map_mode: Package_Map_Mode) {
         for _, type in graph.types {
             switch root_type in type {
             case ^g.Builtin_Class:
-                import_map[root_type] = Import {
-                    name = "__bindgen_var",
-                    path = "godot:variant",
-                }
+                import_map[root_type] = No_Import{}
 
                 for &class_enum in root_type.enums {
-                    import_map[&class_enum] = Import {
-                        name = "__bindgen_var",
-                        path = "godot:variant",
-                    }
+                    import_map[&class_enum] = No_Import{}
                 }
 
                 for &class_bit_field in root_type.bit_fields {
-                    import_map[&class_bit_field] = Import {
-                        name = "__bindgen_var",
-                        path = "godot:variant",
-                    }
+                    import_map[&class_bit_field] = No_Import{}
                 }
             case ^g.Engine_Class:
                 if slice.contains(declared_builtins, cast(string)root_type.name) {
-                    import_map[root_type] = Import {
-                        name = "__bindgen_var",
-                        path = "godot:variant",
-                    }
+                    import_map[root_type] = No_Import{}
                     continue
                 }
 
-                import_map[root_type] = Import {
-                    name = _api_type_to_import_name[root_type.api_type],
-                    path = _api_type_to_import_path[root_type.api_type],
+                import_map[root_type] = No_Import{}
+
+                for &class_enum in root_type.enums {
+                    import_map[&class_enum] = No_Import{}
                 }
 
-                {
-                    any_type := g.root_to_any(root_type)
-                    // TODO: refactor pointer resolution out of _any_to_name, to get rid of the current_package dependency
-                    // N.B. we can safely provide "" for current_package; we know that any_type will never be a ^g.Pointer,
-                    //      because we casted it from Root_Type - which is never a ^g.Pointer
-                    root_type_snake_name := cast(string)names.to_snake(_any_to_name(any_type))
-                    packaged_type_import := Import {
-                        name = root_type_snake_name,
-                        path = fmt.aprintf("godot:%v/%v", g.to_string(root_type.api_type), root_type_snake_name),
-                    }
-
-                    for &class_enum in root_type.enums {
-                        import_map[&class_enum] = packaged_type_import
-                    }
-
-                    for &class_bit_field in root_type.bit_fields {
-                        import_map[&class_bit_field] = packaged_type_import
-                    }
+                for &class_bit_field in root_type.bit_fields {
+                    import_map[&class_bit_field] = No_Import{}
                 }
 
             case ^g.Enum:
@@ -122,30 +89,16 @@ map_types_to_imports :: proc(graph: g.Graph, map_mode: Package_Map_Mode) {
                     continue
                 }
 
-                import_map[root_type] = Import {
-                    name = "__bindgen_core",
-                    path = "godot:core",
-                }
+                import_map[root_type] = No_Import{}
             case ^g.Bit_Field:
-                import_map[root_type] = Import {
-                    name = "__bindgen_core",
-                    path = "godot:core",
-                }
+                import_map[root_type] = No_Import{}
             case ^g.Native_Struct:
-                import_map[root_type] = Import {
-                    name = "__bindgen_structs",
-                    path = "godot:structs",
-                }
+                import_map[root_type] = No_Import{}
             case ^g.Primitive:
                 if root_type.odin_name == "Float" {
                     import_map[root_type] = Import {
                         name = "__bindgen_gde",
                         path = "godot:gdextension",
-                    }
-                } else if root_type.odin_name == "ObjectPtr" {
-                    import_map[root_type] = Import {
-                        name = "__bindgen_var",
-                        path = "godot:variant",
                     }
                 } else {
                     import_map[root_type] = No_Import{}
@@ -289,10 +242,6 @@ _any_to_name :: proc(type: g.Any_Type, location := #caller_location) -> names.Od
 
 ensure_imports :: proc(imports: ^map[string]Import, type: g.Any_Type, current_package: string) {
     if typed_array, is_typed_array := type.(^g.Typed_Array); is_typed_array {
-        if _array_import.path != current_package {
-            imports[_array_import.name] = _array_import
-        }
-
         ensure_imports(imports, typed_array.element_type, current_package)
         return
     }
@@ -318,27 +267,9 @@ ensure_imports :: proc(imports: ^map[string]Import, type: g.Any_Type, current_pa
     imports[import_.name] = import_
 }
 
-// resolve_class_enum :: proc(type: g.Class_Enum($P), current_package: string) -> string where C == Builtin_Class || C == Engine_Class {
-//     type_import, ok := import_map[_any_to_rawptr(type)]
-//     assert(ok, fmt.tprintfln("Couldn't find mapped import for type: %v", _any_to_name(type)))
-
-//     import_, is_import := type_import.(Import)
-//     assert(is_import, "class_enum inner type_import must be Import")
-
-//     if import_.path == current_package {
-//         return cast(string)_any_to_name(type)
-//     }
-
-//     return fmt.aprintf("%v_%v", names.to_odin(class_enum.class.name), names.to_odin(class_enum.name)),
-// }
-
 resolve_qualified_type :: proc(type: g.Any_Type, current_package: string) -> string {
     if typed_array, is_typed_array := type.(^g.Typed_Array); is_typed_array {
         elem_type := resolve_qualified_type(typed_array.element_type, current_package)
-        if _array_import.path != current_package {
-            return fmt.aprintf("%v.Typed_Array(%v)", _array_import.name, elem_type)
-        }
-
         return fmt.aprintf("Typed_Array(%v)", elem_type)
     }
 
