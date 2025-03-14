@@ -1,113 +1,106 @@
 package example
 
-import "godot:core"
-import gd "godot:gdextension"
+import gdext "godot:gdextension"
 import "godot:gdextension/bind"
-import var "godot:variant"
+import "godot:godot"
 
-ExampleClassString_Name := var.String_Name{}
-ObjectClassString_Name := var.String_Name{}
-Sprite2DClassString_Name := var.String_Name{}
-ProcessVirtualString_Name := var.String_Name{}
-TimePassedSignalString_Name := var.String_Name{}
-EmitSignalMethodString_Name := var.String_Name{}
-
-GetAmplitudeString_Name := var.String_Name{}
-SetAmplitudeString_Name := var.String_Name{}
-AmplitudeString_Name := var.String_Name{}
-GetSpeedString_Name := var.String_Name{}
-SetSpeedString_Name := var.String_Name{}
-SpeedString_Name := var.String_Name{}
-TimePassedString_Name := var.String_Name{}
+@(private = "file")
+example_class_name: godot.String_Name
+time_passed_name := godot.String_Name{}
+emit_signal_name := godot.String_Name{}
 
 ExampleClass :: struct {
-    amplitude:   gd.Float,
-    speed:       gd.Float,
-    time_emit:   gd.Float,
-    time_passed: gd.Float,
-    object:      ^var.Object,
+    amplitude:   f64,
+    speed:       f64,
+    time_emit:   f64,
+    time_passed: f64,
+    object:      ^godot.Object,
 }
 
-example_class_set_amplitude :: proc "contextless" (self: ^ExampleClass, amplitude: gd.Float) {
+set_amplitude :: proc "contextless" (self: ^ExampleClass, amplitude: f64) {
     self.amplitude = amplitude
 }
 
-example_class_get_amplitude :: proc "contextless" (self: ^ExampleClass) -> gd.Float {
+get_amplitude :: proc "contextless" (self: ^ExampleClass) -> f64 {
     return self.amplitude
 }
 
-example_class_set_speed :: proc "contextless" (self: ^ExampleClass, speed: gd.Float) {
+set_speed :: proc "contextless" (self: ^ExampleClass, speed: f64) {
     self.speed = speed
 
-    msg := var.new_string_cstring("example_class_set_speed")
-    defer var.free_string(msg)
+    msg := godot.new_string_cstring("set_speed")
+    defer godot.free_string(msg)
 
-    core.print(var.variant_from(&msg))
-    core.print(var.variant_from(&self.speed))
+    godot.gd_print(godot.variant_from(&msg))
+    godot.gd_print(godot.variant_from(&self.speed))
 }
 
-example_class_get_speed :: proc "contextless" (self: ^ExampleClass) -> gd.Float {
+get_speed :: proc "contextless" (self: ^ExampleClass) -> f64 {
     return self.speed
 }
 
-example_class_process :: proc "contextless" (self: ^ExampleClass, delta: gd.Float) {
+process :: proc "contextless" (self: ^ExampleClass, delta: f64) {
     self.time_passed += self.speed * delta
 
     if self.time_passed >= self.time_emit {
-        example_class_emit_time_passed(self, self.time_passed)
+        emit_time_passed(self, self.time_passed)
         self.time_passed -= self.time_emit
     }
 }
 
-example_class_emit_time_passed :: proc "contextless" (self: ^ExampleClass, time_passed: gd.Float) {
+emit_time_passed :: proc "contextless" (self: ^ExampleClass, time_passed: f64) {
+    object_emit_signal := gdext.classdb_get_method_bind(
+        godot.object_name_ref(),
+        &emit_signal_name,
+        4047867050,
+    )
 
-    object_emit_signal := gd.classdb_get_method_bind(&ObjectClassString_Name, &EmitSignalMethodString_Name, 4047867050)
+    signal_name_argument := godot.variant_from(&time_passed_name)
+    time_passed_argument := godot.variant_from(&self.time_passed)
 
-    signal_name_argument := var.variant_from(&TimePassedSignalString_Name)
-    time_passed_argument := var.variant_from(&self.time_passed)
-
-    args := [2]gd.VariantPtr{&signal_name_argument, &time_passed_argument}
-    ret := var.Variant{}
-    gd.object_method_bind_call(object_emit_signal, self.object, &args[0], len(args), &ret, nil)
-    defer gd.variant_destroy(&ret)
+    args := [2]gdext.VariantPtr{&signal_name_argument, &time_passed_argument}
+    ret := godot.Variant{}
+    gdext.object_method_bind_call(object_emit_signal, self.object, &args[0], len(args), &ret, nil)
+    defer gdext.variant_destroy(&ret)
 }
 
-example_class_get_virtual_with_data :: proc "c" (class_user_data: rawptr, name: gd.StringNamePtr) -> rawptr {
-    name := cast(^var.String_Name)name
-    if var.string_name_equal(name^, ProcessVirtualString_Name) {
-        return cast(rawptr)example_class_process
+get_virtual_with_data :: proc "c" (class_user_data: rawptr, name: gdext.StringNamePtr) -> rawptr {
+    name := cast(^godot.String_Name)name
+    process_name := godot.new_string_name_cstring("_process", true)
+    if godot.string_name_equal(name^, process_name) {
+        return cast(rawptr)process
     }
 
     return nil
 }
 
-example_class_call_virtual_with_data :: proc "c" (
-    instance: gd.ExtensionClassInstancePtr,
-    name: gd.StringNamePtr,
+call_virtual_with_data :: proc "c" (
+    instance: gdext.ExtensionClassInstancePtr,
+    name: gdext.StringNamePtr,
     virtual_call_user_data: rawptr,
-    args: [^]gd.TypePtr,
-    ret: gd.TypePtr,
+    args: [^]gdext.TypePtr,
+    ret: gdext.TypePtr,
 ) {
-    if virtual_call_user_data == cast(rawptr)example_class_process {
-        delta := cast(^gd.Float)args[0]
-        example_class_process(cast(^ExampleClass)instance, delta^)
+    if virtual_call_user_data == cast(rawptr)process {
+        delta := cast(^f64)args[0]
+        process(cast(^ExampleClass)instance, delta^)
     }
 }
 
-example_class_binding_callbacks := gd.InstanceBindingCallbacks {
+example_class_binding_callbacks := gdext.InstanceBindingCallbacks {
     create    = nil,
     free      = nil,
     reference = nil,
 }
 
-example_class_create_instance :: proc "c" (class_user_data: rawptr) -> gd.ObjectPtr {
-    context = gd.godot_context()
+create_instance :: proc "c" (class_user_data: rawptr) -> gdext.ObjectPtr {
+    context = gdext.godot_context()
 
-    object := gd.classdb_construct_object(&Sprite2DClassString_Name)
+    object := gdext.classdb_construct_object(godot.sprite2d_name_ref())
 
     self := new_clone(
         ExampleClass {
-            object = cast(^var.Object)object,
+            object = cast(^godot.Object)object,
             amplitude = 1.0,
             speed = 1.0,
             time_passed = 0.0,
@@ -115,14 +108,14 @@ example_class_create_instance :: proc "c" (class_user_data: rawptr) -> gd.Object
         },
     )
 
-    gd.object_set_instance(object, &ExampleClassString_Name, self)
-    gd.object_set_instance_binding(object, gd.library, self, &example_class_binding_callbacks)
+    gdext.object_set_instance(object, &example_class_name, self)
+    gdext.object_set_instance_binding(object, gdext.library, self, &example_class_binding_callbacks)
 
     return object
 }
 
-example_class_free_instance :: proc "c" (class_user_data: rawptr, instance: gd.ExtensionClassInstancePtr) {
-    context = gd.godot_context()
+free_instance :: proc "c" (class_user_data: rawptr, instance: gdext.ExtensionClassInstancePtr) {
+    context = gdext.godot_context()
 
     if instance == nil {
         return
@@ -134,22 +127,11 @@ example_class_free_instance :: proc "c" (class_user_data: rawptr, instance: gd.E
 
 example_class_register :: proc() {
     // we use string_name_new_with_latin1_chars because we know the lifetime of the string literal to be static
-    gd.string_name_new_with_latin1_chars(&ExampleClassString_Name, "ExampleClass", true)
-    gd.string_name_new_with_latin1_chars(&ObjectClassString_Name, "Object", true)
-    gd.string_name_new_with_latin1_chars(&Sprite2DClassString_Name, "Sprite2D", true)
-    gd.string_name_new_with_latin1_chars(&ProcessVirtualString_Name, "_process", true)
-    gd.string_name_new_with_latin1_chars(&TimePassedSignalString_Name, "time_passed", true)
-    gd.string_name_new_with_latin1_chars(&EmitSignalMethodString_Name, "emit_signal", true)
+    gdext.string_name_new_with_latin1_chars(&example_class_name, "ExampleClass", true)
+    gdext.string_name_new_with_latin1_chars(&time_passed_name, "time_passed", true)
+    gdext.string_name_new_with_latin1_chars(&emit_signal_name, "emit_signal", true)
 
-    gd.string_name_new_with_latin1_chars(&GetAmplitudeString_Name, "get_amplitude", true)
-    gd.string_name_new_with_latin1_chars(&SetAmplitudeString_Name, "set_amplitude", true)
-    gd.string_name_new_with_latin1_chars(&AmplitudeString_Name, "amplitude", true)
-    gd.string_name_new_with_latin1_chars(&GetSpeedString_Name, "get_speed", true)
-    gd.string_name_new_with_latin1_chars(&SetSpeedString_Name, "set_speed", true)
-    gd.string_name_new_with_latin1_chars(&SpeedString_Name, "speed", true)
-    gd.string_name_new_with_latin1_chars(&TimePassedString_Name, "time_passed", true)
-
-    class_info := gd.ExtensionClassCreationInfo2 {
+    class_info := gdext.ExtensionClassCreationInfo2 {
         is_virtual                  = false,
         is_abstract                 = false,
         is_exposed                  = true,
@@ -164,38 +146,50 @@ example_class_register :: proc() {
         to_string_func              = nil,
         reference_func              = nil,
         unreference_func            = nil,
-        create_instance_func        = example_class_create_instance,
-        free_instance_func          = example_class_free_instance,
+        create_instance_func        = create_instance,
+        free_instance_func          = free_instance,
         recreate_instance_func      = nil,
         get_virtual_func            = nil,
-        get_virtual_call_data_func  = example_class_get_virtual_with_data,
-        call_virtual_with_data_func = example_class_call_virtual_with_data,
+        get_virtual_call_data_func  = get_virtual_with_data,
+        call_virtual_with_data_func = call_virtual_with_data,
         get_rid_func                = nil,
         class_userdata              = nil,
     }
 
-    gd.classdb_register_extension_class2(gd.library, &ExampleClassString_Name, &Sprite2DClassString_Name, &class_info)
-
-    bind.bind_property_and_methods(
-        &ExampleClassString_Name,
-        &AmplitudeString_Name,
-        &GetAmplitudeString_Name,
-        &SetAmplitudeString_Name,
-        example_class_get_amplitude,
-        example_class_set_amplitude,
-    )
-    bind.bind_property_and_methods(
-        &ExampleClassString_Name,
-        &SpeedString_Name,
-        &GetSpeedString_Name,
-        &SetSpeedString_Name,
-        example_class_get_speed,
-        example_class_set_speed,
+    gdext.classdb_register_extension_class2(
+        gdext.library,
+        &example_class_name,
+        godot.sprite2d_name_ref(),
+        &class_info,
     )
 
-    bind_signal(
-        &ExampleClassString_Name,
-        &TimePassedSignalString_Name,
-        MethodBindArgument{name = &TimePassedString_Name, type = .Float},
+    amplitdue_name := godot.new_string_name_cstring("amplitude", true)
+    get_amplitdue_name := godot.new_string_name_cstring("get_amplitude", true)
+    set_amplitdue_name := godot.new_string_name_cstring("set_amplitude", true)
+    bind.bind_property_and_methods(
+        &example_class_name,
+        &amplitdue_name,
+        &get_amplitdue_name,
+        &set_amplitdue_name,
+        get_amplitude,
+        set_amplitude,
+    )
+
+    speed_name := godot.new_string_name_cstring("speed_name", true)
+    get_speed_name := godot.new_string_name_cstring("get_speed_name", true)
+    set_speed_name := godot.new_string_name_cstring("set_speed_name", true)
+    bind.bind_property_and_methods(
+        &example_class_name,
+        &speed_name,
+        &get_speed_name,
+        &set_speed_name,
+        get_speed,
+        set_speed,
+    )
+
+    bind.bind_signal(
+        &example_class_name,
+        &time_passed_name,
+        bind.Signal_Arg{name = &time_passed_name, type = .Float},
     )
 }

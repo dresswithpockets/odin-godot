@@ -1,9 +1,9 @@
 package test
 
-import "godot:godot"
+import "core:fmt"
 import gdext "godot:gdextension"
 import "godot:gdextension/bind"
-import "core:fmt"
+import "godot:godot"
 
 @(private = "file")
 test_class_name: godot.String_Name
@@ -41,8 +41,6 @@ vector_neq :: proc "contextless" (self: ^Test_Class, other: godot.Vector2) -> bo
 
 @(private = "file")
 vector_add :: proc "contextless" (self: ^Test_Class, other: godot.Vector2) -> godot.Vector2 {
-    context = gdext.godot_context()
-    fmt.printfln("self.vector: %v, other: %v, sum: %v", self.vector, other, self.vector + other)
     return self.vector + other
 }
 
