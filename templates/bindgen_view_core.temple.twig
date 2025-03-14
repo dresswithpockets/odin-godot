@@ -20,8 +20,8 @@ init :: proc "contextless" () {
     __name = new_string_name_cstring("{{ function.godot_name }}", true)
     __{{ function.name }}_ptr = __bindgen_gde.variant_get_ptr_utility_function(&__name, {{ i64(function.hash) }})
 {% end %}
-{% for class in this.classes %}
-    {{ class.snake_name }}_init()
+{% for snake_name in this.inits %}
+    {{ snake_name }}_init()
 {% end %}
 }
 

@@ -7,13 +7,13 @@ import "core:slice"
 import "core:strings"
 
 Package_Class :: struct {
-    name:       string,
-    derives:    string,
-    snake_name: string,
+    name:    string,
+    derives: string,
 }
 
 Godot_Package :: struct {
     classes:    []Package_Class,
+    inits:      []string,
     functions:  []Function,
     enums:      []Enum,
     bit_fields: []Bit_Field,
@@ -43,20 +43,22 @@ godot_package :: proc(graph: ^g.Graph, allocator: mem.Allocator) -> (core: Godot
 
     core = Godot_Package {
         classes    = make([]Package_Class, core_class_count),
+        inits      = make([]string, len(graph.engine_classes)),
         functions  = make([]Function, len(graph.util_procs)),
         enums      = make([]Enum, enum_count),
         bit_fields = make([]Bit_Field, len(graph.bit_fields)),
     }
 
     class_idx := 0
-    for class in graph.engine_classes {
+    for class, init_idx in graph.engine_classes {
+        core.inits[init_idx] = cast(string)names.to_snake(class.name)
+
         if slice.contains(declared_builtins, cast(string)class.name) {
             continue
         }
 
         core.classes[class_idx] = Package_Class {
             name       = cast(string)names.to_odin(class.name),
-            snake_name = cast(string)names.to_snake(class.name),
             derives    = resolve_qualified_type(class.inherits, "godot:core"),
         }
         class_idx += 1
