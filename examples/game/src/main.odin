@@ -1,21 +1,16 @@
 package game
 
-import "godot:core"
-import "godot:core/init"
-import gd "godot:gdextension"
-import var "godot:variant"
-import "core:strings"
-import "core:c"
-import "core:fmt"
+import "godot:godot"
+import gdext "godot:gdextension"
 
 @(export)
 game_init :: proc "c" (
-    get_proc_address: gd.ExtensionInterfaceGetProcAddress,
-    library: gd.ExtensionClassLibraryPtr,
-    initialization: ^gd.Initialization,
+    get_proc_address: gdext.ExtensionInterfaceGetProcAddress,
+    library: gdext.ExtensionClassLibraryPtr,
+    initialization: ^gdext.Initialization,
 ) -> bool {
-    gd.init(library, get_proc_address)
-    init.init()
+    gdext.init(library, get_proc_address)
+    godot.init()
 
     initialization.initialize = initialize_game_module
     initialization.deinitialize = uninitialize_game_module
@@ -25,17 +20,17 @@ game_init :: proc "c" (
     return true
 }
 
-initialize_game_module :: proc "c" (user_data: rawptr, level: gd.InitializationLevel) {
+initialize_game_module :: proc "c" (user_data: rawptr, level: gdext.InitializationLevel) {
     if level != .Scene {
         return
     }
 
-    context = gd.godot_context()
+    context = gdext.godot_context()
 
     player_class_register()
 }
 
-uninitialize_game_module :: proc "c" (user_data: rawptr, level: gd.InitializationLevel) {
+uninitialize_game_module :: proc "c" (user_data: rawptr, level: gdext.InitializationLevel) {
     if level != .Scene {
         return
     }

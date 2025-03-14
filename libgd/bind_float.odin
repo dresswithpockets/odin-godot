@@ -1,39 +1,40 @@
 package libgd
 
-import gd "godot:gdextension"
+import "godot:godot"
+import gdext "godot:gdextension"
 
-GetterFloat :: proc(instance: rawptr) -> gd.Float
-SetterFloat :: proc(instance: rawptr, value: gd.Float)
+GetterFloat :: proc(instance: rawptr) -> godot.Float
+SetterFloat :: proc(instance: rawptr, value: godot.Float)
 
 ptrcall_getter_float :: proc "c" (
     method_user_data: rawptr,
-    instance: gd.ExtensionClassInstancePtr,
-    args: [^]gd.TypePtr,
-    call_return: gd.TypePtr,
+    instance: gdext.ExtensionClassInstancePtr,
+    args: [^]gdext.TypePtr,
+    call_return: gdext.TypePtr,
 ) {
-    context = gd.godot_context()
+    context = gdext.godot_context()
     method := cast(GetterFloat)method_user_data
-    (cast(^gd.Float)call_return)^ = method(instance)
+    (cast(^godot.Float)call_return)^ = method(instance)
 }
 
 ptrcall_setter_float :: proc "c" (
     method_user_data: rawptr,
-    instance: gd.ExtensionClassInstancePtr,
-    args: [^]gd.TypePtr,
-    call_return: gd.TypePtr,
+    instance: gdext.ExtensionClassInstancePtr,
+    args: [^]gdext.TypePtr,
+    call_return: gdext.TypePtr,
 ) {
-    context = gd.godot_context()
+    context = gdext.godot_context()
     method := cast(SetterFloat)method_user_data
-    method(instance, (cast(^gd.Float)args[0])^)
+    method(instance, (cast(^godot.Float)args[0])^)
 }
 
 call_getter_float :: proc "c" (
     method_user_data: rawptr,
-    instance: gd.ExtensionClassInstancePtr,
-    args: [^]gd.VariantPtr,
+    instance: gdext.ExtensionClassInstancePtr,
+    args: [^]gdext.VariantPtr,
     arg_count: i64,
-    call_return: gd.VariantPtr,
-    error: ^gd.CallError,
+    call_return: gdext.VariantPtr,
+    error: ^gdext.CallError,
 ) {
     if arg_count != 0 {
         error.error = .Too_Many_Arguments
@@ -41,20 +42,20 @@ call_getter_float :: proc "c" (
         return
     }
 
-    context = gd.godot_context()
+    context = gdext.godot_context()
     method := cast(GetterFloat)method_user_data
     result := method(instance)
-    var_float_constructor := gd.get_variant_from_type_constructor(.Float)
-    var_float_constructor(cast(gd.UninitializedVariantPtr)call_return, cast(gd.TypePtr)&result)
+    var_float_constructor := gdext.get_variant_from_type_constructor(.Float)
+    var_float_constructor(call_return, cast(gdext.TypePtr)&result)
 }
 
 call_setter_float :: proc "c" (
     method_user_data: rawptr,
-    instance: gd.ExtensionClassInstancePtr,
-    args: [^]gd.VariantPtr,
+    instance: gdext.ExtensionClassInstancePtr,
+    args: [^]gdext.VariantPtr,
     arg_count: i64,
-    call_return: gd.VariantPtr,
-    error: ^gd.CallError,
+    call_return: gdext.VariantPtr,
+    error: ^gdext.CallError,
 ) {
     if arg_count < 1 {
         error.error = .Too_Few_Arguments
@@ -68,19 +69,19 @@ call_setter_float :: proc "c" (
         return
     }
 
-    type := gd.variant_get_type(args[0])
+    type := gdext.variant_get_type(args[0])
     if type != .Float {
         error.error = .Invalid_Argument
-        error.expected = cast(i32)gd.Variant_Type.Float
+        error.expected = cast(i32)gdext.Variant_Type.Float
         error.argument = 0
         return
     }
 
     arg1: f64
-    float_from_var_constructor := gd.get_variant_to_type_constructor(.Float)
-    float_from_var_constructor(cast(gd.TypePtr)&arg1, args[0])
+    float_from_var_constructor := gdext.get_variant_to_type_constructor(.Float)
+    float_from_var_constructor(cast(gdext.TypePtr)&arg1, args[0])
 
-    context = gd.godot_context()
+    context = gdext.godot_context()
     method := cast(SetterFloat)method_user_data
     method(instance, arg1)
 }

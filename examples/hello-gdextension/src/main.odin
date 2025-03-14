@@ -2,9 +2,6 @@ package example
 
 import "godot:godot"
 import gdext "godot:gdextension"
-import "core:strings"
-import "core:c"
-import "core:fmt"
 
 // see gdext.InitializationFunction
 @(export)
