@@ -4,9 +4,21 @@ import gd "../gdextension"
 import "base:intrinsics"
 import "core:math"
 
+REAL_PRECISION :: #config(REAL_PRECISION, "float_64")
+
+when REAL_PRECISION == "double" {
+    Real :: f64
+    Quat :: quaternion256
+    REAL_INF :: math.INF_F64
+} else {
+    Real :: f32
+    Quat :: quaternion128
+    REAL_INF :: math.INF_F32
+}
+
 Bool :: bool
 Int :: i64
-Float :: gd.Float
+Float :: f64
 
 Opaque :: struct(I: int) {
     opaque: [I]uintptr,
@@ -17,9 +29,9 @@ Variant :: struct {
     opaque: Opaque(4),
 }
 
-Vector2 :: [2]gd.Float
-Vector3 :: [3]gd.Float
-Vector4 :: [4]gd.Float
+Vector2 :: [2]Real
+Vector3 :: [3]Real
+Vector4 :: [4]Real
 Vector2i :: [2]i32
 Vector3i :: [3]i32
 Vector4i :: [4]i32
@@ -42,10 +54,10 @@ Transform2d :: struct {
 
 Plane :: struct {
     normal: Vector3,
-    d:      gd.Float,
+    d:      Real,
 }
 
-Quaternion :: gd.Quat
+Quaternion :: Quat
 
 Aabb :: struct {
     position: Vector3,
@@ -61,7 +73,7 @@ Transform3d :: struct {
 
 Projection :: [4]Vector4
 
-Color :: distinct [4]gd.Float
+Color :: distinct [4]Real
 
 Rid :: distinct Opaque(2)
 String :: distinct Opaque(1)
@@ -119,9 +131,9 @@ Variantable_Type :: union {
     Vector4i,
 
     // primitives
-    bool,
-    i64,
-    gd.Float,
+    Bool,
+    Int,
+    Float,
     Rect2,
     Rect2i,
     Transform2d,
@@ -148,7 +160,7 @@ Variantable_Type :: union {
 
 Vector2_Zero :: Vector2{0, 0}
 Vector2_One :: Vector2{1, 1}
-Vector2_Inf :: Vector2{gd.INF, gd.INF}
+Vector2_Inf :: Vector2{REAL_INF, REAL_INF}
 Vector2_Left :: Vector2{-1, 0}
 Vector2_Right :: Vector2{1, 0}
 Vector2_Up :: Vector2{0, -1}
@@ -165,7 +177,7 @@ Vector2i_Down :: Vector2i{0, 1}
 
 VECTOR3_ZERO :: Vector3{0, 0, 0}
 VECTOR3_ONE :: Vector3{1, 1, 1}
-VECTOR3_INF :: Vector3{gd.INF, gd.INF, gd.INF}
+VECTOR3_INF :: Vector3{REAL_INF, REAL_INF, REAL_INF}
 VECTOR3_LEFT :: Vector3{-1, 0, 0}
 VECTOR3_RIGHT :: Vector3{1, 0, 0}
 VECTOR3_UP :: Vector3{0, 1, 0}
@@ -196,7 +208,7 @@ TRANSFORM2D_FLIP_Y :: Transform2d{{1, 0}, {0, -1}, {0, 0}}
 
 VECTOR4_ZERO :: Vector4{0, 0, 0, 0}
 VECTOR4_ONE :: Vector4{1, 1, 1, 1}
-VECTOR4_INF :: Vector4{gd.INF, gd.INF, gd.INF, gd.INF}
+VECTOR4_INF :: Vector4{REAL_INF, REAL_INF, REAL_INF, REAL_INF}
 
 VECTOR4I_ZERO :: Vector4i{0, 0, 0, 0}
 VECTOR4I_ONE :: Vector4i{1, 1, 1, 1}
@@ -208,10 +220,10 @@ Plane_PLANE_XZ :: Plane{{0, 1, 0}, 0}
 Plane_PLANE_XY :: Plane{{0, 0, 1}, 0}
 
 QUATERNION_IDENTITY :: quaternion(
-    real = cast(gd.Float)0,
-    imag = cast(gd.Float)0,
-    jmag = cast(gd.Float)0,
-    kmag = cast(gd.Float)1,
+    real = cast(Real)0,
+    imag = cast(Real)0,
+    jmag = cast(Real)0,
+    kmag = cast(Real)1,
 )
 
 BASIS_IDENTITY :: Basis{Vector3{1, 0, 0}, Vector3{0, 1, 0}, Vector3{0, 0, 1}}
@@ -434,7 +446,7 @@ variant_from :: proc {
     variant_from_packed_vector4_array,
 }
 
-variant_from_bool :: proc "contextless" (from: ^Bool) -> (ret: Variant) {
+variant_from_bool :: proc "contextless" (from: ^bool) -> (ret: Variant) {
     @(static) constructor: gd.VariantFromTypeConstructorProc
     if constructor == nil {
         constructor = gd.get_variant_from_type_constructor(.Bool)
@@ -876,7 +888,7 @@ variant_to :: proc "contextless" (
         return variant_to_bool(from)
     } else when T == i64 {
         return variant_to_int(from)
-    } else when T == gd.Float {
+    } else when T == Float {
         return variant_to_float(from)
     } else when T == String {
         return variant_to_string(from)
@@ -953,12 +965,11 @@ variant_to :: proc "contextless" (
     }
 }
 
-variant_to_bool :: proc "contextless" (from: ^Variant) -> (ret: Bool) {
+variant_to_bool :: proc "contextless" (from: ^Variant) -> (ret: bool) {
     @(static) constructor: gd.TypeFromVariantConstructorProc
     if constructor == nil {
         constructor = gd.get_variant_to_type_constructor(.Bool)
     }
-    ret = Bool{}
     constructor(&ret, from)
     return
 }
@@ -1339,9 +1350,9 @@ variant_type :: proc "contextless" (
     intrinsics.type_is_variant_of(Variantable_Type, T) {
     when T == bool {
         return .Bool
-    } else when T == i64 {
+    } else when T == Int {
         return .Int
-    } else when T == gd.Float {
+    } else when T == Float {
         return .Float
     } else when T == String {
         return .String

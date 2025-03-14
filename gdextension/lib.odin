@@ -2,8 +2,6 @@ package gdextension
 
 import "core:c"
 
-BUILD_CONFIG :: #config(BUILD_CONFIG, "float_64")
-
 // In this API there are multiple functions which expect the caller to pass a pointer
 // on return value as parameter.
 // In order to make it clear if the caller should initialize the return value or not

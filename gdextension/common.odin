@@ -1,25 +1,6 @@
 package gdextension
 
 library: ExtensionClassLibraryPtr
-import "core:math"
-
-when BUILD_CONFIG == "float_32" {
-    Float :: f32
-    Quat :: quaternion128
-    INF :: math.INF_F32
-} else when BUILD_CONFIG == "float_64" {
-    Float :: f64
-    Quat :: quaternion256
-    INF :: math.INF_F64
-} else when BUILD_CONFIG == "double_32" {
-    Float :: f32
-    Quat :: quaternion128
-    INF :: math.INF_F32
-} else when BUILD_CONFIG == "double_64" {
-    Float :: f64
-    Quat :: quaternion256
-    INF :: math.INF_F64
-}
 
 call_builtin_constructor :: proc "contextless" (
     constructor: PtrConstructor,
