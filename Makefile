@@ -110,7 +110,7 @@ cexamples: examples/game/cbin/game.dll
 ###
 
 tests:
-	odin test bindgen/ -all-packages -debug -out:$(bindgen_out)
+	odin test bindgen/ -all-packages -debug -out:$(OUT_DIR)/bindgen_tests$(exe_suffix)
 
 check:
 	odin check bindgen/
