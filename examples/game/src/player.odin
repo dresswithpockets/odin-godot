@@ -1,10 +1,9 @@
 package game
 
-import "godot:gdextension"
-import "godot:godot"
-import "godot:libgd"
-
 import "core:math"
+import "godot:gdextension"
+import "godot:gdextension/bind"
+import "godot:godot"
 
 YawSpeed :: 0.022
 PitchSpeed :: 0.022
@@ -12,6 +11,7 @@ MouseSpeed :: 2.0
 
 CharacterBody3D_ClassName: godot.String_Name
 Player_ClassName: godot.String_Name
+PLAYER_CLASS_NAME :: "Player"
 
 // virtual funcs from Node
 Ready_VirtualName: godot.String_Name
@@ -155,7 +155,12 @@ player_move :: proc "contextless" (
     max_speed: godot.Float,
 ) {
     if (wish_dir == godot.Vector3{0, 0, 0}) {
-        self.horizontal_velocity = exp_decay(self.horizontal_velocity, godot.VECTOR3_ZERO, godot.Real(friction), godot.Real(delta))
+        self.horizontal_velocity = exp_decay(
+            self.horizontal_velocity,
+            godot.VECTOR3_ZERO,
+            godot.Real(friction),
+            godot.Real(delta),
+        )
         if is_zero_approx(self.horizontal_velocity) {
             self.horizontal_velocity = godot.Vector3{0, 0, 0}
         }
@@ -278,112 +283,112 @@ player_call_virtual_with_data :: proc "c" (
 }
 
 @(export)
-set_ground_friction :: proc(self: ^Player, value: f64) {
+set_ground_friction :: proc "contextless" (self: ^Player, value: f64) {
     self.ground_friction = value
 }
 
 @(export)
-get_ground_friction :: proc(self: ^Player) -> f64 {
+get_ground_friction :: proc "contextless" (self: ^Player) -> f64 {
     return self.ground_friction
 }
 
 @(private = "file")
-set_ground_accel :: proc(self: ^Player, value: f64) {
+set_ground_accel :: proc "contextless" (self: ^Player, value: f64) {
     self.ground_accel = value
 }
 
 @(private = "file")
-get_ground_accel :: proc(self: ^Player) -> f64 {
+get_ground_accel :: proc "contextless" (self: ^Player) -> f64 {
     return self.ground_accel
 }
 
 @(private = "file")
-set_ground_max_speed :: proc(self: ^Player, value: f64) {
+set_ground_max_speed :: proc "contextless" (self: ^Player, value: f64) {
     self.ground_max_speed = value
 }
 
 @(private = "file")
-get_ground_max_speed :: proc(self: ^Player) -> f64 {
+get_ground_max_speed :: proc "contextless" (self: ^Player) -> f64 {
     return self.ground_max_speed
 }
 
 @(private = "file")
-set_max_step_height :: proc(self: ^Player, value: f64) {
+set_max_step_height :: proc "contextless" (self: ^Player, value: f64) {
     self.max_step_height = value
 }
 
 @(private = "file")
-get_max_step_height :: proc(self: ^Player) -> f64 {
+get_max_step_height :: proc "contextless" (self: ^Player) -> f64 {
     return self.max_step_height
 }
 
 @(private = "file")
-set_max_step_up_slide_iterations :: proc(self: ^Player, value: i64) {
+set_max_step_up_slide_iterations :: proc "contextless" (self: ^Player, value: i64) {
     self.max_step_up_slide_iterations = value
 }
 
 @(private = "file")
-get_max_step_up_slide_iterations :: proc(self: ^Player) -> i64 {
+get_max_step_up_slide_iterations :: proc "contextless" (self: ^Player) -> i64 {
     return self.max_step_up_slide_iterations
 }
 
 @(private = "file")
-set_gravity_up_scale :: proc(self: ^Player, value: f64) {
+set_gravity_up_scale :: proc "contextless" (self: ^Player, value: f64) {
     self.gravity_up_scale = value
 }
 
 @(private = "file")
-get_gravity_up_scale :: proc(self: ^Player) -> f64 {
+get_gravity_up_scale :: proc "contextless" (self: ^Player) -> f64 {
     return self.gravity_up_scale
 }
 
 @(private = "file")
-set_gravity_down_scale :: proc(self: ^Player, value: f64) {
+set_gravity_down_scale :: proc "contextless" (self: ^Player, value: f64) {
     self.gravity_down_scale = value
 }
 
 @(private = "file")
-get_gravity_down_scale :: proc(self: ^Player) -> f64 {
+get_gravity_down_scale :: proc "contextless" (self: ^Player) -> f64 {
     return self.gravity_down_scale
 }
 
 @(private = "file")
-set_air_friction :: proc(self: ^Player, value: f64) {
+set_air_friction :: proc "contextless" (self: ^Player, value: f64) {
     self.air_friction = value
 }
 
 @(private = "file")
-get_air_friction :: proc(self: ^Player) -> f64 {
+get_air_friction :: proc "contextless" (self: ^Player) -> f64 {
     return self.air_friction
 }
 
 @(private = "file")
-set_air_accel :: proc(self: ^Player, value: f64) {
+set_air_accel :: proc "contextless" (self: ^Player, value: f64) {
     self.air_accel = value
 }
 
 @(private = "file")
-get_air_accel :: proc(self: ^Player) -> f64 {
+get_air_accel :: proc "contextless" (self: ^Player) -> f64 {
     return self.air_accel
 }
 
 @(private = "file")
-set_air_max_speed :: proc(self: ^Player, value: f64) {
+set_air_max_speed :: proc "contextless" (self: ^Player, value: f64) {
     self.air_max_speed = value
 }
 
 @(private = "file")
-get_air_max_speed :: proc(self: ^Player) -> f64 {
+get_air_max_speed :: proc "contextless" (self: ^Player) -> f64 {
     return self.air_max_speed
 }
 
 @(private = "file")
-set_max_vertical_speed :: proc(self: ^Player, value: f64) {
+set_max_vertical_speed :: proc "contextless" (self: ^Player, value: f64) {
     self.max_vertical_speed = value
 }
 
 @(private = "file")
-get_max_vertical_speed :: proc(self: ^Player) -> f64 {
+get_max_vertical_speed :: proc "contextless" (self: ^Player) -> f64 {
     return self.max_vertical_speed
 }
 
@@ -433,101 +438,121 @@ player_class_register :: proc() {
         &class_info,
     )
 
-    libgd.bind_property_group(&Player_ClassName, "Movement", "")
-    libgd.bind_property_subgroup(&Player_ClassName, "On Ground", "")
-    libgd.bind_auto_property(
-        &Player_ClassName,
+    bind.bind_property_group(PLAYER_CLASS_NAME, "Movement", "")
+    bind.bind_property_subgroup(PLAYER_CLASS_NAME, "On Ground", "")
+    bind.bind_property_and_methods(
+        PLAYER_CLASS_NAME,
         "ground_friction",
         "get_ground_friction",
-        get_ground_friction,
         "set_ground_friction",
+        get_ground_friction,
         set_ground_friction,
+        static_strings = true,
     )
-    libgd.bind_auto_property(
-        &Player_ClassName,
+    bind.bind_property_and_methods(
+        PLAYER_CLASS_NAME,
         "ground_accel",
         "get_ground_accel",
-        get_ground_accel,
         "set_ground_accel",
+        get_ground_accel,
         set_ground_accel,
+        static_strings = true,
     )
-    libgd.bind_auto_property(
-        &Player_ClassName,
+    bind.bind_property_and_methods(
+        PLAYER_CLASS_NAME,
         "ground_max_speed",
         "get_ground_max_speed",
-        get_ground_max_speed,
         "set_ground_max_speed",
+        get_ground_max_speed,
         set_ground_max_speed,
+        static_strings = true,
     )
-    libgd.bind_auto_property(
-        &Player_ClassName,
+    bind.bind_property_and_methods(
+        PLAYER_CLASS_NAME,
         "max_step_height",
         "get_max_step_height",
-        get_max_step_height,
         "set_max_step_height",
+        get_max_step_height,
         set_max_step_height,
+        static_strings = true,
     )
-    libgd.bind_auto_property(
-        &Player_ClassName,
+    bind.bind_property_and_methods(
+        PLAYER_CLASS_NAME,
         "max_step_up_slide_iterations",
         "get_max_step_up_slide_iterations",
-        get_max_step_up_slide_iterations,
         "set_max_step_up_slide_iterations",
+        get_max_step_up_slide_iterations,
         set_max_step_up_slide_iterations,
+        static_strings = true,
     )
 
-    libgd.bind_property_subgroup(&Player_ClassName, "In Air", "")
-    libgd.bind_auto_property(
-        &Player_ClassName,
+    bind.bind_property_subgroup(PLAYER_CLASS_NAME, "In Air", "")
+    bind.bind_property_and_methods(
+        PLAYER_CLASS_NAME,
         "gravity_up_scale",
         "get_gravity_up_scale",
-        get_gravity_up_scale,
         "set_gravity_up_scale",
+        get_gravity_up_scale,
         set_gravity_up_scale,
+        static_strings = true,
     )
-    libgd.bind_auto_property(
-        &Player_ClassName,
+    bind.bind_property_and_methods(
+        PLAYER_CLASS_NAME,
         "gravity_down_scale",
         "get_gravity_down_scale",
-        get_gravity_down_scale,
         "set_gravity_down_scale",
+        get_gravity_down_scale,
         set_gravity_down_scale,
+        static_strings = true,
     )
-    libgd.bind_auto_property(
-        &Player_ClassName,
+    bind.bind_property_and_methods(
+        PLAYER_CLASS_NAME,
         "air_friction",
         "get_air_friction",
-        get_air_friction,
         "set_air_friction",
+        get_air_friction,
         set_air_friction,
+        static_strings = true,
     )
-    libgd.bind_auto_property(
-        &Player_ClassName,
+    bind.bind_property_and_methods(
+        PLAYER_CLASS_NAME,
         "air_accel",
         "get_air_accel",
-        get_air_accel,
         "set_air_accel",
+        get_air_accel,
         set_air_accel,
+        static_strings = true,
     )
-    libgd.bind_auto_property(
-        &Player_ClassName,
+    bind.bind_property_and_methods(
+        PLAYER_CLASS_NAME,
         "air_max_speed",
         "get_air_max_speed",
-        get_air_max_speed,
         "set_air_max_speed",
+        get_air_max_speed,
         set_air_max_speed,
+        static_strings = true,
     )
-    libgd.bind_auto_property(
-        &Player_ClassName,
+    bind.bind_property_and_methods(
+        PLAYER_CLASS_NAME,
         "max_vertical_speed",
         "get_max_vertical_speed",
-        get_max_vertical_speed,
         "set_max_vertical_speed",
+        get_max_vertical_speed,
         set_max_vertical_speed,
+        static_strings = true,
     )
 
-    libgd.bind_signal(&Player_ClassName, "stepped_up", libgd.MethodBindArgument{name = "distance", type = .Float})
-    libgd.bind_signal(&Player_ClassName, "stepped_down", libgd.MethodBindArgument{name = "distance", type = .Float})
+    distance_name := godot.new_string_name_cstring("distance", true)
+    bind.bind_signal(
+        &Player_ClassName,
+        &Player_SteppedUp_SignalName,
+        bind.Signal_Arg{name = &distance_name, type = .Float},
+    )
+    bind.bind_signal(
+        &Player_ClassName,
+        &Player_SteppedDown_SignalName,
+        bind.Signal_Arg{name = &distance_name, type = .Float},
+    )
 }
 
 player_class_unregister :: proc "contextless" () {
