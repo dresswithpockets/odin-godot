@@ -45,8 +45,8 @@ parse_args :: proc(options: ^Options) -> (ok: bool) {
 
                     right := arg[6:]
                     if result, ok := strconv.parse_int(right); ok {
-                        if result < 1 {
-                            fmt.eprintln("Job count must be at least 1")
+                        if result < 0 {
+                            fmt.eprintln("Job count must be at least 0")
                             ok = false
                             continue
                         }
