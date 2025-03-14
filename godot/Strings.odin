@@ -2,7 +2,6 @@ package godot
 
 import gd "../gdextension"
 import "core:mem"
-import "core:strings"
 
 @(private)
 EmptyString := String{}

@@ -1,10 +1,6 @@
 package test
 
 import gd "godot:gdextension"
-import "godot:godot"
-import "core:strings"
-import "core:c"
-import "core:fmt"
 
 // see gd.InitializationFunction
 @(export)

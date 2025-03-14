@@ -1,6 +1,5 @@
 package test
 
-import "core:fmt"
 import gdext "godot:gdextension"
 import "godot:gdextension/bind"
 import "godot:godot"
