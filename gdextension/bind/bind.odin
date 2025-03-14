@@ -2,10 +2,10 @@ package bind
 
 import "base:intrinsics"
 import "godot:godot"
-import gd "godot:gdextension"
+import gdext "godot:gdextension"
 
-simple_property_info :: proc "contextless" (type: gd.Variant_Type, name: ^godot.String_Name) -> gd.PropertyInfo {
-    return gd.PropertyInfo {
+simple_property_info :: proc "contextless" (type: gdext.Variant_Type, name: ^godot.String_Name) -> gdext.PropertyInfo {
+    return gdext.PropertyInfo {
         name        = name,
         type        = type,
         hint        = 0, // .None
@@ -16,10 +16,10 @@ simple_property_info :: proc "contextless" (type: gd.Variant_Type, name: ^godot.
 }
 
 expect_args :: proc "contextless" (
-    args: [^]gd.VariantPtr,
+    args: [^]gdext.VariantPtr,
     arg_count: i64,
-    error: ^gd.CallError,
-    arg_types: ..gd.Variant_Type,
+    error: ^gdext.CallError,
+    arg_types: ..gdext.Variant_Type,
 ) -> bool {
     if arg_count < cast(i64)len(arg_types) {
         error.error = .Too_Few_Arguments
@@ -34,7 +34,7 @@ expect_args :: proc "contextless" (
     }
 
     for arg_type, arg_idx in arg_types {
-        type := gd.variant_get_type(cast(^godot.Variant)args[arg_idx])
+        type := gdext.variant_get_type(cast(^godot.Variant)args[arg_idx])
         if type != arg_type {
             error.error = .Invalid_Argument
             error.expected = cast(i32)arg_type
@@ -59,18 +59,39 @@ bind_property_and_methods :: proc(
 
     type := godot.variant_type(Value)
     info := simple_property_info(type, name)
-    gd.classdb_register_extension_class_property(gd.library, class_name, &info, setter_name, getter_name)
+    gdext.classdb_register_extension_class_property(gdext.library, class_name, &info, setter_name, getter_name)
 }
 
 bind_property :: proc(
     class_name: ^godot.String_Name,
     name: ^godot.String_Name,
-    type: gd.Variant_Type,
+    type: gdext.Variant_Type,
     getter: ^godot.String_Name,
     setter: ^godot.String_Name,
 ) {
     info := simple_property_info(type, name)
-    gd.classdb_register_extension_class_property(gd.library, class_name, &info, setter, getter)
+    gdext.classdb_register_extension_class_property(gdext.library, class_name, &info, setter, getter)
+}
+
+Signal_Arg :: struct {
+    name: ^godot.String_Name,
+    type: gdext.Variant_Type,
+}
+
+bind_signal :: proc(class_name: ^godot.String_Name, signal_name: ^godot.String_Name, args: ..Signal_Arg) {
+    if len(args) == 0 {
+        gdext.classdb_register_extension_class_signal(gdext.library, class_name, signal_name, nil, 0)
+        return
+    }
+
+    args_info := make([]gdext.PropertyInfo, len(args))
+    defer delete(args_info)
+
+    for arg, idx in args {
+        args_info[idx] = simple_property_info(arg.type, arg.name)
+    }
+
+    gdext.classdb_register_extension_class_signal(gdext.library, class_name, signal_name, raw_data(args_info), cast(i64)len(args))
 }
 
 // bind_void_method :: proc {
@@ -84,7 +105,7 @@ bind_property :: proc(
 //     arg0_name: string,
 // ) {
 //     ptrcall, call := get_void_calls(Self, Arg0)
-//     method_info := gd.ExtensionClassMethodInfo {
+//     method_info := gdext.ExtensionClassMethodInfo {
 //         name                   = method_name,
 //         method_user_data       = function,
 //         call_func              = call,
@@ -96,13 +117,13 @@ bind_property :: proc(
 //         default_argument_count = 0,
 //     }
 
-//     args_info := [0]gd.PropertyInfo{simple_property_info(godot.variant_type(Arg0), arg0_name),}
-//     args_metadata := [0]gd.ExtensionClassMethodArgumentMetadata{.None}
+//     args_info := [0]gdext.PropertyInfo{simple_property_info(godot.variant_type(Arg0), arg0_name),}
+//     args_metadata := [0]gdext.ExtensionClassMethodArgumentMetadata{.None}
 
 //     method_info.arguments_info = &args_info[0]
 //     method_info.arguments_metadata = &args_metadata[0]
 
-//     gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+//     gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 // }
 
 // bind_returning_method :: proc {
@@ -118,7 +139,7 @@ bind_property :: proc(
 //     return_info := simple_property_info(godot.variant_type(Ret), godot.string_name_empty_ref())
 
 //     ptrcall, call := get_void_calls(Self, Arg0)
-//     method_info := gd.ExtensionClassMethodInfo {
+//     method_info := gdext.ExtensionClassMethodInfo {
 //         name                   = method_name,
 //         method_user_data       = function,
 //         call_func              = call,
@@ -131,13 +152,13 @@ bind_property :: proc(
 //         default_argument_count = 0,
 //     }
 
-//     args_info := [0]gd.PropertyInfo{simple_property_info(godot.variant_type(Arg0), arg0_name)}
-//     args_metadata := [0]gd.ExtensionClassMethodArgumentMetadata{.None}
+//     args_info := [0]gdext.PropertyInfo{simple_property_info(godot.variant_type(Arg0), arg0_name)}
+//     args_metadata := [0]gdext.ExtensionClassMethodArgumentMetadata{.None}
 
 //     method_info.arguments_info = &args_info[0]
 //     method_info.arguments_metadata = &args_metadata[0]
 
-//     gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+//     gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 // }
 
 /*
