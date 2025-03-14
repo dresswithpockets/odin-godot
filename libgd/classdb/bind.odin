@@ -1,7 +1,7 @@
 package bind
 
 import "base:intrinsics"
-import gdext "godot:gdextension"
+import "godot:gdext"
 import "godot:godot"
 
 simple_property_info :: proc "contextless" (type: gdext.Variant_Type, name: ^godot.String_Name) -> gdext.PropertyInfo {

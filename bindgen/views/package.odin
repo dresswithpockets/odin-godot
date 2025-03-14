@@ -79,7 +79,7 @@ map_types_to_imports :: proc(graph: g.Graph, map_mode: Package_Map_Mode) {
                 if slice.contains(gdextension_enums, root_type.godot_name) {
                     import_map[root_type] = Import {
                         name = "__bindgen_gde",
-                        path = "godot:gdextension",
+                        path = "godot:gdext",
                     }
                     continue
                 }

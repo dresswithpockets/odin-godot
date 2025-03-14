@@ -1,6 +1,6 @@
 package bind
 
-import gd "godot:gdextension"
+import "godot:gdext"
 import "godot:godot"
 
 bind_void_method :: proc {
@@ -85,7 +85,7 @@ bind_void_method_0_args :: proc "contextless" (
     function: $P/proc "contextless" (self: ^$Self),
 ) {
     ptrcall, call := get_void_calls(Self)
-    method_info := gd.ExtensionClassMethodInfo {
+    method_info := gdext.ExtensionClassMethodInfo {
         name                   = method_name,
         method_user_data       = cast(rawptr)function,
         call_func              = call,
@@ -97,7 +97,7 @@ bind_void_method_0_args :: proc "contextless" (
         default_argument_count = 0,
     }
 
-    gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+    gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 }
 
 bind_returning_method_0_args :: proc "contextless" (
@@ -108,7 +108,7 @@ bind_returning_method_0_args :: proc "contextless" (
     return_info := simple_property_info(godot.variant_type(Ret), godot.string_name_empty_ref())
 
     ptrcall, call := get_returning_calls(Self, Ret)
-    method_info := gd.ExtensionClassMethodInfo {
+    method_info := gdext.ExtensionClassMethodInfo {
         name                   = method_name,
         method_user_data       = cast(rawptr)function,
         call_func              = call,
@@ -121,35 +121,35 @@ bind_returning_method_0_args :: proc "contextless" (
         default_argument_count = 0,
     }
 
-    gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+    gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 }
 
 get_void_calls_0_args :: proc "contextless" (
     $Self: typeid,
 ) -> (
-    gd.ExtensionClassMethodPtrCall,
-    gd.ExtensionClassMethodCall,
+    gdext.ExtensionClassMethodPtrCall,
+    gdext.ExtensionClassMethodCall,
 ) {
     Proc :: #type proc "contextless" (self: ^Self)
-    ptrcall :: proc "c" (data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
-        context = gd.godot_context()
+    ptrcall :: proc "c" (data: rawptr, instance: gdext.ExtensionClassInstancePtr, args: [^]gdext.TypePtr, ret: gdext.TypePtr) {
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         method(cast(^Self)instance)
     }
     call :: proc "c" (
         data: rawptr,
-        instance: gd.ExtensionClassInstancePtr,
-        args: [^]gd.VariantPtr,
+        instance: gdext.ExtensionClassInstancePtr,
+        args: [^]gdext.VariantPtr,
         arg_count: i64,
-        ret: gd.VariantPtr,
-        error: ^gd.CallError,
+        ret: gdext.VariantPtr,
+        error: ^gdext.CallError,
     ) {
         if !expect_args(args, arg_count, error) {
             return
         }
 
-        context = gd.godot_context()
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         method(cast(^Self)instance)
@@ -161,29 +161,29 @@ get_returning_calls_0_args :: proc "contextless" (
     $Self: typeid,
     $Ret: typeid,
 ) -> (
-    gd.ExtensionClassMethodPtrCall,
-    gd.ExtensionClassMethodCall,
+    gdext.ExtensionClassMethodPtrCall,
+    gdext.ExtensionClassMethodCall,
 ) {
     Proc :: #type proc "contextless" (self: ^Self) -> Ret
-    ptrcall :: proc "c" (data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
-        context = gd.godot_context()
+    ptrcall :: proc "c" (data: rawptr, instance: gdext.ExtensionClassInstancePtr, args: [^]gdext.TypePtr, ret: gdext.TypePtr) {
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         (cast(^Ret)ret)^ = method(cast(^Self)instance)
     }
     call :: proc "c" (
         data: rawptr,
-        instance: gd.ExtensionClassInstancePtr,
-        args: [^]gd.VariantPtr,
+        instance: gdext.ExtensionClassInstancePtr,
+        args: [^]gdext.VariantPtr,
         arg_count: i64,
-        ret: gd.VariantPtr,
-        error: ^gd.CallError,
+        ret: gdext.VariantPtr,
+        error: ^gdext.CallError,
     ) {
         if !expect_args(args, arg_count, error) {
             return
         }
 
-        context = gd.godot_context()
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         result := method(cast(^Self)instance)
@@ -197,29 +197,29 @@ get_void_calls_1_args :: proc "contextless" (
     $Self: typeid,
     $Arg0: typeid,
 ) -> (
-    gd.ExtensionClassMethodPtrCall,
-    gd.ExtensionClassMethodCall,
+    gdext.ExtensionClassMethodPtrCall,
+    gdext.ExtensionClassMethodCall,
 ) {
     Proc :: #type proc "contextless" (self: ^Self, arg0: Arg0)
-    ptrcall :: proc "c" (data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
-        context = gd.godot_context()
+    ptrcall :: proc "c" (data: rawptr, instance: gdext.ExtensionClassInstancePtr, args: [^]gdext.TypePtr, ret: gdext.TypePtr) {
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         method(cast(^Self)instance, (cast(^Arg0)args[0])^)
     }
     call :: proc "c" (
         data: rawptr,
-        instance: gd.ExtensionClassInstancePtr,
-        args: [^]gd.VariantPtr,
+        instance: gdext.ExtensionClassInstancePtr,
+        args: [^]gdext.VariantPtr,
         arg_count: i64,
-        ret: gd.VariantPtr,
-        error: ^gd.CallError,
+        ret: gdext.VariantPtr,
+        error: ^gdext.CallError,
     ) {
         if !expect_args(args, arg_count, error, godot.variant_type(Arg0)) {
             return
         }
 
-        context = gd.godot_context()
+        context = gdext.godot_context()
 
         arg0 := godot.variant_to(cast(^godot.Variant)args[0], Arg0)
         method := cast(Proc)data
@@ -233,29 +233,29 @@ get_returning_calls_1_args :: proc "contextless" (
     $Arg0: typeid,
     $Ret: typeid,
 ) -> (
-    gd.ExtensionClassMethodPtrCall,
-    gd.ExtensionClassMethodCall,
+    gdext.ExtensionClassMethodPtrCall,
+    gdext.ExtensionClassMethodCall,
 ) {
     Proc :: #type proc "contextless" (self: ^Self, arg0: Arg0) -> Ret
-    ptrcall :: proc "c" (data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
-        context = gd.godot_context()
+    ptrcall :: proc "c" (data: rawptr, instance: gdext.ExtensionClassInstancePtr, args: [^]gdext.TypePtr, ret: gdext.TypePtr) {
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         (cast(^Ret)ret)^ = method(cast(^Self)instance, (cast(^Arg0)args[0])^)
     }
     call :: proc "c" (
         data: rawptr,
-        instance: gd.ExtensionClassInstancePtr,
-        args: [^]gd.VariantPtr,
+        instance: gdext.ExtensionClassInstancePtr,
+        args: [^]gdext.VariantPtr,
         arg_count: i64,
-        ret: gd.VariantPtr,
-        error: ^gd.CallError,
+        ret: gdext.VariantPtr,
+        error: ^gdext.CallError,
     ) {
         if !expect_args(args, arg_count, error, godot.variant_type(Arg0)) {
             return
         }
 
-        context = gd.godot_context()
+        context = gdext.godot_context()
 
         arg0 := godot.variant_to(cast(^godot.Variant)args[0], Arg0)
         method := cast(Proc)data
@@ -272,11 +272,11 @@ bind_void_method_1_args :: proc "contextless" (
     function: $P/proc "contextless" (self: ^$Self, arg0: $Arg0),
     arg0_name: ^godot.String_Name,
 ) {
-    args_info := [1]gd.PropertyInfo{simple_property_info(godot.variant_type(Arg0), arg0_name)}
-    args_metadata := [1]gd.ExtensionClassMethodArgumentMetadata{.None}
+    args_info := [1]gdext.PropertyInfo{simple_property_info(godot.variant_type(Arg0), arg0_name)}
+    args_metadata := [1]gdext.ExtensionClassMethodArgumentMetadata{.None}
 
     ptrcall, call := get_void_calls(Self, Arg0)
-    method_info := gd.ExtensionClassMethodInfo {
+    method_info := gdext.ExtensionClassMethodInfo {
         name                   = method_name,
         method_user_data       = cast(rawptr)function,
         call_func              = call,
@@ -290,7 +290,7 @@ bind_void_method_1_args :: proc "contextless" (
         default_argument_count = 0,
     }
 
-    gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+    gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 }
 
 bind_returning_method_1_args :: proc "contextless" (
@@ -299,13 +299,13 @@ bind_returning_method_1_args :: proc "contextless" (
     function: $P/proc "contextless" (self: ^$Self, arg0: $Arg0) -> $Ret,
     arg0_name: ^godot.String_Name,
 ) {
-    args_info := [1]gd.PropertyInfo{simple_property_info(godot.variant_type(Arg0), arg0_name)}
-    args_metadata := [1]gd.ExtensionClassMethodArgumentMetadata{.None}
+    args_info := [1]gdext.PropertyInfo{simple_property_info(godot.variant_type(Arg0), arg0_name)}
+    args_metadata := [1]gdext.ExtensionClassMethodArgumentMetadata{.None}
 
     return_info := simple_property_info(godot.variant_type(Ret), godot.string_name_empty_ref())
 
     ptrcall, call := get_returning_calls(Self, Arg0, Ret)
-    method_info := gd.ExtensionClassMethodInfo {
+    method_info := gdext.ExtensionClassMethodInfo {
         name                   = method_name,
         method_user_data       = cast(rawptr)function,
         call_func              = call,
@@ -320,7 +320,7 @@ bind_returning_method_1_args :: proc "contextless" (
         default_argument_count = 0,
     }
 
-    gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+    gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 }
 
 get_void_calls_2_args :: proc "contextless" (
@@ -328,29 +328,29 @@ get_void_calls_2_args :: proc "contextless" (
     $Arg0: typeid,
     $Arg1: typeid,
 ) -> (
-    gd.ExtensionClassMethodPtrCall,
-    gd.ExtensionClassMethodCall,
+    gdext.ExtensionClassMethodPtrCall,
+    gdext.ExtensionClassMethodCall,
 ) {
     Proc :: #type proc "contextless" (self: ^Self, arg0: Arg0, arg1: Arg1)
-    ptrcall :: proc "c" (data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
-        context = gd.godot_context()
+    ptrcall :: proc "c" (data: rawptr, instance: gdext.ExtensionClassInstancePtr, args: [^]gdext.TypePtr, ret: gdext.TypePtr) {
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         method(cast(^Self)instance, (cast(^Arg0)args[0])^, (cast(^Arg1)args[1])^)
     }
     call :: proc "c" (
         data: rawptr,
-        instance: gd.ExtensionClassInstancePtr,
-        args: [^]gd.VariantPtr,
+        instance: gdext.ExtensionClassInstancePtr,
+        args: [^]gdext.VariantPtr,
         arg_count: i64,
-        ret: gd.VariantPtr,
-        error: ^gd.CallError,
+        ret: gdext.VariantPtr,
+        error: ^gdext.CallError,
     ) {
         if !expect_args(args, arg_count, error, godot.variant_type(Arg0), godot.variant_type(Arg1)) {
             return
         }
 
-        context = gd.godot_context()
+        context = gdext.godot_context()
 
         arg0 := godot.variant_to(cast(^godot.Variant)args[0], Arg0)
         arg1 := godot.variant_to(cast(^godot.Variant)args[1], Arg1)
@@ -366,29 +366,29 @@ get_returning_calls_2_args :: proc "contextless" (
     $Arg1: typeid,
     $Ret: typeid,
 ) -> (
-    gd.ExtensionClassMethodPtrCall,
-    gd.ExtensionClassMethodCall,
+    gdext.ExtensionClassMethodPtrCall,
+    gdext.ExtensionClassMethodCall,
 ) {
     Proc :: #type proc "contextless" (self: ^Self, arg0: Arg0, arg1: Arg1) -> Ret
-    ptrcall :: proc "c" (data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
-        context = gd.godot_context()
+    ptrcall :: proc "c" (data: rawptr, instance: gdext.ExtensionClassInstancePtr, args: [^]gdext.TypePtr, ret: gdext.TypePtr) {
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         (cast(^Ret)ret)^ = method(cast(^Self)instance, (cast(^Arg0)args[0])^, (cast(^Arg1)args[1])^)
     }
     call :: proc "c" (
         data: rawptr,
-        instance: gd.ExtensionClassInstancePtr,
-        args: [^]gd.VariantPtr,
+        instance: gdext.ExtensionClassInstancePtr,
+        args: [^]gdext.VariantPtr,
         arg_count: i64,
-        ret: gd.VariantPtr,
-        error: ^gd.CallError,
+        ret: gdext.VariantPtr,
+        error: ^gdext.CallError,
     ) {
         if !expect_args(args, arg_count, error, godot.variant_type(Arg0), godot.variant_type(Arg1)) {
             return
         }
 
-        context = gd.godot_context()
+        context = gdext.godot_context()
 
         arg0 := godot.variant_to(cast(^godot.Variant)args[0], Arg0)
         arg1 := godot.variant_to(cast(^godot.Variant)args[1], Arg1)
@@ -407,14 +407,14 @@ bind_void_method_2_args :: proc "contextless" (
     arg0_name: ^godot.String_Name,
     arg1_name: ^godot.String_Name,
 ) {
-    args_info := [2]gd.PropertyInfo {
+    args_info := [2]gdext.PropertyInfo {
         simple_property_info(godot.variant_type(Arg0), arg0_name),
         simple_property_info(godot.variant_type(Arg1), arg1_name),
     }
-    args_metadata := [2]gd.ExtensionClassMethodArgumentMetadata{.None, .None}
+    args_metadata := [2]gdext.ExtensionClassMethodArgumentMetadata{.None, .None}
 
     ptrcall, call := get_void_calls(Self, Arg0, Arg1)
-    method_info := gd.ExtensionClassMethodInfo {
+    method_info := gdext.ExtensionClassMethodInfo {
         name                   = method_name,
         method_user_data       = cast(rawptr)function,
         call_func              = call,
@@ -428,7 +428,7 @@ bind_void_method_2_args :: proc "contextless" (
         default_argument_count = 0,
     }
 
-    gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+    gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 }
 
 bind_returning_method_2_args :: proc "contextless" (
@@ -438,16 +438,16 @@ bind_returning_method_2_args :: proc "contextless" (
     arg0_name: ^godot.String_Name,
     arg1_name: ^godot.String_Name,
 ) {
-    args_info := [2]gd.PropertyInfo {
+    args_info := [2]gdext.PropertyInfo {
         simple_property_info(godot.variant_type(Arg0), arg0_name),
         simple_property_info(godot.variant_type(Arg1), arg1_name),
     }
-    args_metadata := [2]gd.ExtensionClassMethodArgumentMetadata{.None, .None}
+    args_metadata := [2]gdext.ExtensionClassMethodArgumentMetadata{.None, .None}
 
     return_info := simple_property_info(godot.variant_type(Ret), godot.string_name_empty_ref())
 
     ptrcall, call := get_returning_calls(Self, Arg0, Arg1, Ret)
-    method_info := gd.ExtensionClassMethodInfo {
+    method_info := gdext.ExtensionClassMethodInfo {
         name                   = method_name,
         method_user_data       = cast(rawptr)function,
         call_func              = call,
@@ -462,7 +462,7 @@ bind_returning_method_2_args :: proc "contextless" (
         default_argument_count = 0,
     }
 
-    gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+    gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 }
 
 get_void_calls_3_args :: proc "contextless" (
@@ -471,23 +471,23 @@ get_void_calls_3_args :: proc "contextless" (
     $Arg1: typeid,
     $Arg2: typeid,
 ) -> (
-    gd.ExtensionClassMethodPtrCall,
-    gd.ExtensionClassMethodCall,
+    gdext.ExtensionClassMethodPtrCall,
+    gdext.ExtensionClassMethodCall,
 ) {
     Proc :: #type proc "contextless" (self: ^Self, arg0: Arg0, arg1: Arg1, arg2: Arg2)
-    ptrcall :: proc "c" (data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
-        context = gd.godot_context()
+    ptrcall :: proc "c" (data: rawptr, instance: gdext.ExtensionClassInstancePtr, args: [^]gdext.TypePtr, ret: gdext.TypePtr) {
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         method(cast(^Self)instance, (cast(^Arg0)args[0])^, (cast(^Arg1)args[1])^, (cast(^Arg2)args[2])^)
     }
     call :: proc "c" (
         data: rawptr,
-        instance: gd.ExtensionClassInstancePtr,
-        args: [^]gd.VariantPtr,
+        instance: gdext.ExtensionClassInstancePtr,
+        args: [^]gdext.VariantPtr,
         arg_count: i64,
-        ret: gd.VariantPtr,
-        error: ^gd.CallError,
+        ret: gdext.VariantPtr,
+        error: ^gdext.CallError,
     ) {
         if !expect_args(
             args,
@@ -500,7 +500,7 @@ get_void_calls_3_args :: proc "contextless" (
             return
         }
 
-        context = gd.godot_context()
+        context = gdext.godot_context()
 
         arg0 := godot.variant_to(cast(^godot.Variant)args[0], Arg0)
         arg1 := godot.variant_to(cast(^godot.Variant)args[1], Arg1)
@@ -518,12 +518,12 @@ get_returning_calls_3_args :: proc "contextless" (
     $Arg2: typeid,
     $Ret: typeid,
 ) -> (
-    gd.ExtensionClassMethodPtrCall,
-    gd.ExtensionClassMethodCall,
+    gdext.ExtensionClassMethodPtrCall,
+    gdext.ExtensionClassMethodCall,
 ) {
     Proc :: #type proc "contextless" (self: ^Self, arg0: Arg0, arg1: Arg1, arg2: Arg2) -> Ret
-    ptrcall :: proc "c" (data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
-        context = gd.godot_context()
+    ptrcall :: proc "c" (data: rawptr, instance: gdext.ExtensionClassInstancePtr, args: [^]gdext.TypePtr, ret: gdext.TypePtr) {
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         (cast(^Ret)ret)^ = method(
@@ -535,11 +535,11 @@ get_returning_calls_3_args :: proc "contextless" (
     }
     call :: proc "c" (
         data: rawptr,
-        instance: gd.ExtensionClassInstancePtr,
-        args: [^]gd.VariantPtr,
+        instance: gdext.ExtensionClassInstancePtr,
+        args: [^]gdext.VariantPtr,
         arg_count: i64,
-        ret: gd.VariantPtr,
-        error: ^gd.CallError,
+        ret: gdext.VariantPtr,
+        error: ^gdext.CallError,
     ) {
         if !expect_args(
             args,
@@ -552,7 +552,7 @@ get_returning_calls_3_args :: proc "contextless" (
             return
         }
 
-        context = gd.godot_context()
+        context = gdext.godot_context()
 
         arg0 := godot.variant_to(cast(^godot.Variant)args[0], Arg0)
         arg1 := godot.variant_to(cast(^godot.Variant)args[1], Arg1)
@@ -573,15 +573,15 @@ bind_void_method_3_args :: proc "contextless" (
     arg1_name: ^godot.String_Name,
     arg2_name: ^godot.String_Name,
 ) {
-    args_info := [3]gd.PropertyInfo {
+    args_info := [3]gdext.PropertyInfo {
         simple_property_info(godot.variant_type(Arg0), arg0_name),
         simple_property_info(godot.variant_type(Arg1), arg1_name),
         simple_property_info(godot.variant_type(Arg2), arg2_name),
     }
-    args_metadata := [3]gd.ExtensionClassMethodArgumentMetadata{.None, .None, .None}
+    args_metadata := [3]gdext.ExtensionClassMethodArgumentMetadata{.None, .None, .None}
 
     ptrcall, call := get_void_calls(Self, Arg0, Arg1, Arg2)
-    method_info := gd.ExtensionClassMethodInfo {
+    method_info := gdext.ExtensionClassMethodInfo {
         name                   = method_name,
         method_user_data       = cast(rawptr)function,
         call_func              = call,
@@ -595,7 +595,7 @@ bind_void_method_3_args :: proc "contextless" (
         default_argument_count = 0,
     }
 
-    gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+    gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 }
 
 bind_returning_method_3_args :: proc "contextless" (
@@ -606,17 +606,17 @@ bind_returning_method_3_args :: proc "contextless" (
     arg1_name: ^godot.String_Name,
     arg2_name: ^godot.String_Name,
 ) {
-    args_info := [3]gd.PropertyInfo {
+    args_info := [3]gdext.PropertyInfo {
         simple_property_info(godot.variant_type(Arg0), arg0_name),
         simple_property_info(godot.variant_type(Arg1), arg1_name),
         simple_property_info(godot.variant_type(Arg2), arg2_name),
     }
-    args_metadata := [3]gd.ExtensionClassMethodArgumentMetadata{.None, .None, .None}
+    args_metadata := [3]gdext.ExtensionClassMethodArgumentMetadata{.None, .None, .None}
 
     return_info := simple_property_info(godot.variant_type(Ret), godot.string_name_empty_ref())
 
     ptrcall, call := get_returning_calls(Self, Arg0, Arg1, Arg2, Ret)
-    method_info := gd.ExtensionClassMethodInfo {
+    method_info := gdext.ExtensionClassMethodInfo {
         name                   = method_name,
         method_user_data       = cast(rawptr)function,
         call_func              = call,
@@ -631,7 +631,7 @@ bind_returning_method_3_args :: proc "contextless" (
         default_argument_count = 0,
     }
 
-    gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+    gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 }
 
 get_void_calls_4_args :: proc "contextless" (
@@ -641,12 +641,12 @@ get_void_calls_4_args :: proc "contextless" (
     $Arg2: typeid,
     $Arg3: typeid,
 ) -> (
-    gd.ExtensionClassMethodPtrCall,
-    gd.ExtensionClassMethodCall,
+    gdext.ExtensionClassMethodPtrCall,
+    gdext.ExtensionClassMethodCall,
 ) {
     Proc :: #type proc "contextless" (self: ^Self, arg0: Arg0, arg1: Arg1, arg2: Arg2, arg3: Arg3)
-    ptrcall :: proc "c" (data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
-        context = gd.godot_context()
+    ptrcall :: proc "c" (data: rawptr, instance: gdext.ExtensionClassInstancePtr, args: [^]gdext.TypePtr, ret: gdext.TypePtr) {
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         method(
@@ -659,11 +659,11 @@ get_void_calls_4_args :: proc "contextless" (
     }
     call :: proc "c" (
         data: rawptr,
-        instance: gd.ExtensionClassInstancePtr,
-        args: [^]gd.VariantPtr,
+        instance: gdext.ExtensionClassInstancePtr,
+        args: [^]gdext.VariantPtr,
         arg_count: i64,
-        ret: gd.VariantPtr,
-        error: ^gd.CallError,
+        ret: gdext.VariantPtr,
+        error: ^gdext.CallError,
     ) {
         if !expect_args(
             args,
@@ -677,7 +677,7 @@ get_void_calls_4_args :: proc "contextless" (
             return
         }
 
-        context = gd.godot_context()
+        context = gdext.godot_context()
 
         arg0 := godot.variant_to(cast(^godot.Variant)args[0], Arg0)
         arg1 := godot.variant_to(cast(^godot.Variant)args[1], Arg1)
@@ -697,12 +697,12 @@ get_returning_calls_4_args :: proc "contextless" (
     $Arg3: typeid,
     $Ret: typeid,
 ) -> (
-    gd.ExtensionClassMethodPtrCall,
-    gd.ExtensionClassMethodCall,
+    gdext.ExtensionClassMethodPtrCall,
+    gdext.ExtensionClassMethodCall,
 ) {
     Proc :: #type proc "contextless" (self: ^Self, arg0: Arg0, arg1: Arg1, arg2: Arg2, arg3: Arg3) -> Ret
-    ptrcall :: proc "c" (data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
-        context = gd.godot_context()
+    ptrcall :: proc "c" (data: rawptr, instance: gdext.ExtensionClassInstancePtr, args: [^]gdext.TypePtr, ret: gdext.TypePtr) {
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         (cast(^Ret)ret)^ = method(
@@ -715,11 +715,11 @@ get_returning_calls_4_args :: proc "contextless" (
     }
     call :: proc "c" (
         data: rawptr,
-        instance: gd.ExtensionClassInstancePtr,
-        args: [^]gd.VariantPtr,
+        instance: gdext.ExtensionClassInstancePtr,
+        args: [^]gdext.VariantPtr,
         arg_count: i64,
-        ret: gd.VariantPtr,
-        error: ^gd.CallError,
+        ret: gdext.VariantPtr,
+        error: ^gdext.CallError,
     ) {
         if !expect_args(
             args,
@@ -733,7 +733,7 @@ get_returning_calls_4_args :: proc "contextless" (
             return
         }
 
-        context = gd.godot_context()
+        context = gdext.godot_context()
 
         arg0 := godot.variant_to(cast(^godot.Variant)args[0], Arg0)
         arg1 := godot.variant_to(cast(^godot.Variant)args[1], Arg1)
@@ -756,16 +756,16 @@ bind_void_method_4_args :: proc "contextless" (
     arg2_name: ^godot.String_Name,
     arg3_name: ^godot.String_Name,
 ) {
-    args_info := [4]gd.PropertyInfo {
+    args_info := [4]gdext.PropertyInfo {
         simple_property_info(godot.variant_type(Arg0), arg0_name),
         simple_property_info(godot.variant_type(Arg1), arg1_name),
         simple_property_info(godot.variant_type(Arg2), arg2_name),
         simple_property_info(godot.variant_type(Arg3), arg3_name),
     }
-    args_metadata := [4]gd.ExtensionClassMethodArgumentMetadata{.None, .None, .None, .None}
+    args_metadata := [4]gdext.ExtensionClassMethodArgumentMetadata{.None, .None, .None, .None}
 
     ptrcall, call := get_void_calls(Self, Arg0, Arg1, Arg2, Arg3)
-    method_info := gd.ExtensionClassMethodInfo {
+    method_info := gdext.ExtensionClassMethodInfo {
         name                   = method_name,
         method_user_data       = cast(rawptr)function,
         call_func              = call,
@@ -779,7 +779,7 @@ bind_void_method_4_args :: proc "contextless" (
         default_argument_count = 0,
     }
 
-    gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+    gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 }
 
 bind_returning_method_4_args :: proc "contextless" (
@@ -791,18 +791,18 @@ bind_returning_method_4_args :: proc "contextless" (
     arg2_name: ^godot.String_Name,
     arg3_name: ^godot.String_Name,
 ) {
-    args_info := [4]gd.PropertyInfo {
+    args_info := [4]gdext.PropertyInfo {
         simple_property_info(godot.variant_type(Arg0), arg0_name),
         simple_property_info(godot.variant_type(Arg1), arg1_name),
         simple_property_info(godot.variant_type(Arg2), arg2_name),
         simple_property_info(godot.variant_type(Arg3), arg3_name),
     }
-    args_metadata := [4]gd.ExtensionClassMethodArgumentMetadata{.None, .None, .None, .None}
+    args_metadata := [4]gdext.ExtensionClassMethodArgumentMetadata{.None, .None, .None, .None}
 
     return_info := simple_property_info(godot.variant_type(Ret), godot.string_name_empty_ref())
 
     ptrcall, call := get_returning_calls(Self, Arg0, Arg1, Arg2, Arg3, Ret)
-    method_info := gd.ExtensionClassMethodInfo {
+    method_info := gdext.ExtensionClassMethodInfo {
         name                   = method_name,
         method_user_data       = cast(rawptr)function,
         call_func              = call,
@@ -817,7 +817,7 @@ bind_returning_method_4_args :: proc "contextless" (
         default_argument_count = 0,
     }
 
-    gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+    gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 }
 
 get_void_calls_5_args :: proc "contextless" (
@@ -828,12 +828,12 @@ get_void_calls_5_args :: proc "contextless" (
     $Arg3: typeid,
     $Arg4: typeid,
 ) -> (
-    gd.ExtensionClassMethodPtrCall,
-    gd.ExtensionClassMethodCall,
+    gdext.ExtensionClassMethodPtrCall,
+    gdext.ExtensionClassMethodCall,
 ) {
     Proc :: #type proc "contextless" (self: ^Self, arg0: Arg0, arg1: Arg1, arg2: Arg2, arg3: Arg3, arg4: Arg4)
-    ptrcall :: proc "c" (data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
-        context = gd.godot_context()
+    ptrcall :: proc "c" (data: rawptr, instance: gdext.ExtensionClassInstancePtr, args: [^]gdext.TypePtr, ret: gdext.TypePtr) {
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         method(
@@ -847,11 +847,11 @@ get_void_calls_5_args :: proc "contextless" (
     }
     call :: proc "c" (
         data: rawptr,
-        instance: gd.ExtensionClassInstancePtr,
-        args: [^]gd.VariantPtr,
+        instance: gdext.ExtensionClassInstancePtr,
+        args: [^]gdext.VariantPtr,
         arg_count: i64,
-        ret: gd.VariantPtr,
-        error: ^gd.CallError,
+        ret: gdext.VariantPtr,
+        error: ^gdext.CallError,
     ) {
         if !expect_args(
             args,
@@ -866,7 +866,7 @@ get_void_calls_5_args :: proc "contextless" (
             return
         }
 
-        context = gd.godot_context()
+        context = gdext.godot_context()
 
         arg0 := godot.variant_to(cast(^godot.Variant)args[0], Arg0)
         arg1 := godot.variant_to(cast(^godot.Variant)args[1], Arg1)
@@ -888,12 +888,12 @@ get_returning_calls_5_args :: proc "contextless" (
     $Arg4: typeid,
     $Ret: typeid,
 ) -> (
-    gd.ExtensionClassMethodPtrCall,
-    gd.ExtensionClassMethodCall,
+    gdext.ExtensionClassMethodPtrCall,
+    gdext.ExtensionClassMethodCall,
 ) {
     Proc :: #type proc "contextless" (self: ^Self, arg0: Arg0, arg1: Arg1, arg2: Arg2, arg3: Arg3, arg4: Arg4) -> Ret
-    ptrcall :: proc "c" (data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
-        context = gd.godot_context()
+    ptrcall :: proc "c" (data: rawptr, instance: gdext.ExtensionClassInstancePtr, args: [^]gdext.TypePtr, ret: gdext.TypePtr) {
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         (cast(^Ret)ret)^ = method(
@@ -907,11 +907,11 @@ get_returning_calls_5_args :: proc "contextless" (
     }
     call :: proc "c" (
         data: rawptr,
-        instance: gd.ExtensionClassInstancePtr,
-        args: [^]gd.VariantPtr,
+        instance: gdext.ExtensionClassInstancePtr,
+        args: [^]gdext.VariantPtr,
         arg_count: i64,
-        ret: gd.VariantPtr,
-        error: ^gd.CallError,
+        ret: gdext.VariantPtr,
+        error: ^gdext.CallError,
     ) {
         if !expect_args(
             args,
@@ -926,7 +926,7 @@ get_returning_calls_5_args :: proc "contextless" (
             return
         }
 
-        context = gd.godot_context()
+        context = gdext.godot_context()
 
         arg0 := godot.variant_to(cast(^godot.Variant)args[0], Arg0)
         arg1 := godot.variant_to(cast(^godot.Variant)args[1], Arg1)
@@ -951,17 +951,17 @@ bind_void_method_5_args :: proc "contextless" (
     arg3_name: ^godot.String_Name,
     arg4_name: ^godot.String_Name,
 ) {
-    args_info := [5]gd.PropertyInfo {
+    args_info := [5]gdext.PropertyInfo {
         simple_property_info(godot.variant_type(Arg0), arg0_name),
         simple_property_info(godot.variant_type(Arg1), arg1_name),
         simple_property_info(godot.variant_type(Arg2), arg2_name),
         simple_property_info(godot.variant_type(Arg3), arg3_name),
         simple_property_info(godot.variant_type(Arg4), arg4_name),
     }
-    args_metadata := [5]gd.ExtensionClassMethodArgumentMetadata{.None, .None, .None, .None, .None}
+    args_metadata := [5]gdext.ExtensionClassMethodArgumentMetadata{.None, .None, .None, .None, .None}
 
     ptrcall, call := get_void_calls(Self, Arg0, Arg1, Arg2, Arg3, Arg4)
-    method_info := gd.ExtensionClassMethodInfo {
+    method_info := gdext.ExtensionClassMethodInfo {
         name                   = method_name,
         method_user_data       = cast(rawptr)function,
         call_func              = call,
@@ -975,7 +975,7 @@ bind_void_method_5_args :: proc "contextless" (
         default_argument_count = 0,
     }
 
-    gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+    gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 }
 
 bind_returning_method_5_args :: proc "contextless" (
@@ -995,19 +995,19 @@ bind_returning_method_5_args :: proc "contextless" (
     arg3_name: ^godot.String_Name,
     arg4_name: ^godot.String_Name,
 ) {
-    args_info := [5]gd.PropertyInfo {
+    args_info := [5]gdext.PropertyInfo {
         simple_property_info(godot.variant_type(Arg0), arg0_name),
         simple_property_info(godot.variant_type(Arg1), arg1_name),
         simple_property_info(godot.variant_type(Arg2), arg2_name),
         simple_property_info(godot.variant_type(Arg3), arg3_name),
         simple_property_info(godot.variant_type(Arg4), arg4_name),
     }
-    args_metadata := [5]gd.ExtensionClassMethodArgumentMetadata{.None, .None, .None, .None, .None}
+    args_metadata := [5]gdext.ExtensionClassMethodArgumentMetadata{.None, .None, .None, .None, .None}
 
     return_info := simple_property_info(godot.variant_type(Ret), godot.string_name_empty_ref())
 
     ptrcall, call := get_returning_calls(Self, Arg0, Arg1, Arg2, Arg3, Arg4, Ret)
-    method_info := gd.ExtensionClassMethodInfo {
+    method_info := gdext.ExtensionClassMethodInfo {
         name                   = method_name,
         method_user_data       = cast(rawptr)function,
         call_func              = call,
@@ -1022,7 +1022,7 @@ bind_returning_method_5_args :: proc "contextless" (
         default_argument_count = 0,
     }
 
-    gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+    gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 }
 
 get_void_calls_6_args :: proc "contextless" (
@@ -1034,8 +1034,8 @@ get_void_calls_6_args :: proc "contextless" (
     $Arg4: typeid,
     $Arg5: typeid,
 ) -> (
-    gd.ExtensionClassMethodPtrCall,
-    gd.ExtensionClassMethodCall,
+    gdext.ExtensionClassMethodPtrCall,
+    gdext.ExtensionClassMethodCall,
 ) {
     Proc :: #type proc "contextless" (
         self: ^Self,
@@ -1046,8 +1046,8 @@ get_void_calls_6_args :: proc "contextless" (
         arg4: Arg4,
         arg5: Arg5,
     )
-    ptrcall :: proc "c" (data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
-        context = gd.godot_context()
+    ptrcall :: proc "c" (data: rawptr, instance: gdext.ExtensionClassInstancePtr, args: [^]gdext.TypePtr, ret: gdext.TypePtr) {
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         method(
@@ -1062,11 +1062,11 @@ get_void_calls_6_args :: proc "contextless" (
     }
     call :: proc "c" (
         data: rawptr,
-        instance: gd.ExtensionClassInstancePtr,
-        args: [^]gd.VariantPtr,
+        instance: gdext.ExtensionClassInstancePtr,
+        args: [^]gdext.VariantPtr,
         arg_count: i64,
-        ret: gd.VariantPtr,
-        error: ^gd.CallError,
+        ret: gdext.VariantPtr,
+        error: ^gdext.CallError,
     ) {
         if !expect_args(
             args,
@@ -1082,7 +1082,7 @@ get_void_calls_6_args :: proc "contextless" (
             return
         }
 
-        context = gd.godot_context()
+        context = gdext.godot_context()
 
         arg0 := godot.variant_to(cast(^godot.Variant)args[0], Arg0)
         arg1 := godot.variant_to(cast(^godot.Variant)args[1], Arg1)
@@ -1106,8 +1106,8 @@ get_returning_calls_6_args :: proc "contextless" (
     $Arg5: typeid,
     $Ret: typeid,
 ) -> (
-    gd.ExtensionClassMethodPtrCall,
-    gd.ExtensionClassMethodCall,
+    gdext.ExtensionClassMethodPtrCall,
+    gdext.ExtensionClassMethodCall,
 ) {
     Proc :: #type proc "contextless" (
         self: ^Self,
@@ -1118,8 +1118,8 @@ get_returning_calls_6_args :: proc "contextless" (
         arg4: Arg4,
         arg5: Arg5,
     ) -> Ret
-    ptrcall :: proc "c" (data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
-        context = gd.godot_context()
+    ptrcall :: proc "c" (data: rawptr, instance: gdext.ExtensionClassInstancePtr, args: [^]gdext.TypePtr, ret: gdext.TypePtr) {
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         (cast(^Ret)ret)^ = method(
@@ -1134,11 +1134,11 @@ get_returning_calls_6_args :: proc "contextless" (
     }
     call :: proc "c" (
         data: rawptr,
-        instance: gd.ExtensionClassInstancePtr,
-        args: [^]gd.VariantPtr,
+        instance: gdext.ExtensionClassInstancePtr,
+        args: [^]gdext.VariantPtr,
         arg_count: i64,
-        ret: gd.VariantPtr,
-        error: ^gd.CallError,
+        ret: gdext.VariantPtr,
+        error: ^gdext.CallError,
     ) {
         if !expect_args(
             args,
@@ -1154,7 +1154,7 @@ get_returning_calls_6_args :: proc "contextless" (
             return
         }
 
-        context = gd.godot_context()
+        context = gdext.godot_context()
 
         arg0 := godot.variant_to(cast(^godot.Variant)args[0], Arg0)
         arg1 := godot.variant_to(cast(^godot.Variant)args[1], Arg1)
@@ -1189,7 +1189,7 @@ bind_void_method_6_args :: proc "contextless" (
     arg4_name: ^godot.String_Name,
     arg5_name: ^godot.String_Name,
 ) {
-    args_info := [6]gd.PropertyInfo {
+    args_info := [6]gdext.PropertyInfo {
         simple_property_info(godot.variant_type(Arg0), arg0_name),
         simple_property_info(godot.variant_type(Arg1), arg1_name),
         simple_property_info(godot.variant_type(Arg2), arg2_name),
@@ -1197,10 +1197,10 @@ bind_void_method_6_args :: proc "contextless" (
         simple_property_info(godot.variant_type(Arg4), arg4_name),
         simple_property_info(godot.variant_type(Arg5), arg5_name),
     }
-    args_metadata := [6]gd.ExtensionClassMethodArgumentMetadata{.None, .None, .None, .None, .None, .None}
+    args_metadata := [6]gdext.ExtensionClassMethodArgumentMetadata{.None, .None, .None, .None, .None, .None}
 
     ptrcall, call := get_void_calls(Self, Arg0, Arg1, Arg2, Arg3, Arg4, Arg5)
-    method_info := gd.ExtensionClassMethodInfo {
+    method_info := gdext.ExtensionClassMethodInfo {
         name                   = method_name,
         method_user_data       = cast(rawptr)function,
         call_func              = call,
@@ -1214,7 +1214,7 @@ bind_void_method_6_args :: proc "contextless" (
         default_argument_count = 0,
     }
 
-    gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+    gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 }
 
 bind_returning_method_6_args :: proc "contextless" (
@@ -1236,7 +1236,7 @@ bind_returning_method_6_args :: proc "contextless" (
     arg4_name: ^godot.String_Name,
     arg5_name: ^godot.String_Name,
 ) {
-    args_info := [6]gd.PropertyInfo {
+    args_info := [6]gdext.PropertyInfo {
         simple_property_info(godot.variant_type(Arg0), arg0_name),
         simple_property_info(godot.variant_type(Arg1), arg1_name),
         simple_property_info(godot.variant_type(Arg2), arg2_name),
@@ -1244,12 +1244,12 @@ bind_returning_method_6_args :: proc "contextless" (
         simple_property_info(godot.variant_type(Arg4), arg4_name),
         simple_property_info(godot.variant_type(Arg5), arg5_name),
     }
-    args_metadata := [6]gd.ExtensionClassMethodArgumentMetadata{.None, .None, .None, .None, .None, .None}
+    args_metadata := [6]gdext.ExtensionClassMethodArgumentMetadata{.None, .None, .None, .None, .None, .None}
 
     return_info := simple_property_info(godot.variant_type(Ret), godot.string_name_empty_ref())
 
     ptrcall, call := get_returning_calls(Self, Arg0, Arg1, Arg2, Arg3, Arg4, Arg5, Ret)
-    method_info := gd.ExtensionClassMethodInfo {
+    method_info := gdext.ExtensionClassMethodInfo {
         name                   = method_name,
         method_user_data       = cast(rawptr)function,
         call_func              = call,
@@ -1264,7 +1264,7 @@ bind_returning_method_6_args :: proc "contextless" (
         default_argument_count = 0,
     }
 
-    gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+    gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 }
 
 get_void_calls_7_args :: proc "contextless" (
@@ -1277,8 +1277,8 @@ get_void_calls_7_args :: proc "contextless" (
     $Arg5: typeid,
     $Arg6: typeid,
 ) -> (
-    gd.ExtensionClassMethodPtrCall,
-    gd.ExtensionClassMethodCall,
+    gdext.ExtensionClassMethodPtrCall,
+    gdext.ExtensionClassMethodCall,
 ) {
     Proc :: #type proc "contextless" (
         self: ^Self,
@@ -1290,8 +1290,8 @@ get_void_calls_7_args :: proc "contextless" (
         arg5: Arg5,
         arg6: Arg6,
     )
-    ptrcall :: proc "c" (data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
-        context = gd.godot_context()
+    ptrcall :: proc "c" (data: rawptr, instance: gdext.ExtensionClassInstancePtr, args: [^]gdext.TypePtr, ret: gdext.TypePtr) {
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         method(
@@ -1307,11 +1307,11 @@ get_void_calls_7_args :: proc "contextless" (
     }
     call :: proc "c" (
         data: rawptr,
-        instance: gd.ExtensionClassInstancePtr,
-        args: [^]gd.VariantPtr,
+        instance: gdext.ExtensionClassInstancePtr,
+        args: [^]gdext.VariantPtr,
         arg_count: i64,
-        ret: gd.VariantPtr,
-        error: ^gd.CallError,
+        ret: gdext.VariantPtr,
+        error: ^gdext.CallError,
     ) {
         if !expect_args(
             args,
@@ -1328,7 +1328,7 @@ get_void_calls_7_args :: proc "contextless" (
             return
         }
 
-        context = gd.godot_context()
+        context = gdext.godot_context()
 
         arg0 := godot.variant_to(cast(^godot.Variant)args[0], Arg0)
         arg1 := godot.variant_to(cast(^godot.Variant)args[1], Arg1)
@@ -1354,8 +1354,8 @@ get_returning_calls_7_args :: proc "contextless" (
     $Arg6: typeid,
     $Ret: typeid,
 ) -> (
-    gd.ExtensionClassMethodPtrCall,
-    gd.ExtensionClassMethodCall,
+    gdext.ExtensionClassMethodPtrCall,
+    gdext.ExtensionClassMethodCall,
 ) {
     Proc :: #type proc "contextless" (
         self: ^Self,
@@ -1367,8 +1367,8 @@ get_returning_calls_7_args :: proc "contextless" (
         arg5: Arg5,
         arg6: Arg6,
     ) -> Ret
-    ptrcall :: proc "c" (data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
-        context = gd.godot_context()
+    ptrcall :: proc "c" (data: rawptr, instance: gdext.ExtensionClassInstancePtr, args: [^]gdext.TypePtr, ret: gdext.TypePtr) {
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         (cast(^Ret)ret)^ = method(
@@ -1384,11 +1384,11 @@ get_returning_calls_7_args :: proc "contextless" (
     }
     call :: proc "c" (
         data: rawptr,
-        instance: gd.ExtensionClassInstancePtr,
-        args: [^]gd.VariantPtr,
+        instance: gdext.ExtensionClassInstancePtr,
+        args: [^]gdext.VariantPtr,
         arg_count: i64,
-        ret: gd.VariantPtr,
-        error: ^gd.CallError,
+        ret: gdext.VariantPtr,
+        error: ^gdext.CallError,
     ) {
         if !expect_args(
             args,
@@ -1405,7 +1405,7 @@ get_returning_calls_7_args :: proc "contextless" (
             return
         }
 
-        context = gd.godot_context()
+        context = gdext.godot_context()
 
         arg0 := godot.variant_to(cast(^godot.Variant)args[0], Arg0)
         arg1 := godot.variant_to(cast(^godot.Variant)args[1], Arg1)
@@ -1443,7 +1443,7 @@ bind_void_method_7_args :: proc "contextless" (
     arg5_name: ^godot.String_Name,
     arg6_name: ^godot.String_Name,
 ) {
-    args_info := [7]gd.PropertyInfo {
+    args_info := [7]gdext.PropertyInfo {
         simple_property_info(godot.variant_type(Arg0), arg0_name),
         simple_property_info(godot.variant_type(Arg1), arg1_name),
         simple_property_info(godot.variant_type(Arg2), arg2_name),
@@ -1452,10 +1452,10 @@ bind_void_method_7_args :: proc "contextless" (
         simple_property_info(godot.variant_type(Arg5), arg5_name),
         simple_property_info(godot.variant_type(Arg6), arg6_name),
     }
-    args_metadata := [7]gd.ExtensionClassMethodArgumentMetadata{.None, .None, .None, .None, .None, .None, .None}
+    args_metadata := [7]gdext.ExtensionClassMethodArgumentMetadata{.None, .None, .None, .None, .None, .None, .None}
 
     ptrcall, call := get_void_calls(Self, Arg0, Arg1, Arg2, Arg3, Arg4, Arg5, Arg6)
-    method_info := gd.ExtensionClassMethodInfo {
+    method_info := gdext.ExtensionClassMethodInfo {
         name                   = method_name,
         method_user_data       = cast(rawptr)function,
         call_func              = call,
@@ -1469,7 +1469,7 @@ bind_void_method_7_args :: proc "contextless" (
         default_argument_count = 0,
     }
 
-    gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+    gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 }
 
 bind_returning_method_7_args :: proc "contextless" (
@@ -1493,7 +1493,7 @@ bind_returning_method_7_args :: proc "contextless" (
     arg5_name: ^godot.String_Name,
     arg6_name: ^godot.String_Name,
 ) {
-    args_info := [7]gd.PropertyInfo {
+    args_info := [7]gdext.PropertyInfo {
         simple_property_info(godot.variant_type(Arg0), arg0_name),
         simple_property_info(godot.variant_type(Arg1), arg1_name),
         simple_property_info(godot.variant_type(Arg2), arg2_name),
@@ -1502,12 +1502,12 @@ bind_returning_method_7_args :: proc "contextless" (
         simple_property_info(godot.variant_type(Arg5), arg5_name),
         simple_property_info(godot.variant_type(Arg6), arg6_name),
     }
-    args_metadata := [7]gd.ExtensionClassMethodArgumentMetadata{.None, .None, .None, .None, .None, .None, .None}
+    args_metadata := [7]gdext.ExtensionClassMethodArgumentMetadata{.None, .None, .None, .None, .None, .None, .None}
 
     return_info := simple_property_info(godot.variant_type(Ret), godot.string_name_empty_ref())
 
     ptrcall, call := get_returning_calls(Self, Arg0, Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Ret)
-    method_info := gd.ExtensionClassMethodInfo {
+    method_info := gdext.ExtensionClassMethodInfo {
         name                   = method_name,
         method_user_data       = cast(rawptr)function,
         call_func              = call,
@@ -1522,7 +1522,7 @@ bind_returning_method_7_args :: proc "contextless" (
         default_argument_count = 0,
     }
 
-    gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+    gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 }
 
 get_void_calls_8_args :: proc "contextless" (
@@ -1536,8 +1536,8 @@ get_void_calls_8_args :: proc "contextless" (
     $Arg6: typeid,
     $Arg7: typeid,
 ) -> (
-    gd.ExtensionClassMethodPtrCall,
-    gd.ExtensionClassMethodCall,
+    gdext.ExtensionClassMethodPtrCall,
+    gdext.ExtensionClassMethodCall,
 ) {
     Proc :: #type proc "contextless" (
         self: ^Self,
@@ -1550,8 +1550,8 @@ get_void_calls_8_args :: proc "contextless" (
         arg6: Arg6,
         arg7: Arg7,
     )
-    ptrcall :: proc "c" (data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
-        context = gd.godot_context()
+    ptrcall :: proc "c" (data: rawptr, instance: gdext.ExtensionClassInstancePtr, args: [^]gdext.TypePtr, ret: gdext.TypePtr) {
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         method(
@@ -1568,11 +1568,11 @@ get_void_calls_8_args :: proc "contextless" (
     }
     call :: proc "c" (
         data: rawptr,
-        instance: gd.ExtensionClassInstancePtr,
-        args: [^]gd.VariantPtr,
+        instance: gdext.ExtensionClassInstancePtr,
+        args: [^]gdext.VariantPtr,
         arg_count: i64,
-        ret: gd.VariantPtr,
-        error: ^gd.CallError,
+        ret: gdext.VariantPtr,
+        error: ^gdext.CallError,
     ) {
         if !expect_args(
             args,
@@ -1590,7 +1590,7 @@ get_void_calls_8_args :: proc "contextless" (
             return
         }
 
-        context = gd.godot_context()
+        context = gdext.godot_context()
 
         arg0 := godot.variant_to(cast(^godot.Variant)args[0], Arg0)
         arg1 := godot.variant_to(cast(^godot.Variant)args[1], Arg1)
@@ -1618,8 +1618,8 @@ get_returning_calls_8_args :: proc "contextless" (
     $Arg7: typeid,
     $Ret: typeid,
 ) -> (
-    gd.ExtensionClassMethodPtrCall,
-    gd.ExtensionClassMethodCall,
+    gdext.ExtensionClassMethodPtrCall,
+    gdext.ExtensionClassMethodCall,
 ) {
     Proc :: #type proc "contextless" (
         self: ^Self,
@@ -1632,8 +1632,8 @@ get_returning_calls_8_args :: proc "contextless" (
         arg6: Arg6,
         arg7: Arg7,
     ) -> Ret
-    ptrcall :: proc "c" (data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
-        context = gd.godot_context()
+    ptrcall :: proc "c" (data: rawptr, instance: gdext.ExtensionClassInstancePtr, args: [^]gdext.TypePtr, ret: gdext.TypePtr) {
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         (cast(^Ret)ret)^ = method(
@@ -1650,11 +1650,11 @@ get_returning_calls_8_args :: proc "contextless" (
     }
     call :: proc "c" (
         data: rawptr,
-        instance: gd.ExtensionClassInstancePtr,
-        args: [^]gd.VariantPtr,
+        instance: gdext.ExtensionClassInstancePtr,
+        args: [^]gdext.VariantPtr,
         arg_count: i64,
-        ret: gd.VariantPtr,
-        error: ^gd.CallError,
+        ret: gdext.VariantPtr,
+        error: ^gdext.CallError,
     ) {
         if !expect_args(
             args,
@@ -1672,7 +1672,7 @@ get_returning_calls_8_args :: proc "contextless" (
             return
         }
 
-        context = gd.godot_context()
+        context = gdext.godot_context()
 
         arg0 := godot.variant_to(cast(^godot.Variant)args[0], Arg0)
         arg1 := godot.variant_to(cast(^godot.Variant)args[1], Arg1)
@@ -1713,7 +1713,7 @@ bind_void_method_8_args :: proc "contextless" (
     arg6_name: ^godot.String_Name,
     arg7_name: ^godot.String_Name,
 ) {
-    args_info := [8]gd.PropertyInfo {
+    args_info := [8]gdext.PropertyInfo {
         simple_property_info(godot.variant_type(Arg0), arg0_name),
         simple_property_info(godot.variant_type(Arg1), arg1_name),
         simple_property_info(godot.variant_type(Arg2), arg2_name),
@@ -1723,10 +1723,10 @@ bind_void_method_8_args :: proc "contextless" (
         simple_property_info(godot.variant_type(Arg6), arg6_name),
         simple_property_info(godot.variant_type(Arg7), arg7_name),
     }
-    args_metadata := [8]gd.ExtensionClassMethodArgumentMetadata{.None, .None, .None, .None, .None, .None, .None, .None}
+    args_metadata := [8]gdext.ExtensionClassMethodArgumentMetadata{.None, .None, .None, .None, .None, .None, .None, .None}
 
     ptrcall, call := get_void_calls(Self, Arg0, Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7)
-    method_info := gd.ExtensionClassMethodInfo {
+    method_info := gdext.ExtensionClassMethodInfo {
         name                   = method_name,
         method_user_data       = cast(rawptr)function,
         call_func              = call,
@@ -1740,7 +1740,7 @@ bind_void_method_8_args :: proc "contextless" (
         default_argument_count = 0,
     }
 
-    gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+    gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 }
 
 bind_returning_method_8_args :: proc "contextless" (
@@ -1766,7 +1766,7 @@ bind_returning_method_8_args :: proc "contextless" (
     arg6_name: ^godot.String_Name,
     arg7_name: ^godot.String_Name,
 ) {
-    args_info := [8]gd.PropertyInfo {
+    args_info := [8]gdext.PropertyInfo {
         simple_property_info(godot.variant_type(Arg0), arg0_name),
         simple_property_info(godot.variant_type(Arg1), arg1_name),
         simple_property_info(godot.variant_type(Arg2), arg2_name),
@@ -1776,12 +1776,12 @@ bind_returning_method_8_args :: proc "contextless" (
         simple_property_info(godot.variant_type(Arg6), arg6_name),
         simple_property_info(godot.variant_type(Arg7), arg7_name),
     }
-    args_metadata := [8]gd.ExtensionClassMethodArgumentMetadata{.None, .None, .None, .None, .None, .None, .None, .None}
+    args_metadata := [8]gdext.ExtensionClassMethodArgumentMetadata{.None, .None, .None, .None, .None, .None, .None, .None}
 
     return_info := simple_property_info(godot.variant_type(Ret), godot.string_name_empty_ref())
 
     ptrcall, call := get_returning_calls(Self, Arg0, Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Ret)
-    method_info := gd.ExtensionClassMethodInfo {
+    method_info := gdext.ExtensionClassMethodInfo {
         name                   = method_name,
         method_user_data       = cast(rawptr)function,
         call_func              = call,
@@ -1796,7 +1796,7 @@ bind_returning_method_8_args :: proc "contextless" (
         default_argument_count = 0,
     }
 
-    gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+    gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 }
 
 get_void_calls_9_args :: proc "contextless" (
@@ -1811,8 +1811,8 @@ get_void_calls_9_args :: proc "contextless" (
     $Arg7: typeid,
     $Arg8: typeid,
 ) -> (
-    gd.ExtensionClassMethodPtrCall,
-    gd.ExtensionClassMethodCall,
+    gdext.ExtensionClassMethodPtrCall,
+    gdext.ExtensionClassMethodCall,
 ) {
     Proc :: #type proc "contextless" (
         self: ^Self,
@@ -1826,8 +1826,8 @@ get_void_calls_9_args :: proc "contextless" (
         arg7: Arg7,
         arg8: Arg8,
     )
-    ptrcall :: proc "c" (data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
-        context = gd.godot_context()
+    ptrcall :: proc "c" (data: rawptr, instance: gdext.ExtensionClassInstancePtr, args: [^]gdext.TypePtr, ret: gdext.TypePtr) {
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         method(
@@ -1845,11 +1845,11 @@ get_void_calls_9_args :: proc "contextless" (
     }
     call :: proc "c" (
         data: rawptr,
-        instance: gd.ExtensionClassInstancePtr,
-        args: [^]gd.VariantPtr,
+        instance: gdext.ExtensionClassInstancePtr,
+        args: [^]gdext.VariantPtr,
         arg_count: i64,
-        ret: gd.VariantPtr,
-        error: ^gd.CallError,
+        ret: gdext.VariantPtr,
+        error: ^gdext.CallError,
     ) {
         if !expect_args(
             args,
@@ -1868,7 +1868,7 @@ get_void_calls_9_args :: proc "contextless" (
             return
         }
 
-        context = gd.godot_context()
+        context = gdext.godot_context()
 
         arg0 := godot.variant_to(cast(^godot.Variant)args[0], Arg0)
         arg1 := godot.variant_to(cast(^godot.Variant)args[1], Arg1)
@@ -1898,8 +1898,8 @@ get_returning_calls_9_args :: proc "contextless" (
     $Arg8: typeid,
     $Ret: typeid,
 ) -> (
-    gd.ExtensionClassMethodPtrCall,
-    gd.ExtensionClassMethodCall,
+    gdext.ExtensionClassMethodPtrCall,
+    gdext.ExtensionClassMethodCall,
 ) {
     Proc :: #type proc "contextless" (
         self: ^Self,
@@ -1913,8 +1913,8 @@ get_returning_calls_9_args :: proc "contextless" (
         arg7: Arg7,
         arg8: Arg8,
     ) -> Ret
-    ptrcall :: proc "c" (data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
-        context = gd.godot_context()
+    ptrcall :: proc "c" (data: rawptr, instance: gdext.ExtensionClassInstancePtr, args: [^]gdext.TypePtr, ret: gdext.TypePtr) {
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         (cast(^Ret)ret)^ = method(
@@ -1932,11 +1932,11 @@ get_returning_calls_9_args :: proc "contextless" (
     }
     call :: proc "c" (
         data: rawptr,
-        instance: gd.ExtensionClassInstancePtr,
-        args: [^]gd.VariantPtr,
+        instance: gdext.ExtensionClassInstancePtr,
+        args: [^]gdext.VariantPtr,
         arg_count: i64,
-        ret: gd.VariantPtr,
-        error: ^gd.CallError,
+        ret: gdext.VariantPtr,
+        error: ^gdext.CallError,
     ) {
         if !expect_args(
             args,
@@ -1955,7 +1955,7 @@ get_returning_calls_9_args :: proc "contextless" (
             return
         }
 
-        context = gd.godot_context()
+        context = gdext.godot_context()
 
         arg0 := godot.variant_to(cast(^godot.Variant)args[0], Arg0)
         arg1 := godot.variant_to(cast(^godot.Variant)args[1], Arg1)
@@ -1999,7 +1999,7 @@ bind_void_method_9_args :: proc "contextless" (
     arg7_name: ^godot.String_Name,
     arg8_name: ^godot.String_Name,
 ) {
-    args_info := [9]gd.PropertyInfo {
+    args_info := [9]gdext.PropertyInfo {
         simple_property_info(godot.variant_type(Arg0), arg0_name),
         simple_property_info(godot.variant_type(Arg1), arg1_name),
         simple_property_info(godot.variant_type(Arg2), arg2_name),
@@ -2010,7 +2010,7 @@ bind_void_method_9_args :: proc "contextless" (
         simple_property_info(godot.variant_type(Arg7), arg7_name),
         simple_property_info(godot.variant_type(Arg8), arg8_name),
     }
-    args_metadata := [9]gd.ExtensionClassMethodArgumentMetadata {
+    args_metadata := [9]gdext.ExtensionClassMethodArgumentMetadata {
         .None,
         .None,
         .None,
@@ -2023,7 +2023,7 @@ bind_void_method_9_args :: proc "contextless" (
     }
 
     ptrcall, call := get_void_calls(Self, Arg0, Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8)
-    method_info := gd.ExtensionClassMethodInfo {
+    method_info := gdext.ExtensionClassMethodInfo {
         name                   = method_name,
         method_user_data       = cast(rawptr)function,
         call_func              = call,
@@ -2037,7 +2037,7 @@ bind_void_method_9_args :: proc "contextless" (
         default_argument_count = 0,
     }
 
-    gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+    gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 }
 
 bind_returning_method_9_args :: proc "contextless" (
@@ -2065,7 +2065,7 @@ bind_returning_method_9_args :: proc "contextless" (
     arg7_name: ^godot.String_Name,
     arg8_name: ^godot.String_Name,
 ) {
-    args_info := [9]gd.PropertyInfo {
+    args_info := [9]gdext.PropertyInfo {
         simple_property_info(godot.variant_type(Arg0), arg0_name),
         simple_property_info(godot.variant_type(Arg1), arg1_name),
         simple_property_info(godot.variant_type(Arg2), arg2_name),
@@ -2076,7 +2076,7 @@ bind_returning_method_9_args :: proc "contextless" (
         simple_property_info(godot.variant_type(Arg7), arg7_name),
         simple_property_info(godot.variant_type(Arg8), arg8_name),
     }
-    args_metadata := [9]gd.ExtensionClassMethodArgumentMetadata {
+    args_metadata := [9]gdext.ExtensionClassMethodArgumentMetadata {
         .None,
         .None,
         .None,
@@ -2091,7 +2091,7 @@ bind_returning_method_9_args :: proc "contextless" (
     return_info := simple_property_info(godot.variant_type(Ret), godot.string_name_empty_ref())
 
     ptrcall, call := get_returning_calls(Self, Arg0, Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Ret)
-    method_info := gd.ExtensionClassMethodInfo {
+    method_info := gdext.ExtensionClassMethodInfo {
         name                   = method_name,
         method_user_data       = cast(rawptr)function,
         call_func              = call,
@@ -2106,7 +2106,7 @@ bind_returning_method_9_args :: proc "contextless" (
         default_argument_count = 0,
     }
 
-    gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+    gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 }
 
 get_void_calls_10_args :: proc "contextless" (
@@ -2122,8 +2122,8 @@ get_void_calls_10_args :: proc "contextless" (
     $Arg8: typeid,
     $Arg9: typeid,
 ) -> (
-    gd.ExtensionClassMethodPtrCall,
-    gd.ExtensionClassMethodCall,
+    gdext.ExtensionClassMethodPtrCall,
+    gdext.ExtensionClassMethodCall,
 ) {
     Proc :: #type proc "contextless" (
         self: ^Self,
@@ -2138,8 +2138,8 @@ get_void_calls_10_args :: proc "contextless" (
         arg8: Arg8,
         arg9: Arg9,
     )
-    ptrcall :: proc "c" (data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
-        context = gd.godot_context()
+    ptrcall :: proc "c" (data: rawptr, instance: gdext.ExtensionClassInstancePtr, args: [^]gdext.TypePtr, ret: gdext.TypePtr) {
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         method(
@@ -2158,11 +2158,11 @@ get_void_calls_10_args :: proc "contextless" (
     }
     call :: proc "c" (
         data: rawptr,
-        instance: gd.ExtensionClassInstancePtr,
-        args: [^]gd.VariantPtr,
+        instance: gdext.ExtensionClassInstancePtr,
+        args: [^]gdext.VariantPtr,
         arg_count: i64,
-        ret: gd.VariantPtr,
-        error: ^gd.CallError,
+        ret: gdext.VariantPtr,
+        error: ^gdext.CallError,
     ) {
         if !expect_args(
             args,
@@ -2182,7 +2182,7 @@ get_void_calls_10_args :: proc "contextless" (
             return
         }
 
-        context = gd.godot_context()
+        context = gdext.godot_context()
 
         arg0 := godot.variant_to(cast(^godot.Variant)args[0], Arg0)
         arg1 := godot.variant_to(cast(^godot.Variant)args[1], Arg1)
@@ -2214,8 +2214,8 @@ get_returning_calls_10_args :: proc "contextless" (
     $Arg9: typeid,
     $Ret: typeid,
 ) -> (
-    gd.ExtensionClassMethodPtrCall,
-    gd.ExtensionClassMethodCall,
+    gdext.ExtensionClassMethodPtrCall,
+    gdext.ExtensionClassMethodCall,
 ) {
     Proc :: #type proc "contextless" (
         self: ^Self,
@@ -2230,8 +2230,8 @@ get_returning_calls_10_args :: proc "contextless" (
         arg8: Arg8,
         arg9: Arg9,
     ) -> Ret
-    ptrcall :: proc "c" (data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
-        context = gd.godot_context()
+    ptrcall :: proc "c" (data: rawptr, instance: gdext.ExtensionClassInstancePtr, args: [^]gdext.TypePtr, ret: gdext.TypePtr) {
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         (cast(^Ret)ret)^ = method(
@@ -2250,11 +2250,11 @@ get_returning_calls_10_args :: proc "contextless" (
     }
     call :: proc "c" (
         data: rawptr,
-        instance: gd.ExtensionClassInstancePtr,
-        args: [^]gd.VariantPtr,
+        instance: gdext.ExtensionClassInstancePtr,
+        args: [^]gdext.VariantPtr,
         arg_count: i64,
-        ret: gd.VariantPtr,
-        error: ^gd.CallError,
+        ret: gdext.VariantPtr,
+        error: ^gdext.CallError,
     ) {
         if !expect_args(
             args,
@@ -2274,7 +2274,7 @@ get_returning_calls_10_args :: proc "contextless" (
             return
         }
 
-        context = gd.godot_context()
+        context = gdext.godot_context()
 
         arg0 := godot.variant_to(cast(^godot.Variant)args[0], Arg0)
         arg1 := godot.variant_to(cast(^godot.Variant)args[1], Arg1)
@@ -2321,7 +2321,7 @@ bind_void_method_10_args :: proc "contextless" (
     arg8_name: ^godot.String_Name,
     arg9_name: ^godot.String_Name,
 ) {
-    args_info := [10]gd.PropertyInfo {
+    args_info := [10]gdext.PropertyInfo {
         simple_property_info(godot.variant_type(Arg0), arg0_name),
         simple_property_info(godot.variant_type(Arg1), arg1_name),
         simple_property_info(godot.variant_type(Arg2), arg2_name),
@@ -2333,7 +2333,7 @@ bind_void_method_10_args :: proc "contextless" (
         simple_property_info(godot.variant_type(Arg8), arg8_name),
         simple_property_info(godot.variant_type(Arg9), arg9_name),
     }
-    args_metadata := [10]gd.ExtensionClassMethodArgumentMetadata {
+    args_metadata := [10]gdext.ExtensionClassMethodArgumentMetadata {
         .None,
         .None,
         .None,
@@ -2347,7 +2347,7 @@ bind_void_method_10_args :: proc "contextless" (
     }
 
     ptrcall, call := get_void_calls(Self, Arg0, Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9)
-    method_info := gd.ExtensionClassMethodInfo {
+    method_info := gdext.ExtensionClassMethodInfo {
         name                   = method_name,
         method_user_data       = cast(rawptr)function,
         call_func              = call,
@@ -2361,7 +2361,7 @@ bind_void_method_10_args :: proc "contextless" (
         default_argument_count = 0,
     }
 
-    gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+    gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 }
 
 bind_returning_method_10_args :: proc "contextless" (
@@ -2391,7 +2391,7 @@ bind_returning_method_10_args :: proc "contextless" (
     arg8_name: ^godot.String_Name,
     arg9_name: ^godot.String_Name,
 ) {
-    args_info := [10]gd.PropertyInfo {
+    args_info := [10]gdext.PropertyInfo {
         simple_property_info(godot.variant_type(Arg0), arg0_name),
         simple_property_info(godot.variant_type(Arg1), arg1_name),
         simple_property_info(godot.variant_type(Arg2), arg2_name),
@@ -2403,7 +2403,7 @@ bind_returning_method_10_args :: proc "contextless" (
         simple_property_info(godot.variant_type(Arg8), arg8_name),
         simple_property_info(godot.variant_type(Arg9), arg9_name),
     }
-    args_metadata := [10]gd.ExtensionClassMethodArgumentMetadata {
+    args_metadata := [10]gdext.ExtensionClassMethodArgumentMetadata {
         .None,
         .None,
         .None,
@@ -2419,7 +2419,7 @@ bind_returning_method_10_args :: proc "contextless" (
     return_info := simple_property_info(godot.variant_type(Ret), godot.string_name_empty_ref())
 
     ptrcall, call := get_returning_calls(Self, Arg0, Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9, Ret)
-    method_info := gd.ExtensionClassMethodInfo {
+    method_info := gdext.ExtensionClassMethodInfo {
         name                   = method_name,
         method_user_data       = cast(rawptr)function,
         call_func              = call,
@@ -2434,7 +2434,7 @@ bind_returning_method_10_args :: proc "contextless" (
         default_argument_count = 0,
     }
 
-    gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+    gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 }
 
 get_void_calls_11_args :: proc "contextless" (
@@ -2451,8 +2451,8 @@ get_void_calls_11_args :: proc "contextless" (
     $Arg9: typeid,
     $Arg10: typeid,
 ) -> (
-    gd.ExtensionClassMethodPtrCall,
-    gd.ExtensionClassMethodCall,
+    gdext.ExtensionClassMethodPtrCall,
+    gdext.ExtensionClassMethodCall,
 ) {
     Proc :: #type proc "contextless" (
         self: ^Self,
@@ -2468,8 +2468,8 @@ get_void_calls_11_args :: proc "contextless" (
         arg9: Arg9,
         arg10: Arg10,
     )
-    ptrcall :: proc "c" (data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
-        context = gd.godot_context()
+    ptrcall :: proc "c" (data: rawptr, instance: gdext.ExtensionClassInstancePtr, args: [^]gdext.TypePtr, ret: gdext.TypePtr) {
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         method(
@@ -2489,11 +2489,11 @@ get_void_calls_11_args :: proc "contextless" (
     }
     call :: proc "c" (
         data: rawptr,
-        instance: gd.ExtensionClassInstancePtr,
-        args: [^]gd.VariantPtr,
+        instance: gdext.ExtensionClassInstancePtr,
+        args: [^]gdext.VariantPtr,
         arg_count: i64,
-        ret: gd.VariantPtr,
-        error: ^gd.CallError,
+        ret: gdext.VariantPtr,
+        error: ^gdext.CallError,
     ) {
         if !expect_args(
             args,
@@ -2514,7 +2514,7 @@ get_void_calls_11_args :: proc "contextless" (
             return
         }
 
-        context = gd.godot_context()
+        context = gdext.godot_context()
 
         arg0 := godot.variant_to(cast(^godot.Variant)args[0], Arg0)
         arg1 := godot.variant_to(cast(^godot.Variant)args[1], Arg1)
@@ -2548,8 +2548,8 @@ get_returning_calls_11_args :: proc "contextless" (
     $Arg10: typeid,
     $Ret: typeid,
 ) -> (
-    gd.ExtensionClassMethodPtrCall,
-    gd.ExtensionClassMethodCall,
+    gdext.ExtensionClassMethodPtrCall,
+    gdext.ExtensionClassMethodCall,
 ) {
     Proc :: #type proc "contextless" (
         self: ^Self,
@@ -2565,8 +2565,8 @@ get_returning_calls_11_args :: proc "contextless" (
         arg9: Arg9,
         arg10: Arg10,
     ) -> Ret
-    ptrcall :: proc "c" (data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
-        context = gd.godot_context()
+    ptrcall :: proc "c" (data: rawptr, instance: gdext.ExtensionClassInstancePtr, args: [^]gdext.TypePtr, ret: gdext.TypePtr) {
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         (cast(^Ret)ret)^ = method(
@@ -2586,11 +2586,11 @@ get_returning_calls_11_args :: proc "contextless" (
     }
     call :: proc "c" (
         data: rawptr,
-        instance: gd.ExtensionClassInstancePtr,
-        args: [^]gd.VariantPtr,
+        instance: gdext.ExtensionClassInstancePtr,
+        args: [^]gdext.VariantPtr,
         arg_count: i64,
-        ret: gd.VariantPtr,
-        error: ^gd.CallError,
+        ret: gdext.VariantPtr,
+        error: ^gdext.CallError,
     ) {
         if !expect_args(
             args,
@@ -2611,7 +2611,7 @@ get_returning_calls_11_args :: proc "contextless" (
             return
         }
 
-        context = gd.godot_context()
+        context = gdext.godot_context()
 
         arg0 := godot.variant_to(cast(^godot.Variant)args[0], Arg0)
         arg1 := godot.variant_to(cast(^godot.Variant)args[1], Arg1)
@@ -2661,7 +2661,7 @@ bind_void_method_11_args :: proc "contextless" (
     arg9_name: ^godot.String_Name,
     arg10_name: ^godot.String_Name,
 ) {
-    args_info := [11]gd.PropertyInfo {
+    args_info := [11]gdext.PropertyInfo {
         simple_property_info(godot.variant_type(Arg0), arg0_name),
         simple_property_info(godot.variant_type(Arg1), arg1_name),
         simple_property_info(godot.variant_type(Arg2), arg2_name),
@@ -2674,7 +2674,7 @@ bind_void_method_11_args :: proc "contextless" (
         simple_property_info(godot.variant_type(Arg9), arg9_name),
         simple_property_info(godot.variant_type(Arg10), arg10_name),
     }
-    args_metadata := [11]gd.ExtensionClassMethodArgumentMetadata {
+    args_metadata := [11]gdext.ExtensionClassMethodArgumentMetadata {
         .None,
         .None,
         .None,
@@ -2689,7 +2689,7 @@ bind_void_method_11_args :: proc "contextless" (
     }
 
     ptrcall, call := get_void_calls(Self, Arg0, Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9, Arg10)
-    method_info := gd.ExtensionClassMethodInfo {
+    method_info := gdext.ExtensionClassMethodInfo {
         name                   = method_name,
         method_user_data       = cast(rawptr)function,
         call_func              = call,
@@ -2703,7 +2703,7 @@ bind_void_method_11_args :: proc "contextless" (
         default_argument_count = 0,
     }
 
-    gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+    gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 }
 
 bind_returning_method_11_args :: proc "contextless" (
@@ -2735,7 +2735,7 @@ bind_returning_method_11_args :: proc "contextless" (
     arg9_name: ^godot.String_Name,
     arg10_name: ^godot.String_Name,
 ) {
-    args_info := [11]gd.PropertyInfo {
+    args_info := [11]gdext.PropertyInfo {
         simple_property_info(godot.variant_type(Arg0), arg0_name),
         simple_property_info(godot.variant_type(Arg1), arg1_name),
         simple_property_info(godot.variant_type(Arg2), arg2_name),
@@ -2748,7 +2748,7 @@ bind_returning_method_11_args :: proc "contextless" (
         simple_property_info(godot.variant_type(Arg9), arg9_name),
         simple_property_info(godot.variant_type(Arg10), arg10_name),
     }
-    args_metadata := [11]gd.ExtensionClassMethodArgumentMetadata {
+    args_metadata := [11]gdext.ExtensionClassMethodArgumentMetadata {
         .None,
         .None,
         .None,
@@ -2765,7 +2765,7 @@ bind_returning_method_11_args :: proc "contextless" (
     return_info := simple_property_info(godot.variant_type(Ret), godot.string_name_empty_ref())
 
     ptrcall, call := get_returning_calls(Self, Arg0, Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9, Arg10, Ret)
-    method_info := gd.ExtensionClassMethodInfo {
+    method_info := gdext.ExtensionClassMethodInfo {
         name                   = method_name,
         method_user_data       = cast(rawptr)function,
         call_func              = call,
@@ -2780,7 +2780,7 @@ bind_returning_method_11_args :: proc "contextless" (
         default_argument_count = 0,
     }
 
-    gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+    gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 }
 
 get_void_calls_12_args :: proc "contextless" (
@@ -2798,8 +2798,8 @@ get_void_calls_12_args :: proc "contextless" (
     $Arg10: typeid,
     $Arg11: typeid,
 ) -> (
-    gd.ExtensionClassMethodPtrCall,
-    gd.ExtensionClassMethodCall,
+    gdext.ExtensionClassMethodPtrCall,
+    gdext.ExtensionClassMethodCall,
 ) {
     Proc :: #type proc "contextless" (
         self: ^Self,
@@ -2816,8 +2816,8 @@ get_void_calls_12_args :: proc "contextless" (
         arg10: Arg10,
         arg11: Arg11,
     )
-    ptrcall :: proc "c" (data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
-        context = gd.godot_context()
+    ptrcall :: proc "c" (data: rawptr, instance: gdext.ExtensionClassInstancePtr, args: [^]gdext.TypePtr, ret: gdext.TypePtr) {
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         method(
@@ -2838,11 +2838,11 @@ get_void_calls_12_args :: proc "contextless" (
     }
     call :: proc "c" (
         data: rawptr,
-        instance: gd.ExtensionClassInstancePtr,
-        args: [^]gd.VariantPtr,
+        instance: gdext.ExtensionClassInstancePtr,
+        args: [^]gdext.VariantPtr,
         arg_count: i64,
-        ret: gd.VariantPtr,
-        error: ^gd.CallError,
+        ret: gdext.VariantPtr,
+        error: ^gdext.CallError,
     ) {
         if !expect_args(
             args,
@@ -2864,7 +2864,7 @@ get_void_calls_12_args :: proc "contextless" (
             return
         }
 
-        context = gd.godot_context()
+        context = gdext.godot_context()
 
         arg0 := godot.variant_to(cast(^godot.Variant)args[0], Arg0)
         arg1 := godot.variant_to(cast(^godot.Variant)args[1], Arg1)
@@ -2900,8 +2900,8 @@ get_returning_calls_12_args :: proc "contextless" (
     $Arg11: typeid,
     $Ret: typeid,
 ) -> (
-    gd.ExtensionClassMethodPtrCall,
-    gd.ExtensionClassMethodCall,
+    gdext.ExtensionClassMethodPtrCall,
+    gdext.ExtensionClassMethodCall,
 ) {
     Proc :: #type proc "contextless" (
         self: ^Self,
@@ -2918,8 +2918,8 @@ get_returning_calls_12_args :: proc "contextless" (
         arg10: Arg10,
         arg11: Arg11,
     ) -> Ret
-    ptrcall :: proc "c" (data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
-        context = gd.godot_context()
+    ptrcall :: proc "c" (data: rawptr, instance: gdext.ExtensionClassInstancePtr, args: [^]gdext.TypePtr, ret: gdext.TypePtr) {
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         (cast(^Ret)ret)^ = method(
@@ -2940,11 +2940,11 @@ get_returning_calls_12_args :: proc "contextless" (
     }
     call :: proc "c" (
         data: rawptr,
-        instance: gd.ExtensionClassInstancePtr,
-        args: [^]gd.VariantPtr,
+        instance: gdext.ExtensionClassInstancePtr,
+        args: [^]gdext.VariantPtr,
         arg_count: i64,
-        ret: gd.VariantPtr,
-        error: ^gd.CallError,
+        ret: gdext.VariantPtr,
+        error: ^gdext.CallError,
     ) {
         if !expect_args(
             args,
@@ -2966,7 +2966,7 @@ get_returning_calls_12_args :: proc "contextless" (
             return
         }
 
-        context = gd.godot_context()
+        context = gdext.godot_context()
 
         arg0 := godot.variant_to(cast(^godot.Variant)args[0], Arg0)
         arg1 := godot.variant_to(cast(^godot.Variant)args[1], Arg1)
@@ -3019,7 +3019,7 @@ bind_void_method_12_args :: proc "contextless" (
     arg10_name: ^godot.String_Name,
     arg11_name: ^godot.String_Name,
 ) {
-    args_info := [12]gd.PropertyInfo {
+    args_info := [12]gdext.PropertyInfo {
         simple_property_info(godot.variant_type(Arg0), arg0_name),
         simple_property_info(godot.variant_type(Arg1), arg1_name),
         simple_property_info(godot.variant_type(Arg2), arg2_name),
@@ -3033,7 +3033,7 @@ bind_void_method_12_args :: proc "contextless" (
         simple_property_info(godot.variant_type(Arg10), arg10_name),
         simple_property_info(godot.variant_type(Arg11), arg11_name),
     }
-    args_metadata := [12]gd.ExtensionClassMethodArgumentMetadata {
+    args_metadata := [12]gdext.ExtensionClassMethodArgumentMetadata {
         .None,
         .None,
         .None,
@@ -3049,7 +3049,7 @@ bind_void_method_12_args :: proc "contextless" (
     }
 
     ptrcall, call := get_void_calls(Self, Arg0, Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9, Arg10, Arg11)
-    method_info := gd.ExtensionClassMethodInfo {
+    method_info := gdext.ExtensionClassMethodInfo {
         name                   = method_name,
         method_user_data       = cast(rawptr)function,
         call_func              = call,
@@ -3063,7 +3063,7 @@ bind_void_method_12_args :: proc "contextless" (
         default_argument_count = 0,
     }
 
-    gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+    gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 }
 
 bind_returning_method_12_args :: proc "contextless" (
@@ -3097,7 +3097,7 @@ bind_returning_method_12_args :: proc "contextless" (
     arg10_name: ^godot.String_Name,
     arg11_name: ^godot.String_Name,
 ) {
-    args_info := [12]gd.PropertyInfo {
+    args_info := [12]gdext.PropertyInfo {
         simple_property_info(godot.variant_type(Arg0), arg0_name),
         simple_property_info(godot.variant_type(Arg1), arg1_name),
         simple_property_info(godot.variant_type(Arg2), arg2_name),
@@ -3111,7 +3111,7 @@ bind_returning_method_12_args :: proc "contextless" (
         simple_property_info(godot.variant_type(Arg10), arg10_name),
         simple_property_info(godot.variant_type(Arg11), arg11_name),
     }
-    args_metadata := [12]gd.ExtensionClassMethodArgumentMetadata {
+    args_metadata := [12]gdext.ExtensionClassMethodArgumentMetadata {
         .None,
         .None,
         .None,
@@ -3144,7 +3144,7 @@ bind_returning_method_12_args :: proc "contextless" (
         Arg11,
         Ret,
     )
-    method_info := gd.ExtensionClassMethodInfo {
+    method_info := gdext.ExtensionClassMethodInfo {
         name                   = method_name,
         method_user_data       = cast(rawptr)function,
         call_func              = call,
@@ -3159,7 +3159,7 @@ bind_returning_method_12_args :: proc "contextless" (
         default_argument_count = 0,
     }
 
-    gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+    gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 }
 
 get_void_calls_13_args :: proc "contextless" (
@@ -3178,8 +3178,8 @@ get_void_calls_13_args :: proc "contextless" (
     $Arg11: typeid,
     $Arg12: typeid,
 ) -> (
-    gd.ExtensionClassMethodPtrCall,
-    gd.ExtensionClassMethodCall,
+    gdext.ExtensionClassMethodPtrCall,
+    gdext.ExtensionClassMethodCall,
 ) {
     Proc :: #type proc "contextless" (
         self: ^Self,
@@ -3197,8 +3197,8 @@ get_void_calls_13_args :: proc "contextless" (
         arg11: Arg11,
         arg12: Arg12,
     )
-    ptrcall :: proc "c" (data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
-        context = gd.godot_context()
+    ptrcall :: proc "c" (data: rawptr, instance: gdext.ExtensionClassInstancePtr, args: [^]gdext.TypePtr, ret: gdext.TypePtr) {
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         method(
@@ -3220,11 +3220,11 @@ get_void_calls_13_args :: proc "contextless" (
     }
     call :: proc "c" (
         data: rawptr,
-        instance: gd.ExtensionClassInstancePtr,
-        args: [^]gd.VariantPtr,
+        instance: gdext.ExtensionClassInstancePtr,
+        args: [^]gdext.VariantPtr,
         arg_count: i64,
-        ret: gd.VariantPtr,
-        error: ^gd.CallError,
+        ret: gdext.VariantPtr,
+        error: ^gdext.CallError,
     ) {
         if !expect_args(
             args,
@@ -3247,7 +3247,7 @@ get_void_calls_13_args :: proc "contextless" (
             return
         }
 
-        context = gd.godot_context()
+        context = gdext.godot_context()
 
         arg0 := godot.variant_to(cast(^godot.Variant)args[0], Arg0)
         arg1 := godot.variant_to(cast(^godot.Variant)args[1], Arg1)
@@ -3285,8 +3285,8 @@ get_returning_calls_13_args :: proc "contextless" (
     $Arg12: typeid,
     $Ret: typeid,
 ) -> (
-    gd.ExtensionClassMethodPtrCall,
-    gd.ExtensionClassMethodCall,
+    gdext.ExtensionClassMethodPtrCall,
+    gdext.ExtensionClassMethodCall,
 ) {
     Proc :: #type proc "contextless" (
         self: ^Self,
@@ -3304,8 +3304,8 @@ get_returning_calls_13_args :: proc "contextless" (
         arg11: Arg11,
         arg12: Arg12,
     ) -> Ret
-    ptrcall :: proc "c" (data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
-        context = gd.godot_context()
+    ptrcall :: proc "c" (data: rawptr, instance: gdext.ExtensionClassInstancePtr, args: [^]gdext.TypePtr, ret: gdext.TypePtr) {
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         (cast(^Ret)ret)^ = method(
@@ -3327,11 +3327,11 @@ get_returning_calls_13_args :: proc "contextless" (
     }
     call :: proc "c" (
         data: rawptr,
-        instance: gd.ExtensionClassInstancePtr,
-        args: [^]gd.VariantPtr,
+        instance: gdext.ExtensionClassInstancePtr,
+        args: [^]gdext.VariantPtr,
         arg_count: i64,
-        ret: gd.VariantPtr,
-        error: ^gd.CallError,
+        ret: gdext.VariantPtr,
+        error: ^gdext.CallError,
     ) {
         if !expect_args(
             args,
@@ -3354,7 +3354,7 @@ get_returning_calls_13_args :: proc "contextless" (
             return
         }
 
-        context = gd.godot_context()
+        context = gdext.godot_context()
 
         arg0 := godot.variant_to(cast(^godot.Variant)args[0], Arg0)
         arg1 := godot.variant_to(cast(^godot.Variant)args[1], Arg1)
@@ -3425,7 +3425,7 @@ bind_void_method_13_args :: proc "contextless" (
     arg11_name: ^godot.String_Name,
     arg12_name: ^godot.String_Name,
 ) {
-    args_info := [13]gd.PropertyInfo {
+    args_info := [13]gdext.PropertyInfo {
         simple_property_info(godot.variant_type(Arg0), arg0_name),
         simple_property_info(godot.variant_type(Arg1), arg1_name),
         simple_property_info(godot.variant_type(Arg2), arg2_name),
@@ -3440,7 +3440,7 @@ bind_void_method_13_args :: proc "contextless" (
         simple_property_info(godot.variant_type(Arg11), arg11_name),
         simple_property_info(godot.variant_type(Arg12), arg12_name),
     }
-    args_metadata := [13]gd.ExtensionClassMethodArgumentMetadata {
+    args_metadata := [13]gdext.ExtensionClassMethodArgumentMetadata {
         .None,
         .None,
         .None,
@@ -3472,7 +3472,7 @@ bind_void_method_13_args :: proc "contextless" (
         Arg11,
         Arg12,
     )
-    method_info := gd.ExtensionClassMethodInfo {
+    method_info := gdext.ExtensionClassMethodInfo {
         name                   = method_name,
         method_user_data       = cast(rawptr)function,
         call_func              = call,
@@ -3486,7 +3486,7 @@ bind_void_method_13_args :: proc "contextless" (
         default_argument_count = 0,
     }
 
-    gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+    gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 }
 
 bind_returning_method_13_args :: proc "contextless" (
@@ -3522,7 +3522,7 @@ bind_returning_method_13_args :: proc "contextless" (
     arg11_name: ^godot.String_Name,
     arg12_name: ^godot.String_Name,
 ) {
-    args_info := [13]gd.PropertyInfo {
+    args_info := [13]gdext.PropertyInfo {
         simple_property_info(godot.variant_type(Arg0), arg0_name),
         simple_property_info(godot.variant_type(Arg1), arg1_name),
         simple_property_info(godot.variant_type(Arg2), arg2_name),
@@ -3537,7 +3537,7 @@ bind_returning_method_13_args :: proc "contextless" (
         simple_property_info(godot.variant_type(Arg11), arg11_name),
         simple_property_info(godot.variant_type(Arg12), arg12_name),
     }
-    args_metadata := [13]gd.ExtensionClassMethodArgumentMetadata {
+    args_metadata := [13]gdext.ExtensionClassMethodArgumentMetadata {
         .None,
         .None,
         .None,
@@ -3572,7 +3572,7 @@ bind_returning_method_13_args :: proc "contextless" (
         Arg12,
         Ret,
     )
-    method_info := gd.ExtensionClassMethodInfo {
+    method_info := gdext.ExtensionClassMethodInfo {
         name                   = method_name,
         method_user_data       = cast(rawptr)function,
         call_func              = call,
@@ -3587,7 +3587,7 @@ bind_returning_method_13_args :: proc "contextless" (
         default_argument_count = 0,
     }
 
-    gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+    gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 }
 
 get_void_calls_14_args :: proc "contextless" (
@@ -3607,8 +3607,8 @@ get_void_calls_14_args :: proc "contextless" (
     $Arg12: typeid,
     $Arg13: typeid,
 ) -> (
-    gd.ExtensionClassMethodPtrCall,
-    gd.ExtensionClassMethodCall,
+    gdext.ExtensionClassMethodPtrCall,
+    gdext.ExtensionClassMethodCall,
 ) {
     Proc :: #type proc "contextless" (
         self: ^Self,
@@ -3627,8 +3627,8 @@ get_void_calls_14_args :: proc "contextless" (
         arg12: Arg12,
         arg13: Arg13,
     )
-    ptrcall :: proc "c" (data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
-        context = gd.godot_context()
+    ptrcall :: proc "c" (data: rawptr, instance: gdext.ExtensionClassInstancePtr, args: [^]gdext.TypePtr, ret: gdext.TypePtr) {
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         method(
@@ -3651,11 +3651,11 @@ get_void_calls_14_args :: proc "contextless" (
     }
     call :: proc "c" (
         data: rawptr,
-        instance: gd.ExtensionClassInstancePtr,
-        args: [^]gd.VariantPtr,
+        instance: gdext.ExtensionClassInstancePtr,
+        args: [^]gdext.VariantPtr,
         arg_count: i64,
-        ret: gd.VariantPtr,
-        error: ^gd.CallError,
+        ret: gdext.VariantPtr,
+        error: ^gdext.CallError,
     ) {
         if !expect_args(
             args,
@@ -3679,7 +3679,7 @@ get_void_calls_14_args :: proc "contextless" (
             return
         }
 
-        context = gd.godot_context()
+        context = gdext.godot_context()
 
         arg0 := godot.variant_to(cast(^godot.Variant)args[0], Arg0)
         arg1 := godot.variant_to(cast(^godot.Variant)args[1], Arg1)
@@ -3735,8 +3735,8 @@ get_returning_calls_14_args :: proc "contextless" (
     $Arg13: typeid,
     $Ret: typeid,
 ) -> (
-    gd.ExtensionClassMethodPtrCall,
-    gd.ExtensionClassMethodCall,
+    gdext.ExtensionClassMethodPtrCall,
+    gdext.ExtensionClassMethodCall,
 ) {
     Proc :: #type proc "contextless" (
         self: ^Self,
@@ -3755,8 +3755,8 @@ get_returning_calls_14_args :: proc "contextless" (
         arg12: Arg12,
         arg13: Arg13,
     ) -> Ret
-    ptrcall :: proc "c" (data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
-        context = gd.godot_context()
+    ptrcall :: proc "c" (data: rawptr, instance: gdext.ExtensionClassInstancePtr, args: [^]gdext.TypePtr, ret: gdext.TypePtr) {
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         (cast(^Ret)ret)^ = method(
@@ -3779,11 +3779,11 @@ get_returning_calls_14_args :: proc "contextless" (
     }
     call :: proc "c" (
         data: rawptr,
-        instance: gd.ExtensionClassInstancePtr,
-        args: [^]gd.VariantPtr,
+        instance: gdext.ExtensionClassInstancePtr,
+        args: [^]gdext.VariantPtr,
         arg_count: i64,
-        ret: gd.VariantPtr,
-        error: ^gd.CallError,
+        ret: gdext.VariantPtr,
+        error: ^gdext.CallError,
     ) {
         if !expect_args(
             args,
@@ -3807,7 +3807,7 @@ get_returning_calls_14_args :: proc "contextless" (
             return
         }
 
-        context = gd.godot_context()
+        context = gdext.godot_context()
 
         arg0 := godot.variant_to(cast(^godot.Variant)args[0], Arg0)
         arg1 := godot.variant_to(cast(^godot.Variant)args[1], Arg1)
@@ -3882,7 +3882,7 @@ bind_void_method_14_args :: proc "contextless" (
     arg12_name: ^godot.String_Name,
     arg13_name: ^godot.String_Name,
 ) {
-    args_info := [14]gd.PropertyInfo {
+    args_info := [14]gdext.PropertyInfo {
         simple_property_info(godot.variant_type(Arg0), arg0_name),
         simple_property_info(godot.variant_type(Arg1), arg1_name),
         simple_property_info(godot.variant_type(Arg2), arg2_name),
@@ -3898,7 +3898,7 @@ bind_void_method_14_args :: proc "contextless" (
         simple_property_info(godot.variant_type(Arg12), arg12_name),
         simple_property_info(godot.variant_type(Arg13), arg13_name),
     }
-    args_metadata := [14]gd.ExtensionClassMethodArgumentMetadata {
+    args_metadata := [14]gdext.ExtensionClassMethodArgumentMetadata {
         .None,
         .None,
         .None,
@@ -3932,7 +3932,7 @@ bind_void_method_14_args :: proc "contextless" (
         Arg12,
         Arg13,
     )
-    method_info := gd.ExtensionClassMethodInfo {
+    method_info := gdext.ExtensionClassMethodInfo {
         name                   = method_name,
         method_user_data       = cast(rawptr)function,
         call_func              = call,
@@ -3946,7 +3946,7 @@ bind_void_method_14_args :: proc "contextless" (
         default_argument_count = 0,
     }
 
-    gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+    gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 }
 
 bind_returning_method_14_args :: proc "contextless" (
@@ -3984,7 +3984,7 @@ bind_returning_method_14_args :: proc "contextless" (
     arg12_name: ^godot.String_Name,
     arg13_name: ^godot.String_Name,
 ) {
-    args_info := [14]gd.PropertyInfo {
+    args_info := [14]gdext.PropertyInfo {
         simple_property_info(godot.variant_type(Arg0), arg0_name),
         simple_property_info(godot.variant_type(Arg1), arg1_name),
         simple_property_info(godot.variant_type(Arg2), arg2_name),
@@ -4000,7 +4000,7 @@ bind_returning_method_14_args :: proc "contextless" (
         simple_property_info(godot.variant_type(Arg12), arg12_name),
         simple_property_info(godot.variant_type(Arg13), arg13_name),
     }
-    args_metadata := [14]gd.ExtensionClassMethodArgumentMetadata {
+    args_metadata := [14]gdext.ExtensionClassMethodArgumentMetadata {
         .None,
         .None,
         .None,
@@ -4037,7 +4037,7 @@ bind_returning_method_14_args :: proc "contextless" (
         Arg13,
         Ret,
     )
-    method_info := gd.ExtensionClassMethodInfo {
+    method_info := gdext.ExtensionClassMethodInfo {
         name                   = method_name,
         method_user_data       = cast(rawptr)function,
         call_func              = call,
@@ -4052,7 +4052,7 @@ bind_returning_method_14_args :: proc "contextless" (
         default_argument_count = 0,
     }
 
-    gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+    gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 }
 
 get_void_calls_15_args :: proc "contextless" (
@@ -4073,8 +4073,8 @@ get_void_calls_15_args :: proc "contextless" (
     $Arg13: typeid,
     $Arg14: typeid,
 ) -> (
-    gd.ExtensionClassMethodPtrCall,
-    gd.ExtensionClassMethodCall,
+    gdext.ExtensionClassMethodPtrCall,
+    gdext.ExtensionClassMethodCall,
 ) {
     Proc :: #type proc "contextless" (
         self: ^Self,
@@ -4094,8 +4094,8 @@ get_void_calls_15_args :: proc "contextless" (
         arg13: Arg13,
         arg14: Arg14,
     )
-    ptrcall :: proc "c" (data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
-        context = gd.godot_context()
+    ptrcall :: proc "c" (data: rawptr, instance: gdext.ExtensionClassInstancePtr, args: [^]gdext.TypePtr, ret: gdext.TypePtr) {
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         method(
@@ -4119,11 +4119,11 @@ get_void_calls_15_args :: proc "contextless" (
     }
     call :: proc "c" (
         data: rawptr,
-        instance: gd.ExtensionClassInstancePtr,
-        args: [^]gd.VariantPtr,
+        instance: gdext.ExtensionClassInstancePtr,
+        args: [^]gdext.VariantPtr,
         arg_count: i64,
-        ret: gd.VariantPtr,
-        error: ^gd.CallError,
+        ret: gdext.VariantPtr,
+        error: ^gdext.CallError,
     ) {
         if !expect_args(
             args,
@@ -4148,7 +4148,7 @@ get_void_calls_15_args :: proc "contextless" (
             return
         }
 
-        context = gd.godot_context()
+        context = gdext.godot_context()
 
         arg0 := godot.variant_to(cast(^godot.Variant)args[0], Arg0)
         arg1 := godot.variant_to(cast(^godot.Variant)args[1], Arg1)
@@ -4207,8 +4207,8 @@ get_returning_calls_15_args :: proc "contextless" (
     $Arg14: typeid,
     $Ret: typeid,
 ) -> (
-    gd.ExtensionClassMethodPtrCall,
-    gd.ExtensionClassMethodCall,
+    gdext.ExtensionClassMethodPtrCall,
+    gdext.ExtensionClassMethodCall,
 ) {
     Proc :: #type proc "contextless" (
         self: ^Self,
@@ -4228,8 +4228,8 @@ get_returning_calls_15_args :: proc "contextless" (
         arg13: Arg13,
         arg14: Arg14,
     ) -> Ret
-    ptrcall :: proc "c" (data: rawptr, instance: gd.ExtensionClassInstancePtr, args: [^]gd.TypePtr, ret: gd.TypePtr) {
-        context = gd.godot_context()
+    ptrcall :: proc "c" (data: rawptr, instance: gdext.ExtensionClassInstancePtr, args: [^]gdext.TypePtr, ret: gdext.TypePtr) {
+        context = gdext.godot_context()
 
         method := cast(Proc)data
         (cast(^Ret)ret)^ = method(
@@ -4253,11 +4253,11 @@ get_returning_calls_15_args :: proc "contextless" (
     }
     call :: proc "c" (
         data: rawptr,
-        instance: gd.ExtensionClassInstancePtr,
-        args: [^]gd.VariantPtr,
+        instance: gdext.ExtensionClassInstancePtr,
+        args: [^]gdext.VariantPtr,
         arg_count: i64,
-        ret: gd.VariantPtr,
-        error: ^gd.CallError,
+        ret: gdext.VariantPtr,
+        error: ^gdext.CallError,
     ) {
         if !expect_args(
             args,
@@ -4282,7 +4282,7 @@ get_returning_calls_15_args :: proc "contextless" (
             return
         }
 
-        context = gd.godot_context()
+        context = gdext.godot_context()
 
         arg0 := godot.variant_to(cast(^godot.Variant)args[0], Arg0)
         arg1 := godot.variant_to(cast(^godot.Variant)args[1], Arg1)
@@ -4361,7 +4361,7 @@ bind_void_method_15_args :: proc "contextless" (
     arg13_name: ^godot.String_Name,
     arg14_name: ^godot.String_Name,
 ) {
-    args_info := [15]gd.PropertyInfo {
+    args_info := [15]gdext.PropertyInfo {
         simple_property_info(godot.variant_type(Arg0), arg0_name),
         simple_property_info(godot.variant_type(Arg1), arg1_name),
         simple_property_info(godot.variant_type(Arg2), arg2_name),
@@ -4378,7 +4378,7 @@ bind_void_method_15_args :: proc "contextless" (
         simple_property_info(godot.variant_type(Arg13), arg13_name),
         simple_property_info(godot.variant_type(Arg14), arg14_name),
     }
-    args_metadata := [15]gd.ExtensionClassMethodArgumentMetadata {
+    args_metadata := [15]gdext.ExtensionClassMethodArgumentMetadata {
         .None,
         .None,
         .None,
@@ -4414,7 +4414,7 @@ bind_void_method_15_args :: proc "contextless" (
         Arg13,
         Arg14,
     )
-    method_info := gd.ExtensionClassMethodInfo {
+    method_info := gdext.ExtensionClassMethodInfo {
         name                   = method_name,
         method_user_data       = cast(rawptr)function,
         call_func              = call,
@@ -4428,7 +4428,7 @@ bind_void_method_15_args :: proc "contextless" (
         default_argument_count = 0,
     }
 
-    gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+    gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 }
 
 bind_returning_method_15_args :: proc "contextless" (
@@ -4468,7 +4468,7 @@ bind_returning_method_15_args :: proc "contextless" (
     arg13_name: ^godot.String_Name,
     arg14_name: ^godot.String_Name,
 ) {
-    args_info := [15]gd.PropertyInfo {
+    args_info := [15]gdext.PropertyInfo {
         simple_property_info(godot.variant_type(Arg0), arg0_name),
         simple_property_info(godot.variant_type(Arg1), arg1_name),
         simple_property_info(godot.variant_type(Arg2), arg2_name),
@@ -4485,7 +4485,7 @@ bind_returning_method_15_args :: proc "contextless" (
         simple_property_info(godot.variant_type(Arg13), arg13_name),
         simple_property_info(godot.variant_type(Arg14), arg14_name),
     }
-    args_metadata := [15]gd.ExtensionClassMethodArgumentMetadata {
+    args_metadata := [15]gdext.ExtensionClassMethodArgumentMetadata {
         .None,
         .None,
         .None,
@@ -4524,7 +4524,7 @@ bind_returning_method_15_args :: proc "contextless" (
         Arg14,
         Ret,
     )
-    method_info := gd.ExtensionClassMethodInfo {
+    method_info := gdext.ExtensionClassMethodInfo {
         name                   = method_name,
         method_user_data       = cast(rawptr)function,
         call_func              = call,
@@ -4539,5 +4539,5 @@ bind_returning_method_15_args :: proc "contextless" (
         default_argument_count = 0,
     }
 
-    gd.classdb_register_extension_class_method(gd.library, class_name, &method_info)
+    gdext.classdb_register_extension_class_method(gdext.library, class_name, &method_info)
 }

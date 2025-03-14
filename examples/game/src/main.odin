@@ -1,7 +1,7 @@
 package game
 
 import "godot:godot"
-import gdext "godot:gdextension"
+import "godot:gdext"
 
 @(export)
 game_init :: proc "c" (

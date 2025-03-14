@@ -1,7 +1,7 @@
 package example
 
 import "godot:godot"
-import gdext "godot:gdextension"
+import "godot:gdext"
 
 // see gdext.InitializationFunction
 @(export)

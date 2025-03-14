@@ -1,15 +1,15 @@
 package test
 
-import gd "godot:gdextension"
+import "godot:gdext"
 
-// see gd.InitializationFunction
+// see gdext.InitializationFunction
 @(export)
 tests_library_init :: proc "c" (
-    get_proc_address: gd.ExtensionInterfaceGetProcAddress,
-    library: gd.ExtensionClassLibraryPtr,
-    initialization: ^gd.Initialization,
+    get_proc_address: gdext.ExtensionInterfaceGetProcAddress,
+    library: gdext.ExtensionClassLibraryPtr,
+    initialization: ^gdext.Initialization,
 ) -> bool {
-    gd.init(library, get_proc_address)
+    gdext.init(library, get_proc_address)
 
     initialization.initialize = init_module
     initialization.deinitialize = uninit_module
@@ -19,8 +19,8 @@ tests_library_init :: proc "c" (
     return true
 }
 
-init_module :: proc "c" (user_data: rawptr, level: gd.InitializationLevel) {
-    context = gd.godot_context()
+init_module :: proc "c" (user_data: rawptr, level: gdext.InitializationLevel) {
+    context = gdext.godot_context()
 
     if level != .Scene {
         return
@@ -29,8 +29,8 @@ init_module :: proc "c" (user_data: rawptr, level: gd.InitializationLevel) {
     test_class_register()
 }
 
-uninit_module :: proc "c" (user_data: rawptr, level: gd.InitializationLevel) {
-    context = gd.godot_context()
+uninit_module :: proc "c" (user_data: rawptr, level: gdext.InitializationLevel) {
+    context = gdext.godot_context()
 
     if level != .Scene {
         return

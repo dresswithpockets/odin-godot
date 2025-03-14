@@ -22,7 +22,7 @@ Engine_Class :: struct {
 }
 
 @(private = "file")
-default_imports := []Import{{name = "__bindgen_gde", path = "godot:gdextension"}}
+default_imports := []Import{{name = "__bindgen_gde", path = "godot:gdext"}}
 
 _constant_constructor :: proc(initializer: g.Initialize_By_Constructor, current_package: string) -> (result: string) {
     sb := strings.builder_make()

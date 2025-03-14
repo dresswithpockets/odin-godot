@@ -1,6 +1,6 @@
 package test
 
-import gdext "godot:gdextension"
+import "godot:gdext"
 import "godot:libgd/classdb"
 import "godot:godot"
 

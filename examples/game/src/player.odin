@@ -1,7 +1,7 @@
 package game
 
 import "core:math"
-import "godot:gdextension"
+import "godot:gdext"
 import "godot:libgd"
 import "godot:libgd/classdb"
 import "godot:godot"
