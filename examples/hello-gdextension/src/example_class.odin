@@ -175,9 +175,9 @@ example_class_register :: proc() {
         set_amplitude,
     )
 
-    speed_name := godot.new_string_name_cstring("speed_name", true)
-    get_speed_name := godot.new_string_name_cstring("get_speed_name", true)
-    set_speed_name := godot.new_string_name_cstring("set_speed_name", true)
+    speed_name := godot.new_string_name_cstring("speed", true)
+    get_speed_name := godot.new_string_name_cstring("get_speed", true)
+    set_speed_name := godot.new_string_name_cstring("set_speed", true)
     bind.bind_property_and_methods(
         &example_class_name,
         &speed_name,
