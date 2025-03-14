@@ -4,7 +4,7 @@ ifeq ($(OS),Windows_NT)
 endif
 
 OUT_DIR := bin/
-GD_BUILD_CONFIG := float_64
+REAL_PRECISION := single
 JOBS := 0
 
 temple_cli_dir := temple/cli/
@@ -64,7 +64,7 @@ examples_game_out := $(examples_game_dir)bin/game$(shared_suffix)
 
 $(examples_hello_out): godot/godot.gen.odin $(examples_hello_deps)
 	odin build $(examples_hello_dir)src/ \
-		-define:BUILD_CONFIG=$(GD_BUILD_CONFIG) \
+		-define:REAL_PRECISION=$(REAL_PRECISION) \
 		-collection:godot=. \
 		-build-mode:shared \
 		-out:$(examples_hello_out) \
@@ -77,7 +77,7 @@ $(examples_hello_out): godot/godot.gen.odin $(examples_hello_deps)
 
 $(examples_game_out): godot/godot.gen.odin $(examples_game_deps)
 	odin build $(examples_game_dir)src/ \
-		-define:BUILD_CONFIG=$(GD_BUILD_CONFIG) \
+		-define:REAL_PRECISION=$(REAL_PRECISION) \
 		-collection:godot=. \
 		-build-mode:shared \
 		-out:$(examples_game_out) \
@@ -90,7 +90,7 @@ $(examples_game_out): godot/godot.gen.odin $(examples_game_deps)
 
 examples/tests/bin/tests$(shared_suffix): godot/godot.gen.odin $(wildcard examples/tests/src/*.odin)
 	odin build examples/tests/src/ \
-		-define:BUILD_CONFIG=$(GD_BUILD_CONFIG) \
+		-define:REAL_PRECISION=$(REAL_PRECISION) \
 		-collection:godot=. \
 		-build-mode:shared \
 		-out:examples/tests/bin/tests$(shared_suffix) \
@@ -111,11 +111,9 @@ cexamples: examples/game/cbin/game.dll
 
 check:
 	odin check bindgen/
-	odin check core/ -no-entry-point -collection:godot=. -define:BUILD_CONFIG=$(GD_BUILD_CONFIG)
-	odin check editor/ -no-entry-point -collection:godot=. -define:BUILD_CONFIG=$(GD_BUILD_CONFIG)
-	odin check structs/ -no-entry-point -collection:godot=. -define:BUILD_CONFIG=$(GD_BUILD_CONFIG)
-	odin check gdextension/ -no-entry-point -collection:godot=. -define:BUILD_CONFIG=$(GD_BUILD_CONFIG)
-	odin check examples/tests/src -no-entry-point -collection:godot=. -define:BUILD_CONFIG=$(GD_BUILD_CONFIG)
+	odin check gdextension/ -no-entry-point -collection:godot=. -vet
+	odin check godot/ -no-entry-point -collection:godot=. -define:REAL_PRECISION=$(REAL_PRECISION) -vet
+	odin check examples/tests/src -no-entry-point -collection:godot=. -define:REAL_PRECISION=$(REAL_PRECISION) -vet
 
 .PHONY: clean
 
