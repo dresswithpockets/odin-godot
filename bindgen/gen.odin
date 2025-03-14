@@ -15,15 +15,6 @@ import "views"
 @(private = "file")
 UNIX_ALLOW_READ_WRITE_ALL :: 0o666
 
-constructor_type :: "gdextension.PtrConstructor"
-destructor_type :: "gdextension.PtrDestructor"
-operator_evaluator_type :: "gdextension.PtrOperatorEvaluator"
-builtin_method_type :: "gdextension.PtrBuiltInMethod"
-
-native_odin_types :: []string{"bool", "f32", "f64", "int", "i8", "i16", "i32", "i64", "u8", "u16", "u32", "u64"}
-
-types_with_odin_string_constructors :: []string{"String", "StringName"}
-
 open_write_template :: proc(file_path: string, view: $T, template: temple.Compiled(T)) {
     fhandle, ferr := os.open(file_path, os.O_CREATE | os.O_TRUNC | os.O_RDWR, UNIX_ALLOW_READ_WRITE_ALL)
     if ferr != 0 {
