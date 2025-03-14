@@ -16,11 +16,15 @@
         {
             "name": "vendor",
             "path": "C:\\Odin\\vendor"
+        },
+        {
+            "name": "godot",
+            "path": "."
         }
     ],
     "enable_document_symbols": true,
     "enable_semantic_tokens": true,
     "enable_hover": true,
     "enable_snippets": true,
-    "checker_args": "-vet -strict-style -no-entry-point -define:BUILD_CONFIG=float_64"
+    "checker_args": "-vet -strict-style -no-entry-point -define:REAL_PRECISION=single"
 }

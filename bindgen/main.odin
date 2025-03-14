@@ -6,14 +6,17 @@ import "core:os"
 import "core:strconv"
 import "core:strings"
 import "core:time"
+import g "graph"
+import "views"
 
 Options :: struct {
     api_file:  string,
     job_count: int,
+    map_mode:  views.Package_Map_Mode,
 }
 
 default_options :: proc() -> Options {
-    return Options{"", 0}
+    return Options{api_file = "", job_count = 0, map_mode = .Nested}
 }
 
 print_usage :: proc() {
@@ -42,14 +45,14 @@ parse_args :: proc(options: ^Options) -> (ok: bool) {
 
                     right := arg[6:]
                     if result, ok := strconv.parse_int(right); ok {
-                        if result < 1 {
-                            fmt.eprintln("Job count must be at least 1")
+                        if result < 0 {
+                            fmt.eprintln("Job count must be at least 0")
                             ok = false
                             continue
                         }
                         options.job_count = result
                     } else {
-                        fmt.eprintf("Expected an integer for job count, but got '%v' instead\n", right)
+                        fmt.eprintfln("Expected an integer for job count, but got '%v' instead", right)
                         ok = false
                         continue
                     }
@@ -58,7 +61,7 @@ parse_args :: proc(options: ^Options) -> (ok: bool) {
                 }
             }
             // we don't yet have any options which are just flags
-            fmt.eprintf("Invalid option: %v", arg)
+            fmt.eprintfln("Invalid option: %v", arg)
             ok = false
         }
     }
@@ -69,11 +72,11 @@ parse_args :: proc(options: ^Options) -> (ok: bool) {
     return
 }
 
-load_api :: proc(options: Options) -> (api: ^Api, ok: bool) {
+load_api :: proc(options: Options) -> (api: ^g.Api, ok: bool) {
     data := os.read_entire_file(options.api_file) or_return
     defer delete(data)
 
-    api = new(Api)
+    api = new(g.Api)
     err := json.unmarshal(data, api)
     ok = err == nil
     return
@@ -91,40 +94,27 @@ main :: proc() {
         os.exit(1)
     }
 
-    stopwatch := time.Stopwatch{}
-    time.stopwatch_start(&stopwatch)
-
-    fmt.printf("Parsing API Spec from %v.\n", options.api_file)
+    fmt.printfln("Parsing API: %v", options.api_file)
     api, ok := load_api(options)
     if !ok {
         fmt.println("There was an error loading the api from the file.")
         os.exit(1)
     }
 
-    api_parse_duration := time.stopwatch_duration(stopwatch)
-    time.stopwatch_reset(&stopwatch)
-    time.stopwatch_start(&stopwatch)
+    graph: g.Graph
 
-    fmt.printf("Generating API for %v, with up to %v threads.\n", api.version.full_name, options.job_count)
-    state := create_new_state(options, api)
+    fmt.println("Running Pass: Init")
+    g.graph_init(&graph, api, context.allocator)
 
-    state_duration := time.stopwatch_duration(stopwatch)
-    time.stopwatch_reset(&stopwatch)
-    time.stopwatch_start(&stopwatch)
+    fmt.println("Running Pass: Map")
+    g.graph_type_info_pass(&graph, api)
+    g.graph_builtins_structure_pass(&graph, api)
 
-    generate_bindings(state)
+    fmt.println("Running Pass: TDG")
+    g.graph_relationship_pass(&graph, api)
 
-    gen_duration := time.stopwatch_duration(stopwatch)
-
-    api_parse_ms := time.duration_milliseconds(api_parse_duration)
-    state_ms := time.duration_milliseconds(state_duration)
-    gen_ms := time.duration_milliseconds(gen_duration)
-    total_ms := api_parse_ms + state_ms + gen_ms
-
-    fmt.printfln("Total Time   - %.3f ms", total_ms)
-    fmt.printfln("Parse API    - %.3f ms", api_parse_ms)
-    fmt.printfln("Create State - %.3f ms", state_ms)
-    fmt.printfln("Code Gen     - %.3f ms", gen_ms)
+    fmt.printfln("Running Codegen (%v)", api.version.full_name)
+    generate_bindings(graph, options)
 
     // since we wanna keep state around until the end of the program's lifetime,
     // no need to be particular about freeing the bits and pieces of the struct (:

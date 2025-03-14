@@ -1,0 +1,213 @@
+package godot
+
+{% for name, import_ in this.imports %}
+import {{ name }} "{{ import_.path }}"
+{% end %}
+
+{% for enum_ in this.enums %}
+{% embed "bindgen_view_enum.temple.twig" with enum_ %}
+{% end %}
+
+{% if len(this.constructors) + len(this.extern_constructors) > 0 %}
+new_{{ this.snake_name }} :: proc {
+{% for constructor in this.constructors %}
+    {{ constructor.name }},
+{% end %}
+{% for extern_constructor in this.extern_constructors %}
+    {{ extern_constructor }},
+{% end %}
+}
+{% end %}
+
+{% for constructor in this.constructors %}
+{{ constructor.name }} :: proc "contextless" (
+{% for arg in constructor.args %}
+    {{ arg.name }}_: {{ arg.type }},
+{% end %}
+) -> (ret: {{ this.name }}) {
+    @(static) __ptr: __bindgen_gde.PtrConstructor
+    if __ptr == nil {
+        __ptr = __bindgen_gde.variant_get_ptr_constructor(.{{ this.name }}, {{ int(constructor.index) }})
+    }
+{% for arg in constructor.args %}
+    {{ arg.name }}_ := {{ arg.name }}_
+{% end %}
+    args := []__bindgen_gde.TypePtr {
+{% for arg in constructor.args %}
+        &{{ arg.name }}_,
+{% end %}
+    }
+    __ptr(&ret, raw_data(args))
+    return
+}
+{% end %}
+
+{% if destructor_name, has_destructor := this.destructor.(string); has_destructor %}
+{{ destructor_name }} :: proc "contextless" (self: {{ this.name }}) {
+    @(static) __ptr: __bindgen_gde.PtrDestructor
+    if __ptr == nil {
+        __ptr = __bindgen_gde.variant_get_ptr_destructor(.{{ this.name }})
+    }
+
+    self := self
+    __ptr(&self)
+}
+{% end %}
+
+// members
+{% for member in this.members %}
+{{ this.snake_name }}_set_{{ member.name }} :: proc "contextless" (self: ^{{ this.name }}, value: {{ member.type }}) {
+    @(static) __ptr: __bindgen_gde.PtrSetter
+    if __ptr == nil {
+        _gde_name := new_string_name_cstring("{{ member.name }}", true)
+        __ptr = __bindgen_gde.variant_get_ptr_setter(.{{ this.name }}, &_gde_name)
+    }
+    
+    value := value
+    __ptr(self, &value)
+}
+
+{{ this.snake_name }}_get_{{ member.name }} :: proc "contextless" (self: ^{{ this.name }}) -> (ret: {{ member.type }}) {
+    @(static) __ptr: __bindgen_gde.PtrGetter
+    if __ptr == nil {
+        _gde_name := new_string_name_cstring("{{ member.name }}", true)
+        __ptr = __bindgen_gde.variant_get_ptr_getter(.{{ this.name }}, &_gde_name)
+    }
+
+    __ptr(self, &ret)
+    return
+}
+{% end %}
+
+{% for method in this.static_methods %}
+{% if return_type, has_return_type := method.return_type.(string); has_return_type %}
+{{ this.snake_name }}_{{ method.name }} :: proc "contextless" (
+{% for arg in method.args %}
+    {{ arg.name }}_: {{ arg.type }},
+{% end %}
+) -> (ret: {{ return_type }}) {
+    @(static) __ptr: __bindgen_gde.PtrBuiltInMethod
+    if __ptr == nil {
+        _gde_name := new_string_name_cstring("{{ method.name }}", true)
+        __ptr = __bindgen_gde.variant_get_ptr_builtin_method(.{{ this.name }}, &_gde_name, {{ i64(method.hash) }})
+    }
+{% for arg in method.args %}
+    {{ arg.name }}_ := {{ arg.name }}_
+{% end %}
+    args := []__bindgen_gde.TypePtr {
+{% for arg in method.args %}
+        &{{ arg.name }}_,
+{% end %}
+    }
+    __ptr(nil, raw_data(args), &ret, len(args))
+    return
+}
+{% else %}
+{{ this.snake_name }}_{{ method.name }} :: proc "contextless" (
+{% for arg in method.args %}
+    {{ arg.name }}_: {{ arg.type }},
+{% end %}
+) {
+    @(static) __ptr: __bindgen_gde.PtrBuiltInMethod
+    if __ptr == nil {
+        _gde_name := new_string_name_cstring("{{ method.name }}", true)
+        __ptr = __bindgen_gde.variant_get_ptr_builtin_method(.{{ this.name }}, &_gde_name, {{ i64(method.hash) }})
+    }
+{% for arg in method.args %}
+    {{ arg.name }}_ := {{ arg.name }}_
+{% end %}
+    args := []__bindgen_gde.TypePtr {
+{% for arg in method.args %}
+        &{{ arg.name }}_,
+{% end %}
+    }
+    __ptr(nil, raw_data(args), nil, len(args))
+}
+{% end %}
+{% end %}
+
+{% for method in this.instance_methods %}
+{% if return_type, has_return_type := method.return_type.(string); has_return_type %}
+{{ this.snake_name }}_{{ method.name }} :: proc "contextless" (
+    self: ^{{ this.name }},
+{% for arg in method.args %}
+    {{ arg.name }}_: {{ arg.type }},
+{% end %}
+) -> (ret: {{ return_type }}) {
+    @(static) __ptr: __bindgen_gde.PtrBuiltInMethod
+    if __ptr == nil {
+        _gde_name := new_string_name_cstring("{{ method.name }}", true)
+        __ptr = __bindgen_gde.variant_get_ptr_builtin_method(.{{ this.name }}, &_gde_name, {{ i64(method.hash) }})
+    }
+{% for arg in method.args %}
+    {{ arg.name }}_ := {{ arg.name }}_
+{% end %}
+    args := []__bindgen_gde.TypePtr {
+{% for arg in method.args %}
+        &{{ arg.name }}_,
+{% end %}
+    }
+    __ptr(self, raw_data(args), &ret, len(args))
+    return
+}
+{% else %}
+{{ this.snake_name }}_{{ method.name }} :: proc "contextless" (
+    self: ^{{ this.name }},
+{% for arg in method.args %}
+    {{ arg.name }}_: {{ arg.type }},
+{% end %}
+) {
+    @(static) __ptr: __bindgen_gde.PtrBuiltInMethod
+    if __ptr == nil {
+        _gde_name := new_string_name_cstring("{{ method.name }}", true)
+        __ptr = __bindgen_gde.variant_get_ptr_builtin_method(.{{ this.name }}, &_gde_name, {{ i64(method.hash) }})
+    }
+{% for arg in method.args %}
+    {{ arg.name }}_ := {{ arg.name }}_
+{% end %}
+    args := []__bindgen_gde.TypePtr {
+{% for arg in method.args %}
+        &{{ arg.name }}_,
+{% end %}
+    }
+    __ptr(self, raw_data(args), nil, len(args))
+    return
+}
+{% end %}
+{% end %}
+
+{% for operator in this.operators %}
+{% for overload in operator.overloads %}
+{% if right_type, has_right_type := overload.right_type.(string); has_right_type %}
+{{ overload.proc_name }} :: proc "contextless" (self: {{ this.name }}, other: {{ right_type }}) -> (ret: {{ overload.return_type }}) {
+    @(static) __ptr: __bindgen_gde.PtrOperatorEvaluator
+    if __ptr == nil {
+        __ptr = __bindgen_gde.variant_get_ptr_operator_evaluator(.{{ operator.variant_name }}, .{{ this.name }}, .{{ overload.right_variant_type }})
+    }
+
+    self := self
+    other := other
+    __ptr(&self, &other, &ret)
+    return
+}
+{% else %}
+{{ overload.proc_name }} :: proc "contextless" (self: {{ this.name }}) -> (ret: {{ overload.return_type }}) {
+    @(static) __ptr: __bindgen_gde.PtrOperatorEvaluator
+    if __ptr == nil {
+        __ptr = __bindgen_gde.variant_get_ptr_operator_evaluator(.{{ operator.variant_name }}, .{{ this.name }}, .Nil)
+    }
+
+    self := self
+    __ptr(&self, nil, &ret)
+    return
+}
+{% end %}
+{% end %}
+
+{{ operator.proc_name }} :: proc {
+{% for overload in operator.overloads %}
+    {{ overload.proc_name }},
+{% end %}
+}
+{% end %}
+

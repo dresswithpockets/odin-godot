@@ -1,27 +1,20 @@
 package example
 
-import gd "../../../gdextension"
-import var "../../../variant"
-import core "../../../core"
-import "core:strings"
-import "core:c"
-import "core:fmt"
+import "godot:godot"
+import "godot:gdext"
 
-// see gd.InitializationFunction
+// see gdext.InitializationFunction
 @(export)
 example_library_init :: proc "c" (
-    get_proc_address: gd.ExtensionInterfaceGetProcAddress,
-    library: gd.ExtensionClassLibraryPtr,
-    initialization: ^gd.Initialization,
+    get_proc_address: gdext.ExtensionInterfaceGetProcAddress,
+    library: gdext.ExtensionClassLibraryPtr,
+    initialization: ^gdext.Initialization,
 ) -> bool {
     // gdextension procs MUST be initialized before using the binding!
-    gd.init(library, get_proc_address)
+    gdext.init(library, get_proc_address)
 
     // MUST be called before using any core classes, singletons, or utility functions
-    core.init()
-
-    // MUST be called before using any variant types
-    var.init()
+    godot.init()
 
     initialization.initialize = initialize_example_module
     initialization.deinitialize = uninitialize_example_module
@@ -31,8 +24,8 @@ example_library_init :: proc "c" (
     return true
 }
 
-initialize_example_module :: proc "c" (user_data: rawptr, level: gd.InitializationLevel) {
-    context = gd.godot_context()
+initialize_example_module :: proc "c" (user_data: rawptr, level: gdext.InitializationLevel) {
+    context = gdext.godot_context()
 
     if level != .Scene {
         return
@@ -41,8 +34,8 @@ initialize_example_module :: proc "c" (user_data: rawptr, level: gd.Initializati
     example_class_register()
 }
 
-uninitialize_example_module :: proc "c" (user_data: rawptr, level: gd.InitializationLevel) {
-    context = gd.godot_context()
+uninitialize_example_module :: proc "c" (user_data: rawptr, level: gdext.InitializationLevel) {
+    context = gdext.godot_context()
 
     if level != .Scene {
         return

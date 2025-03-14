@@ -1,0 +1,14 @@
+package godot
+
+{% for name, import_ in this.imports %}
+import {{ name }} "{{ import_.path }}"
+{% end %}
+
+{% for struct_ in this.structs %}
+{{ struct_.name }} :: struct {
+{% for field in struct_.fields %}
+    {{ field.name }}: {{ field.type }},
+{% end %}
+}
+
+{% end %}

@@ -3,49 +3,12 @@ package bindgen
 import "core:fmt"
 import "core:slice"
 import "core:strings"
+import "views"
 
-global_enums_template := temple_compiled("../templates/bindgen_global_enums.temple.twig", ^State)
-builtin_class_template := temple_compiled("../templates/bindgen_builtin_class.temple.twig", ^StateType)
-util_functions_template := temple_compiled("../templates/bindgen_utility_functions.temple.twig", ^State)
-engine_class_template := temple_compiled("../templates/bindgen_class.temple.twig", ^StateType)
-native_struct_template := temple_compiled("../templates/bindgen_native_structs.temple.twig", ^State)
-variant_init_template := temple_compiled("../templates/bindgen_variant_init.temple.twig", ^State)
-core_init_template := temple_compiled("../templates/bindgen_init_core.temple.twig", ^State)
-editor_init_template := temple_compiled("../templates/bindgen_init_editor.temple.twig", ^State)
-
-bindgen_class_reference_type :: proc(type: ^StateType) -> string {
-    // HACK: Variant.Type and Variant.Operator are provided by the gdextension interface
-    if type.godot_type == "Variant.Type" {
-        return "__bindgen_gde.VariantType"
-    }
-
-    if type.godot_type == "Variant.Operator" {
-        return "__bindgen_gde.VariantOperator"
-    }
-
-    if class, is_class := type.derived.(StateClass); is_class && class.is_builtin {
-        caret_index := strings.last_index(type.odin_type, "^")
-        if caret_index == -1 {
-            return fmt.tprintf("__bindgen_var.%s", type.odin_type)
-        }
-
-        carets, carets_ok := strings.substring_to(type.odin_type, caret_index + 1)
-        assert(carets_ok)
-        odin_name, odin_name_ok := strings.substring_from(type.odin_type, caret_index + 1)
-        assert(odin_name_ok)
-
-        return fmt.tprintf("%s__bindgen_var.%s", carets, odin_name)
-    }
-
-    if enum_type, is_enum_type := type.derived.(StateEnum); is_enum_type && enum_type.parent_class != nil {
-        parent_class := enum_type.parent_class.(^StateType).derived.(StateClass)
-        if parent_class.is_builtin {
-            return fmt.tprintf("__bindgen_var.%s", type.odin_type)
-        }
-    }
-
-    return type.odin_type
-}
+variant_template := temple_compiled("../templates/bindgen_view_variant.temple.twig", views.Variant)
+engine_class_template := temple_compiled("../templates/bindgen_view_engine.temple.twig", views.Engine_Class)
+core_template := temple_compiled("../templates/bindgen_view_core.temple.twig", views.Godot_Package)
+structs_template := temple_compiled("../templates/bindgen_view_structs.temple.twig", views.Structs)
 
 /*
     Copyright 2023 Dresses Digital
