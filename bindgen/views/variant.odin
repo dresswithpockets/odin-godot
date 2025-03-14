@@ -113,7 +113,10 @@ Variant :: struct {
 }
 
 @(private = "file")
-default_import := Import{name = "__bindgen_gde", path = "../gdextension"}
+default_import := Import {
+    name = "__bindgen_gde",
+    path = "../gdextension",
+}
 
 @(private = "file")
 imports_with_math := []Import {
@@ -140,7 +143,7 @@ _class_constructor_name :: proc(snake_name: string, args: []g.Constructor_Arg) -
     }
 
     for arg in args {
-        type_name := _any_to_name(arg.type) // TODO: other package modes
+        type_name := _any_to_odin_name(arg.type) // TODO: other package modes
         if type_name == cast(names.Odin_Name)"Float" {
             type_name = cast(names.Odin_Name)"float"
         }
@@ -154,14 +157,12 @@ _class_constructor_name :: proc(snake_name: string, args: []g.Constructor_Arg) -
 variant :: proc(class: ^g.Builtin_Class, allocator: mem.Allocator) -> (variant: Variant, render: bool) {
     context.allocator = allocator
 
-    render_flags, in_flag_map := render_flag_map[class.name]
-    assert(in_flag_map, fmt.tprintfln("Couldn't find render flags for class: '%v'", class.name))
+    render_flags, in_flag_map := render_flag_map[class.godot_name]
+    assert(in_flag_map, fmt.tprintfln("Couldn't find render flags for class: '%v'", class.godot_name))
 
     if render_flags == {} {
         return {}, false
     }
-
-    snake_name := names.to_snake(class.name)
 
     constructor_count := 0
     if Render_Flags.Constructors in render_flags {
@@ -198,8 +199,8 @@ variant :: proc(class: ^g.Builtin_Class, allocator: mem.Allocator) -> (variant: 
     }
 
     variant = Variant {
-        name                = cast(string)names.to_odin(class.name),
-        snake_name          = cast(string)names.to_snake(class.name),
+        name                = names.clone_string(class.odin_name),
+        snake_name          = names.clone_string(class.snake_name),
         enums               = make([]Enum, len(class.enums)),
         bit_sets            = make([]Enum, len(class.bit_fields)),
         constructors        = make([]Constructor, constructor_count),
@@ -214,23 +215,23 @@ variant :: proc(class: ^g.Builtin_Class, allocator: mem.Allocator) -> (variant: 
     variant.imports[default_import.name] = default_import
 
     if Render_Flags.Destructor in render_flags && class.destructor {
-        variant.destructor = fmt.aprintf("free_%v", snake_name)
+        variant.destructor = fmt.aprintf("free_%v", class.snake_name)
     }
 
     // N.B. some builtin classes have specialized constructors that aren't automatically generated
-    if extern_constructors, has_extern_constructors := extern_constructors[class.name]; has_extern_constructors {
+    if extern_constructors, has_extern_constructors := extern_constructors[class.godot_name]; has_extern_constructors {
         variant.extern_constructors = extern_constructors
     }
 
     for class_enum, enum_idx in class.enums {
         variant_enum := Enum {
-            name   = fmt.aprintf("%v_%v", names.to_odin(class_enum.class.name), names.to_odin(class_enum.name)),
+            name   = fmt.aprintf("%v_%v", class_enum.class.odin_name, class_enum.odin_name),
             values = make([]Enum_Value, len(class_enum.values)),
         }
 
         for value, value_idx in class_enum.values {
             variant_enum.values[value_idx] = Enum_Value {
-                name  = cast(string)names.to_odin(value.name),
+                name  = names.clone_string(value.odin_name),
                 value = strings.clone(value.value),
             }
         }
@@ -240,17 +241,13 @@ variant :: proc(class: ^g.Builtin_Class, allocator: mem.Allocator) -> (variant: 
 
     for class_bit_field, bit_field_idx in class.bit_fields {
         variant_bit_set := Enum {
-            name   = fmt.tprintf(
-                "%v_%v",
-                names.to_odin(class_bit_field.class.name),
-                names.to_odin(class_bit_field.name),
-            ),
+            name   = fmt.tprintf("%v_%v", class_bit_field.class.odin_name, class_bit_field.odin_name),
             values = make([]Enum_Value, len(class_bit_field.values)),
         }
 
         for value, value_idx in class_bit_field.values {
             variant_bit_set.values[value_idx] = Enum_Value {
-                name  = cast(string)names.to_odin(value.name),
+                name  = names.clone_string(value.odin_name),
                 value = strings.clone(value.value),
             }
         }
@@ -295,7 +292,7 @@ variant :: proc(class: ^g.Builtin_Class, allocator: mem.Allocator) -> (variant: 
         instance_method_idx := 0
         for class_method, method_idx in class.methods {
             method := Method {
-                name        = fmt.aprintf("%v_%v", snake_name, class_method.name),
+                name        = fmt.aprintf("%v_%v", class.snake_name, class_method.name),
                 hash        = class_method.hash,
                 args        = make([]Method_Arg, len(class_method.args)),
                 vararg      = class_method.vararg,
@@ -350,13 +347,13 @@ variant :: proc(class: ^g.Builtin_Class, allocator: mem.Allocator) -> (variant: 
             if class_operator.right_type != nil {
                 ensure_imports(&variant.imports, class_operator.right_type, "godot:variant") // TODO: other package modes
 
-                overload.right_type = cast(string)_any_to_name(class_operator.right_type) // TODO: other package modes
+                overload.right_type = cast(string)_any_to_odin_name(class_operator.right_type) // TODO: other package modes
                 overload.right_variant_type = cast(string)_any_to_variant_type(class_operator.right_type)
                 overload.proc_name = fmt.aprintf(
                     "%v_%v_%v",
                     variant.snake_name,
                     class_operator.name,
-                    names.to_snake(_any_to_name(class_operator.right_type)), // TODO: other package modes
+                    names.to_snake(_any_to_odin_name(class_operator.right_type)), // TODO: other package modes
                 )
             } else {
                 overload.proc_name = fmt.aprintf("%v_%v_default", variant.snake_name, class_operator.name)

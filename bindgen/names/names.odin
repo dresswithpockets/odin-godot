@@ -1,5 +1,6 @@
 package names
 
+import "base:intrinsics"
 import "core:fmt"
 import "core:strings"
 import "core:unicode"
@@ -16,6 +17,17 @@ Const_Name :: distinct string
 
 // snake_case
 Snake_Name :: distinct string
+
+Name_Case :: union {
+    Godot_Name,
+    Odin_Name,
+    Const_Name,
+    Snake_Name,
+}
+
+clone_string :: proc(name: $N) -> string where intrinsics.type_is_variant_of(Name_Case, N) {
+    return strings.clone(cast(string)name)
+}
 
 to_odin :: proc {
     godot_to_odin,

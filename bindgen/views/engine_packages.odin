@@ -17,6 +17,7 @@ Godot_Package :: struct {
     functions:  []Function,
     enums:      []Enum,
     bit_fields: []Bit_Field,
+    singletons: []Singleton,
 }
 
 Function :: struct {
@@ -30,6 +31,12 @@ Function :: struct {
 Function_Arg :: struct {
     name: string,
     type: string,
+}
+
+Singleton :: struct {
+    name:       string,
+    snake_name: string,
+    type:       string,
 }
 
 godot_package :: proc(graph: ^g.Graph, allocator: mem.Allocator) -> (core: Godot_Package) {
@@ -47,19 +54,20 @@ godot_package :: proc(graph: ^g.Graph, allocator: mem.Allocator) -> (core: Godot
         functions  = make([]Function, len(graph.util_procs)),
         enums      = make([]Enum, enum_count),
         bit_fields = make([]Bit_Field, len(graph.bit_fields)),
+        singletons = make([]Singleton, len(graph.singletons)),
     }
 
     class_idx := 0
     for class, init_idx in graph.engine_classes {
-        core.inits[init_idx] = cast(string)names.to_snake(class.name)
+        core.inits[init_idx] = names.clone_string(class.snake_name)
 
-        if slice.contains(declared_builtins, cast(string)class.name) {
+        if slice.contains(declared_builtins, class.godot_name) {
             continue
         }
 
         core.classes[class_idx] = Package_Class {
-            name       = cast(string)names.to_odin(class.name),
-            derives    = resolve_qualified_type(class.inherits, "godot:core"),
+            name    = names.clone_string(class.odin_name),
+            derives = resolve_qualified_type(class.inherits, "godot:core"),
         }
         class_idx += 1
     }
@@ -90,18 +98,18 @@ godot_package :: proc(graph: ^g.Graph, allocator: mem.Allocator) -> (core: Godot
     enum_idx := 0
     for graph_enum in graph.enums {
         // skip over enums that are defined in gdextension
-        if slice.contains(gdextension_enums, cast(string)graph_enum.name) {
+        if slice.contains(gdextension_enums, graph_enum.godot_name) {
             continue
         }
 
         new_enum := Enum {
-            name   = cast(string)names.to_odin(graph_enum.name),
+            name   = names.clone_string(graph_enum.odin_name),
             values = make([]Enum_Value, len(graph_enum.values)),
         }
 
         for value, value_idx in graph_enum.values {
             new_enum.values[value_idx] = Enum_Value {
-                name  = cast(string)names.to_odin(value.name),
+                name  = names.clone_string(value.odin_name),
                 value = strings.clone(value.value),
             }
         }
@@ -112,18 +120,26 @@ godot_package :: proc(graph: ^g.Graph, allocator: mem.Allocator) -> (core: Godot
 
     for graph_bit_field, enum_idx in graph.bit_fields {
         new_bit_field := Bit_Field {
-            name   = cast(string)names.to_odin(graph_bit_field.name),
+            name   = names.clone_string(graph_bit_field.odin_name),
             values = make([]Enum_Value, len(graph_bit_field.values)),
         }
 
         for value, value_idx in graph_bit_field.values {
             new_bit_field.values[value_idx] = Enum_Value {
-                name  = cast(string)names.to_odin(value.name),
+                name  = names.clone_string(value.odin_name),
                 value = strings.clone(value.value),
             }
         }
 
         core.bit_fields[enum_idx] = new_bit_field
+    }
+
+    for singleton, singleton_idx in graph.singletons {
+        core.singletons[singleton_idx] = Singleton {
+            name       = names.clone_string(singleton.odin_name),
+            snake_name = names.clone_string(singleton.snake_name),
+            type       = resolve_qualified_type(singleton.type, "godot:godot"),
+        }
     }
 
     return

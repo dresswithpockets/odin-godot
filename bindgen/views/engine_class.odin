@@ -13,6 +13,7 @@ Engine_Class :: struct {
     name:             string,
     godot_name:       string,
     snake_name:       string,
+    cast_on_new: bool,
     enums:            []Enum,
     bit_fields:       []Bit_Field,
     file_constants:   []File_Constant,
@@ -53,9 +54,10 @@ engine_class :: proc(class: ^g.Engine_Class, allocator: mem.Allocator) -> (engin
     }
 
     engine_class = Engine_Class {
-        name             = cast(string)names.to_odin(class.name),
-        godot_name       = strings.clone(cast(string)class.name),
-        snake_name       = cast(string)names.to_snake(class.name),
+        name             = names.clone_string(class.odin_name),
+        godot_name       = names.clone_string(class.godot_name),
+        snake_name       = names.clone_string(class.snake_name),
+        cast_on_new = class.refcounted,
         enums            = make([]Enum, len(class.enums)),
         bit_fields       = make([]Bit_Field, len(class.bit_fields)),
         file_constants   = make([]File_Constant, len(class.constants)),
@@ -76,13 +78,13 @@ engine_class :: proc(class: ^g.Engine_Class, allocator: mem.Allocator) -> (engin
 
     for class_enum, enum_idx in class.enums {
         new_enum := Enum {
-            name   = cast(string)names.to_odin(class_enum.name),
+            name   = names.clone_string(class_enum.odin_name),
             values = make([]Enum_Value, len(class_enum.values)),
         }
 
         for value, value_idx in class_enum.values {
             new_enum.values[value_idx] = Enum_Value {
-                name  = cast(string)names.to_odin(value.name),
+                name  = names.clone_string(value.odin_name),
                 value = strings.clone(value.value),
             }
         }
@@ -92,13 +94,13 @@ engine_class :: proc(class: ^g.Engine_Class, allocator: mem.Allocator) -> (engin
 
     for class_bit_field, bit_field_idx in class.bit_fields {
         new_bit_field := Bit_Field {
-            name   = cast(string)names.to_odin(class_bit_field.name),
+            name   = names.clone_string(class_bit_field.odin_name),
             values = make([]Enum_Value, len(class_bit_field.values)),
         }
 
         for value, value_idx in class_bit_field.values {
             new_bit_field.values[value_idx] = Enum_Value {
-                name  = cast(string)names.to_odin(value.name),
+                name  = names.clone_string(value.odin_name),
                 value = strings.clone(value.value),
             }
         }
@@ -108,7 +110,7 @@ engine_class :: proc(class: ^g.Engine_Class, allocator: mem.Allocator) -> (engin
 
     for constant, constant_idx in class.constants {
         file_constant := File_Constant {
-            name = strings.clone(cast(string)constant.name),
+            name = names.clone_string(constant.name),
             type = resolve_qualified_type(constant.type, package_name),
         }
 

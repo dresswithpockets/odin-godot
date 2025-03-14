@@ -23,10 +23,10 @@ Type_Import :: union {
 No_Import :: struct {}
 
 @(private)
-declared_builtins := []string{"Object", "RefCounted"}
+declared_builtins := []names.Godot_Name{"Object", "RefCounted"}
 
 @(private)
-gdextension_enums := []string{"Variant.Type", "Variant.Operator"}
+gdextension_enums := []names.Godot_Name{"Variant.Type", "Variant.Operator"}
 
 @(private = "file")
 _api_type_to_import_name := [2]string{"__bindgen_core", "__bindgen_editor"}
@@ -76,7 +76,7 @@ map_types_to_imports :: proc(graph: g.Graph, map_mode: Package_Map_Mode) {
                 }
 
             case ^g.Enum:
-                if slice.contains(gdextension_enums, cast(string)root_type.name) {
+                if slice.contains(gdextension_enums, root_type.godot_name) {
                     import_map[root_type] = Import {
                         name = "__bindgen_gde",
                         path = "godot:gdextension",
@@ -137,10 +137,10 @@ _any_to_rawptr :: proc(type: g.Any_Type) -> rawptr {
 _any_to_variant_type :: proc(type: g.Any_Type) -> names.Odin_Name {
     switch as_type in type {
     case ^g.Builtin_Class:
-        if as_type.name == "Variant" {
+        if as_type.godot_name == "Variant" {
             return "Nil"
         }
-        return names.to_odin(as_type.name)
+        return as_type.odin_name
     case ^g.Engine_Class:
         return "Object"
     case ^g.Class_Enum(g.Builtin_Class):
@@ -177,51 +177,51 @@ _any_to_variant_type :: proc(type: g.Any_Type) -> names.Odin_Name {
 }
 
 @(private)
-_any_to_name :: proc(type: g.Any_Type, location := #caller_location) -> names.Odin_Name {
+_any_to_odin_name :: proc(type: g.Any_Type, location := #caller_location) -> names.Odin_Name {
     switch as_type in type {
     case ^g.Builtin_Class:
-        return names.to_odin(as_type.name)
+        return as_type.odin_name
     case ^g.Engine_Class:
-        return names.to_odin(as_type.name)
+        return as_type.odin_name
     case ^g.Class_Enum(g.Builtin_Class):
         return(
-            cast(names.Odin_Name)fmt.aprintf("%v_%v", names.to_odin(as_type.class.name), names.to_odin(as_type.name)) \
+            cast(names.Odin_Name)fmt.aprintf("%v_%v", as_type.class.odin_name, as_type.odin_name) \
         )
     case ^g.Class_Bit_Field(g.Builtin_Class):
         return(
-            cast(names.Odin_Name)fmt.aprintf("%v_%v", names.to_odin(as_type.class.name), names.to_odin(as_type.name)) \
+            cast(names.Odin_Name)fmt.aprintf("%v_%v", as_type.class.odin_name, as_type.odin_name) \
         )
     case ^g.Class_Enum(g.Engine_Class):
-        return names.to_odin(as_type.name)
+        return as_type.odin_name
     case ^g.Class_Bit_Field(g.Engine_Class):
-        return names.to_odin(as_type.name)
+        return as_type.odin_name
     case ^g.Enum:
-        return names.to_odin(as_type.name)
+        return as_type.odin_name
     case ^g.Bit_Field:
-        return names.to_odin(as_type.name)
+        return as_type.odin_name
     case ^g.Native_Struct:
-        return names.to_odin(as_type.name)
+        return as_type.odin_name
     case ^g.Primitive:
         return cast(names.Odin_Name)as_type.odin_name
     case ^g.Typed_Array:
-        name := cast(names.Odin_Name)fmt.aprintf("!!DEBUG Typed_Array(%v)", _any_to_name(as_type.element_type))
-        fmt.eprintln("WARN! _any_to_name called on Typed_Array: ", name, location)
+        name := cast(names.Odin_Name)fmt.aprintf("!!DEBUG Typed_Array(%v)", _any_to_odin_name(as_type.element_type))
+        fmt.eprintln("WARN! _any_to_odin_name called on Typed_Array: ", name, location)
         return name
     case ^g.Pointer:
         name := cast(names.Odin_Name)fmt.aprintf(
             "!!DEBUG Pointer(%v, %v)",
             as_type.depth,
-            _any_to_name(g.pointable_to_any(as_type.type)),
+            _any_to_odin_name(g.pointable_to_any(as_type.type)),
         )
-        fmt.eprintln("WARN! _any_to_name called on Pointer: ", name, location)
+        fmt.eprintln("WARN! _any_to_odin_name called on Pointer: ", name, location)
         return name
     case ^g.Sized_Array:
         name := cast(names.Odin_Name)fmt.aprintf(
             "!!DEBUG Sized_Array(%v, %v)",
             as_type.size,
-            _any_to_name(as_type.type),
+            _any_to_odin_name(as_type.type),
         )
-        fmt.eprintln("WARN! _any_to_name called on Sized_Array: ", name, location)
+        fmt.eprintln("WARN! _any_to_odin_name called on Sized_Array: ", name, location)
         return name
     }
 
@@ -273,14 +273,14 @@ resolve_qualified_type :: proc(type: g.Any_Type, current_package: string) -> str
     }
 
     type_import, ok := import_map[_any_to_rawptr(type)]
-    assert(ok, fmt.tprintfln("Couldn't find mapped import for type: %v", _any_to_name(type)))
+    assert(ok, fmt.tprintfln("Couldn't find mapped import for type: %v", _any_to_odin_name(type)))
 
     import_, is_import := type_import.(Import)
     if !is_import || import_.path == current_package {
-        return cast(string)_any_to_name(type)
+        return cast(string)_any_to_odin_name(type)
     }
 
-    return fmt.aprintf("%v.%v", import_.name, _any_to_name(type))
+    return fmt.aprintf("%v.%v", import_.name, _any_to_odin_name(type))
 }
 
 resolve_constructor_proc_name :: proc(type: g.Any_Type, current_package: string) -> string {
@@ -292,13 +292,13 @@ resolve_constructor_proc_name :: proc(type: g.Any_Type, current_package: string)
         prefix = fmt.tprintf("%v.", import_.name)
     }
 
-    class_name: names.Godot_Name
+    class_name: names.Snake_Name
 
     #partial switch class in type {
     case ^g.Builtin_Class:
-        class_name = class.name
+        class_name = class.snake_name
     case ^g.Engine_Class:
-        class_name = class.name
+        class_name = class.snake_name
     case:
         panic(
             fmt.tprintf(
@@ -308,5 +308,5 @@ resolve_constructor_proc_name :: proc(type: g.Any_Type, current_package: string)
         )
     }
 
-    return fmt.aprintf("%vnew_%v", prefix, names.godot_to_snake(class_name))
+    return fmt.aprintf("%vnew_%v", prefix, class_name)
 }

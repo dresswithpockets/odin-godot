@@ -27,7 +27,7 @@ native_structs :: proc(graph: ^g.Graph, allocator: mem.Allocator) -> (structs: S
 
     for native_struct, struct_idx in graph.native_structs {
         new_struct := Struct {
-            name   = cast(string)names.to_odin(native_struct.name),
+            name   = names.clone_string(native_struct.odin_name),
             fields = make([]Struct_Field, len(native_struct.fields)),
         }
 

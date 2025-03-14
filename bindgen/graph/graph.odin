@@ -148,7 +148,10 @@ Sized_Array :: struct {
 }
 
 Builtin_Class :: struct {
-    name:            names.Godot_Name,
+    godot_name:      names.Godot_Name,
+    snake_name:      names.Snake_Name,
+    odin_name:       names.Odin_Name,
+    const_name:      names.Const_Name,
     destructor:      bool,
     index_returns:   Any_Type, // nil if no indexer
     keyed:           bool,
@@ -197,9 +200,13 @@ Engine_Api_Type :: enum {
 }
 
 Engine_Class :: struct {
-    name:         names.Godot_Name,
+    godot_name:   names.Godot_Name,
+    snake_name:   names.Snake_Name,
+    odin_name:    names.Odin_Name,
+    const_name:   names.Const_Name,
     inherits:     Any_Type,
     instantiable: bool,
+    refcounted:   bool,
     api_type:     Engine_Api_Type,
     enums:        []Class_Enum(Engine_Class),
     bit_fields:   []Class_Bit_Field(Engine_Class),
@@ -208,39 +215,48 @@ Engine_Class :: struct {
     signals:      []Signal,
     operators:    []Operator,
     properties:   []Property,
-    // TODO: is_refcounted
 }
 
 Enum_Value :: struct {
-    name:  names.Const_Name,
-    value: string,
+    const_name: names.Const_Name,
+    odin_name:  names.Odin_Name,
+    value:      string,
 }
 
 Class_Enum :: struct($C: typeid) where C == Builtin_Class || C == Engine_Class {
-    class:  ^C,
-    name:   names.Godot_Name,
-    values: []Enum_Value,
+    class:      ^C,
+    godot_name: names.Godot_Name,
+    odin_name:  names.Odin_Name,
+    const_name: names.Const_Name,
+    values:     []Enum_Value,
 }
 
 Class_Bit_Field :: struct($C: typeid) where C == Builtin_Class || C == Engine_Class {
-    class:  ^C,
-    name:   names.Godot_Name,
-    values: []Enum_Value,
+    class:      ^C,
+    godot_name: names.Godot_Name,
+    odin_name:  names.Odin_Name,
+    const_name: names.Const_Name,
+    values:     []Enum_Value,
 }
 
 Enum :: struct {
-    name:   names.Godot_Name,
-    values: []Enum_Value,
+    godot_name: names.Godot_Name,
+    odin_name:  names.Odin_Name,
+    const_name: names.Const_Name,
+    values:     []Enum_Value,
 }
 
 Bit_Field :: struct {
-    name:   names.Godot_Name,
-    values: []Enum_Value,
+    godot_name: names.Godot_Name,
+    odin_name:  names.Odin_Name,
+    const_name: names.Const_Name,
+    values:     []Enum_Value,
 }
 
 Native_Struct :: struct {
-    name:   names.Godot_Name,
-    fields: []Struct_Field,
+    godot_name: names.Godot_Name,
+    odin_name:  names.Odin_Name,
+    fields:     []Struct_Field,
 }
 
 Struct_Field :: struct {
@@ -314,8 +330,10 @@ Property :: struct {
 }
 
 Singleton :: struct {
-    name: names.Godot_Name,
-    type: Any_Type,
+    godot_name: names.Godot_Name,
+    snake_name: names.Snake_Name,
+    odin_name:  names.Odin_Name,
+    type:       Any_Type,
 }
 
 Util_Proc :: struct {
@@ -399,8 +417,8 @@ graph_init :: proc(graph: ^Graph, api: ^Api, allocator: mem.Allocator) {
 }
 
 @(private = "file")
-_enum_value_name :: proc(enum_name: names.Godot_Name, value_name: names.Const_Name) -> names.Const_Name {
-    result := strings.trim_prefix(cast(string)value_name, cast(string)names.to_const(enum_name))
+_enum_value_name :: proc(enum_const_name: names.Const_Name, value_name: names.Const_Name) -> names.Const_Name {
+    result := strings.trim_prefix(cast(string)value_name, cast(string)enum_const_name)
     if len(result) == 0 {
         return value_name
     }
@@ -420,32 +438,42 @@ _graph_class_enums :: proc(
     bitfield_idx := 0
     for api_enum, idx in api_enums {
         if api_enum.is_bitfield {
+            new_bit_field_godot_name := cast(names.Godot_Name)fmt.aprintf("%v%v", class.godot_name, api_enum.name)
             new_bit_field := Class_Bit_Field(C) {
-                class  = class,
-                name   = cast(names.Godot_Name)fmt.aprintf("%v%v", class.name, api_enum.name),
-                values = make([]Enum_Value, len(api_enum.values)),
+                class      = class,
+                godot_name = new_bit_field_godot_name,
+                const_name = names.to_const(new_bit_field_godot_name),
+                odin_name  = names.to_odin(new_bit_field_godot_name),
+                values     = make([]Enum_Value, len(api_enum.values)),
             }
 
             for api_value, value_idx in api_enum.values {
+                value_const_name := _enum_value_name(new_bit_field.const_name, api_value.name)
                 new_bit_field.values[value_idx] = Enum_Value {
-                    name  = _enum_value_name(api_enum.name, api_value.name),
-                    value = fmt.tprintf("%d", api_value.value),
+                    const_name = value_const_name,
+                    odin_name  = names.to_odin(value_const_name),
+                    value      = fmt.tprintf("%d", api_value.value),
                 }
             }
 
             bit_fields[bitfield_idx] = new_bit_field
             bitfield_idx += 1
         } else {
+            new_enum_godot_name := cast(names.Godot_Name)fmt.aprintf("%v%v", class.godot_name, api_enum.name)
             new_enum := Class_Enum(C) {
-                class  = class,
-                name   = cast(names.Godot_Name)fmt.aprintf("%v%v", class.name, api_enum.name),
-                values = make([]Enum_Value, len(api_enum.values)),
+                class      = class,
+                godot_name = new_enum_godot_name,
+                const_name = names.to_const(new_enum_godot_name),
+                odin_name  = names.to_odin(new_enum_godot_name),
+                values     = make([]Enum_Value, len(api_enum.values)),
             }
 
             for api_value, value_idx in api_enum.values {
+                value_const_name := _enum_value_name(new_enum.const_name, api_value.name)
                 new_enum.values[value_idx] = Enum_Value {
-                    name  = _enum_value_name(api_enum.name, api_value.name),
-                    value = fmt.tprintf("%d", api_value.value),
+                    const_name = value_const_name,
+                    odin_name  = names.to_odin(value_const_name),
+                    value      = fmt.tprintf("%d", api_value.value),
                 }
             }
 
@@ -461,7 +489,9 @@ graph_type_info_pass :: proc(graph: ^Graph, api: ^Api) {
 
     // variant isn't included in the api, but it always exists
     // TODO: Variant.Type and Variant.Operator
-    graph.types["Variant"] = new_clone(Builtin_Class{name = "Variant"})
+    graph.types["Variant"] = new_clone(
+        Builtin_Class{godot_name = "Variant", const_name = "VARIANT", odin_name = "Variant", snake_name = "variant"},
+    )
 
     for api_builtin_class, class_idx in api.builtin_classes {
         enum_count := 0
@@ -475,7 +505,10 @@ graph_type_info_pass :: proc(graph: ^Graph, api: ^Api) {
         }
 
         graph.builtin_classes[class_idx] = Builtin_Class {
-            name         = api_builtin_class.name,
+            godot_name   = api_builtin_class.name,
+            const_name   = names.to_const(api_builtin_class.name),
+            odin_name    = names.to_odin(api_builtin_class.name),
+            snake_name   = names.to_snake(api_builtin_class.name),
             destructor   = api_builtin_class.has_destructor,
             keyed        = api_builtin_class.is_keyed,
             constants    = make([]Constant, len(api_builtin_class.constants)),
@@ -510,7 +543,11 @@ graph_type_info_pass :: proc(graph: ^Graph, api: ^Api) {
         }
 
         engine_class := Engine_Class {
-            name         = api_class.name,
+            godot_name   = api_class.name,
+            const_name   = names.to_const(api_class.name),
+            odin_name    = names.to_odin(api_class.name),
+            snake_name   = names.to_snake(api_class.name),
+            refcounted   = api_class.is_refcounted,
             instantiable = api_class.is_instantiable,
             constants    = make([]Constant, len(api_class.constants)),
             enums        = make([]Class_Enum(Engine_Class), enum_count),
@@ -547,14 +584,18 @@ graph_type_info_pass :: proc(graph: ^Graph, api: ^Api) {
     for api_enum in api.enums {
         if api_enum.is_bitfield {
             new_bit_field := Bit_Field {
-                name   = api_enum.name,
-                values = make([]Enum_Value, len(api_enum.values)),
+                godot_name = api_enum.name,
+                const_name = names.to_const(api_enum.name),
+                odin_name  = names.to_odin(api_enum.name),
+                values     = make([]Enum_Value, len(api_enum.values)),
             }
 
             for api_value, value_idx in api_enum.values {
+                value_const_name := _enum_value_name(new_bit_field.const_name, api_value.name)
                 new_bit_field.values[value_idx] = Enum_Value {
-                    name  = _enum_value_name(api_enum.name, api_value.name),
-                    value = fmt.tprintf("%d", api_value.value),
+                    const_name = value_const_name,
+                    odin_name  = names.to_odin(value_const_name),
+                    value      = fmt.tprintf("%d", api_value.value),
                 }
             }
 
@@ -563,14 +604,18 @@ graph_type_info_pass :: proc(graph: ^Graph, api: ^Api) {
             bitfield_idx += 1
         } else {
             new_enum := Enum {
-                name   = api_enum.name,
-                values = make([]Enum_Value, len(api_enum.values)),
+                godot_name = api_enum.name,
+                const_name = names.to_const(api_enum.name),
+                odin_name  = names.to_odin(api_enum.name),
+                values     = make([]Enum_Value, len(api_enum.values)),
             }
 
             for api_value, value_idx in api_enum.values {
+                value_const_name := _enum_value_name(new_enum.const_name, api_value.name)
                 new_enum.values[value_idx] = Enum_Value {
-                    name  = _enum_value_name(api_enum.name, api_value.name),
-                    value = fmt.tprintf("%d", api_value.value),
+                    const_name = value_const_name,
+                    odin_name  = names.to_odin(value_const_name),
+                    value      = fmt.tprintf("%d", api_value.value),
                 }
             }
 
@@ -582,7 +627,8 @@ graph_type_info_pass :: proc(graph: ^Graph, api: ^Api) {
 
     for api_struct, idx in api.native_structs {
         graph.native_structs[idx] = Native_Struct {
-            name = api_struct.name,
+            godot_name = api_struct.name,
+            odin_name  = names.to_odin(api_struct.name),
         }
 
         graph.types[api_struct.name] = &graph.native_structs[idx]
@@ -736,12 +782,16 @@ _graph_resolve_type :: proc(graph: ^Graph, type_specifier: Type_Specifier) -> An
                             ),
                         )
 
-                        child_type_string := cast(names.Godot_Name)fmt.aprintf("%v%v", class_name, suffix[dot_idx + 1:])
+                        child_type_string := cast(names.Godot_Name)fmt.aprintf(
+                            "%v%v",
+                            class_name,
+                            suffix[dot_idx + 1:],
+                        )
 
                         #partial switch class in class_type {
                         case ^Builtin_Class:
                             for &class_enum in class.enums {
-                                if class_enum.name == child_type_string {
+                                if class_enum.godot_name == child_type_string {
                                     return &class_enum
                                 }
                             }
@@ -754,7 +804,7 @@ _graph_resolve_type :: proc(graph: ^Graph, type_specifier: Type_Specifier) -> An
                             )
                         case ^Engine_Class:
                             for &class_enum in class.enums {
-                                if class_enum.name == child_type_string {
+                                if class_enum.godot_name == child_type_string {
                                     return &class_enum
                                 }
                             }
@@ -791,19 +841,23 @@ _graph_resolve_type :: proc(graph: ^Graph, type_specifier: Type_Specifier) -> An
                             ),
                         )
 
-                        child_type_string := cast(names.Godot_Name)fmt.aprintf("%v%v", class_name, suffix[dot_idx + 1:])
+                        child_type_string := cast(names.Godot_Name)fmt.aprintf(
+                            "%v%v",
+                            class_name,
+                            suffix[dot_idx + 1:],
+                        )
 
                         #partial switch class in class_type {
                         case ^Builtin_Class:
                             for &class_bit_field in class.bit_fields {
-                                if class_bit_field.name == child_type_string {
+                                if class_bit_field.godot_name == child_type_string {
                                     return &class_bit_field
                                 }
                             }
                             panic("Couldn't match TypeName in bitfield::ClassName.TypeName to a Class_Bit_Field")
                         case ^Engine_Class:
                             for &class_bit_field in class.bit_fields {
-                                if class_bit_field.name == child_type_string {
+                                if class_bit_field.godot_name == child_type_string {
                                     return &class_bit_field
                                 }
                             }
@@ -1088,7 +1142,12 @@ _graph_signal :: proc(graph: ^Graph, api_signal: ApiClassSignal) -> Signal {
 
 @(private = "file")
 _graph_singleton :: proc(graph: ^Graph, api_singleton: ApiSingleton) -> Singleton {
-    return Singleton{name = api_singleton.name, type = _graph_resolve_type(graph, api_singleton.type)}
+    return Singleton {
+        godot_name = api_singleton.name,
+        odin_name = names.to_odin(api_singleton.name),
+        snake_name = names.to_snake(api_singleton.name),
+        type = _graph_resolve_type(graph, api_singleton.type),
+    }
 }
 
 @(private = "file")
@@ -1120,7 +1179,7 @@ _graph_util_proc :: proc(graph: ^Graph, api_util_func: ApiUtilityFunction) -> Ut
 @(private = "file")
 _search_class_enums :: proc(enums: []Class_Enum($C), name: names.Godot_Name) -> (ret: ^Class_Enum(C), ok: bool) {
     for &class_enum in enums {
-        if class_enum.name == name {
+        if class_enum.godot_name == name {
             return &class_enum, true
         }
     }
@@ -1136,7 +1195,7 @@ _search_class_bit_fields :: proc(
     ok: bool,
 ) {
     for &class_bit_field in bit_fields {
-        if class_bit_field.name == name {
+        if class_bit_field.godot_name == name {
             return &class_bit_field, true
         }
     }
