@@ -399,6 +399,16 @@ graph_init :: proc(graph: ^Graph, api: ^Api, allocator: mem.Allocator) {
 }
 
 @(private = "file")
+_enum_value_name :: proc(enum_name: names.Godot_Name, value_name: names.Const_Name) -> names.Const_Name {
+    result := strings.trim_prefix(cast(string)value_name, cast(string)names.to_const(enum_name))
+    if len(result) == 0 {
+        return value_name
+    }
+
+    return cast(names.Const_Name)strings.trim_prefix(result, "_")
+}
+
+@(private = "file")
 _graph_class_enums :: proc(
     class: ^$C,
     enums: $E/[]Class_Enum(C),
@@ -418,7 +428,7 @@ _graph_class_enums :: proc(
 
             for api_value, value_idx in api_enum.values {
                 new_bit_field.values[value_idx] = Enum_Value {
-                    name  = cast(names.Const_Name)strings.trim_suffix(cast(string)api_value.name, cast(string)api_enum.name),
+                    name  = _enum_value_name(api_enum.name, api_value.name),
                     value = fmt.tprintf("%d", api_value.value),
                 }
             }
@@ -434,7 +444,7 @@ _graph_class_enums :: proc(
 
             for api_value, value_idx in api_enum.values {
                 new_enum.values[value_idx] = Enum_Value {
-                    name  = cast(names.Const_Name)strings.trim_suffix(cast(string)api_value.name, cast(string)api_enum.name),
+                    name  = _enum_value_name(api_enum.name, api_value.name),
                     value = fmt.tprintf("%d", api_value.value),
                 }
             }
@@ -543,7 +553,7 @@ graph_type_info_pass :: proc(graph: ^Graph, api: ^Api) {
 
             for api_value, value_idx in api_enum.values {
                 new_bit_field.values[value_idx] = Enum_Value {
-                    name  = cast(names.Const_Name)strings.trim_suffix(cast(string)api_value.name, cast(string)api_enum.name),
+                    name  = _enum_value_name(api_enum.name, api_value.name),
                     value = fmt.tprintf("%d", api_value.value),
                 }
             }
@@ -559,7 +569,7 @@ graph_type_info_pass :: proc(graph: ^Graph, api: ^Api) {
 
             for api_value, value_idx in api_enum.values {
                 new_enum.values[value_idx] = Enum_Value {
-                    name  = cast(names.Const_Name)strings.trim_suffix(cast(string)api_value.name, cast(string)api_enum.name),
+                    name  = _enum_value_name(api_enum.name, api_value.name),
                     value = fmt.tprintf("%d", api_value.value),
                 }
             }
