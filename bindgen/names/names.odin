@@ -28,6 +28,11 @@ to_snake :: proc {
     godot_to_snake,
 }
 
+to_const :: proc {
+    godot_to_const,
+    odin_to_const,
+}
+
 // godot uses ACRONYMPascalCase, but we use AcronymPascalCase
 // return string must be freed
 godot_to_odin :: proc(name: Godot_Name) -> (s: Odin_Name) {
@@ -88,7 +93,8 @@ odin_to_snake :: proc(name: Odin_Name) -> (s: Snake_Name) {
     return cast(Snake_Name)strings.to_lower(cast(string)name)
 }
 
-odin_to_const :: proc(name: Odin_Name) -> (s: Const_Name) {
+// ACROYNM0ACRONYMNormalWord to ACRONYM0ACRONYM_NORMAL_WORD
+godot_to_const :: proc(name: Godot_Name) -> (s: Const_Name) {
     assert(len(name) > 0)
 
     sb := strings.builder_make()
@@ -97,22 +103,50 @@ odin_to_const :: proc(name: Odin_Name) -> (s: Const_Name) {
     runes := utf8.string_to_runes(cast(string)name)
     defer delete(runes)
 
-    fmt.sbprint(&sb, runes[0])
-    for i := 1; i < len(runes); i += 1 {
+    in_acronym := false
+
+    for i := 0; i < len(runes) - 1; i += 1 {
         r := runes[i]
-        if unicode.is_alpha(r) && unicode.is_upper(r) {
-            fmt.sbprint(&sb, "_")
-            fmt.sbprint(&sb, r)
-            continue
+        peek := runes[i + 1]
+        if i > 0 {
+            if !unicode.is_digit(r) && unicode.is_upper(r) && unicode.is_lower(peek) {
+                fmt.sbprint(&sb, '_')
+                fmt.sbprint(&sb, r)
+                in_acronym = false
+                continue
+            }
+
+            if !in_acronym && unicode.is_upper(peek) {
+                if unicode.is_digit(r) {
+                    fmt.sbprint(&sb, r)
+                    in_acronym = true
+                    continue
+                } else if unicode.is_upper(r) {
+                    fmt.sbprint(&sb, '_')
+                    fmt.sbprint(&sb, r)
+                    in_acronym = true
+                    continue
+                }
+            }
         }
 
         fmt.sbprint(&sb, unicode.to_upper(r))
     }
 
+    fmt.sbprint(&sb, unicode.to_upper(runes[len(runes) - 1]))
     s = cast(Const_Name)strings.clone(strings.to_string(sb))
     return
 }
 
+// Ada_Case to CONST_CASE
+// Acroynm3dAcronym_More_Words becomes ACRONYM3DACRONYM_MORE_WORDS
+odin_to_const :: proc(name: Odin_Name) -> (s: Const_Name) {
+    assert(len(name) > 0)
+    return cast(Const_Name)strings.to_upper(cast(string)name)
+}
+
+// CONST_CASE to Ada_Case
+// ACRONYM3DACRONYM_MORE_WORDS becomes Acroynm3dAcronym_More_Words
 const_to_odin :: proc(name: Const_Name) -> (s: Odin_Name) {
     assert(len(name) > 0)
 
