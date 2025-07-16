@@ -1,7 +1,7 @@
 package game
 
 import core "../../../core"
-import gd "../../../gdextension"
+import gd "godot:gdext"
 import var "../../../variant"
 
 PhysicsMotion :: struct {
@@ -45,3 +45,4 @@ physics_motion_test :: proc(motion: ^PhysicsMotion, from: var.Transform3d, move:
 
     return motion.last_hit
 }
+

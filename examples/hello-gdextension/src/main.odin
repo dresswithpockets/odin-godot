@@ -10,7 +10,7 @@ example_library_init :: proc "c" (
     library: gdext.ExtensionClassLibraryPtr,
     initialization: ^gdext.Initialization,
 ) -> bool {
-    // gdextension procs MUST be initialized before using the binding!
+    // gdext procs MUST be initialized before using the binding!
     gdext.init(library, get_proc_address)
 
     // MUST be called before using any core classes, singletons, or utility functions

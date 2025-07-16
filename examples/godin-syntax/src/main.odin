@@ -1,6 +1,6 @@
 package example
 
-import gd "../../gdextension"
+import gd "godot:gdext"
 import var "../../variant"
 import "core:strings"
 

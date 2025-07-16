@@ -17,7 +17,7 @@ The bindings to the C Interface are in `gdextension`. Check out [hello-gdextensi
 
 Clone & generate bindings
 ```sh
-git clone --recursive-submodules -j8 https://github.com/dresswithpockets/odin-godot
+git clone --recurse-submodules -j8 https://github.com/dresswithpockets/odin-godot
 cd odin-godot
 make bindings
 ```

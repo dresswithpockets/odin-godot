@@ -1,6 +1,6 @@
 package godot
 
-import gd "../gdextension"
+import gd "godot:gdext" 
 import "core:mem"
 
 @(private)
