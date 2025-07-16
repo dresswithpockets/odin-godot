@@ -115,12 +115,12 @@ Variant :: struct {
 @(private = "file")
 default_import := Import {
     name = "__bindgen_gde",
-    path = "../gdextension",
+    path = "godot:gdext",
 }
 
 @(private = "file")
 imports_with_math := []Import {
-    Import{name = "__bindgen_gde", path = "../gdextension"},
+    Import{name = "__bindgen_gde", path = "godot:gdext"},
     Import{name = "__bindgen_math", path = "core:math"},
 }
 
