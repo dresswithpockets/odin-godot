@@ -154,7 +154,7 @@ ApiClassProperty :: struct {
 }
 
 ApiClassMethod :: struct {
-    name:               string `json:"string"`,
+    name:               string `json:"name"`,
     is_vararg:          bool `json:"is_vararg"`,
     is_const:           bool `json:"is_const"`,
     is_static:          bool `json:"is_static"`,
