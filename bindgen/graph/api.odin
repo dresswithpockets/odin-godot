@@ -94,7 +94,7 @@ ApiClassOperator :: struct {
 }
 
 ApiBuiltinClassMethod :: struct {
-    name:        string `json:"string"`,
+    name:        string `json:"name"`,
     return_type: Maybe(string) `json:"return_type"`,
     is_vararg:   bool `json:"is_vararg"`,
     is_const:    bool `json:"is_const"`,
