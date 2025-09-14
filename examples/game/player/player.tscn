@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://c186aybk0cgr4"]
 
-[ext_resource type="Script" uid="uid://bdgtgv5plcpgc" path="res://player/camera.gd" id="1_1ew6o"]
+[ext_resource type="Script" path="res://player/camera.gd" id="1_1ew6o"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_42akx"]
 margin = 0.005
