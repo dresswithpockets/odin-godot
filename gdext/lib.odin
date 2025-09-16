@@ -150,7 +150,7 @@ PtrDestructor :: #type proc "c" (base: TypePtr)
 PtrSetter :: #type proc "c" (base: TypePtr, value: TypePtr)
 PtrGetter :: #type proc "c" (base: TypePtr, value: TypePtr)
 PtrIndexedSetter :: #type proc "c" (base: TypePtr, index: i64, value: TypePtr)
-PtrIndexedGetter :: #type proc "c" (base: TypePtr, key: TypePtr, value: TypePtr)
+PtrIndexedGetter :: #type proc "c" (base: TypePtr, index: TypePtr, value: TypePtr)
 PtrKeyedSetter :: #type proc "c" (base: TypePtr, key: TypePtr, value: TypePtr)
 PtrKeyedGetter :: #type proc "c" (base: TypePtr, key: TypePtr, value: TypePtr)
 PtrKeyedChecker :: #type proc "c" (base: VariantPtr, key: VariantPtr) -> u32
