@@ -907,6 +907,15 @@ _graph_resolve_type :: proc(graph: ^Graph, type_specifier: Type_Specifier) -> An
 
                     return typed_array
                 }
+			//TODO: new type in Godot 4.5 api
+			// skipped for now
+			case "typeddictionary":
+				{
+				//extension_api.json line 82903 in DPITexture inherits Texture2D, core
+				//"type": "typeddictionary::Color;Color",
+				//extension_api.json line 129285 in GraphEdit inherits Control, core
+				//"type": "typeddictionary::int;String",
+				}
             case:
                 panic("Unexpected type prefix before ::")
             }
