@@ -11,7 +11,8 @@
 >
 > extension_api.json and gdextension_interface.h added just to see the diff between 4.4 and 4.5
 >
-> gdext not updated yet
+> gdext:
+>   lib.odin updated
 >
 > I didn't touch Godin at all
 
