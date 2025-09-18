@@ -371,7 +371,12 @@ ExtensionClassCreationInfo4 :: struct {
     class_userdata: rawptr, // Per-class user data, later accessible in instance bindings.
 }
 
+ExtensionClassCreationInfo4 :: ExtensionClassCreationInfo5
+
 ExtensionClassLibraryPtr :: distinct rawptr
+
+/* Passed a pointer to a PackedStringArray that should be filled with the classes that may be used by the GDExtension. */
+ExtensionEditorGetClassesUsedCallback :: #type proc "c" (packed_string_array: TypePtr)
 
 // Method
 
@@ -739,6 +744,12 @@ ExtensionScriptInstanceInfo3 :: struct {
     free_func:                      ExtensionScriptInstanceFree,
 }
 
+ExtensionWorkerThreadPoolGroupTask :: #type proc "c" (rawptr, c.uint32_t)
+ExtensionWorkerThreadPoolTask :: #type proc "c" (rawptr)
+
+ExtensionInitializeCallback :: #type proc "c" (user_data: rawptr, level: InitializationLevel)
+ExtensionDeinitializeCallback :: #type proc "c" (user_data: rawptr)
+
 ExtensionInterfaceGetProcAddress :: #type proc "c" (function_name: cstring) -> rawptr
 
 /*
@@ -788,6 +799,18 @@ GodotVersion :: struct {
     version_string: cstring,
 }
 
+GodotVersion2 :: struct {
+    version_major:  u32,
+    version_minor:  u32,
+    version_patch:  u32,
+    hex:            u32,        // Full version encoded as hexadecimal with one byte (2 hex digits) per number (e.g. for "3.1.12" it would be 0x03010C)
+    status:         cstring,    // (e.g. "stable", "beta", "rc1", "rc2")
+    build:          cstring,    // (e.g. "custom_build")
+    hash:           cstring,    // Full Git commit hash.
+    timestamp:      u64,        // Git commit date UNIX timestamp in seconds, or 0 if unavailable.
+    version_string: cstring,    // (e.g. "Godot v3.1.4.stable.official.mono")
+}
+
 InitializationLevel :: enum c.int {
     Core,
     Servers,
@@ -799,8 +822,27 @@ InitializationLevel :: enum c.int {
 Initialization :: struct {
     minimum_initialization_level: InitializationLevel,
     user_data:                    rawptr,
-    initialize:                   proc "c" (user_data: rawptr, level: InitializationLevel),
-    deinitialize:                 proc "c" (user_data: rawptr, level: InitializationLevel),
+    initialize:                   ExtensionInitializeCallback,
+    deinitialize:                 ExtensionDeinitializeCallback,
+}
+
+/* Called when starting the main loop. */
+ExtensionMainLoopStartupCallback :: #type proc "c" ()
+
+/* Called when shutting down the main loop. */
+ExtensionMainLoopShutdownCallback :: #type proc "c" ()
+
+/* Called for every frame iteration of the main loop. */
+ExtensionMainLoopFrameCallback :: #type proc "c" ()
+
+ExtensionMainLoopCallbacks :: struct {
+    // Will be called after Godot is started and is fully initialized.
+    startup_func:   ExtensionMainLoopStartupCallback,
+    // Will be called before Godot is shutdown when it is still fully initialized.
+    shutdown_func:  ExtensionMainLoopShutdownCallback,
+	// Will be called for each process frame. This will run after all `_process()` methods on Node, and before `ScriptServer::frame()`.
+	// This is intended to be the equivalent of `ScriptLanguage::frame()` for GDExtension language bindings that don't use the script API.
+    frame_func:     ExtensionMainLoopFrameCallback,
 }
 
 /*
