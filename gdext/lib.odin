@@ -371,7 +371,7 @@ ExtensionClassCreationInfo4 :: struct {
     class_userdata: rawptr, // Per-class user data, later accessible in instance bindings.
 }
 
-ExtensionClassCreationInfo4 :: ExtensionClassCreationInfo5
+ExtensionClassCreationInfo5 :: ExtensionClassCreationInfo4
 
 ExtensionClassLibraryPtr :: distinct rawptr
 
@@ -792,6 +792,7 @@ InitializationFunction :: #type proc "c" (
     initialization: ^Initialization,
 ) -> bool
 
+// @deprecated in Godot 4.5. Use `get_godot_version2` instead.
 GodotVersion :: struct {
     version_major:  u32,
     version_minor:  u32,
@@ -844,6 +845,16 @@ ExtensionMainLoopCallbacks :: struct {
 	// This is intended to be the equivalent of `ScriptLanguage::frame()` for GDExtension language bindings that don't use the script API.
     frame_func:     ExtensionMainLoopFrameCallback,
 }
+/**
+ * @name get_godot_version2
+ * @since 4.5
+ *
+ * Gets the Godot version that the GDExtension was loaded into.
+ *
+ * @param r_godot_version A pointer to the structure to write the version information into.
+ */
+GetGodotVersion2 :: #type proc "c" (godot_version: ^GodotVersion2)
+
 
 /*
     Copyright 2025 Dresses Digital
