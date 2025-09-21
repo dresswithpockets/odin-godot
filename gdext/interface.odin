@@ -1894,6 +1894,17 @@ placeholder_script_instance_update: ExtensionInterfacePlaceHolderScriptInstanceU
 object_get_script_instance: ExtensionInterfaceObjectGetScriptInstance
 
 /**
+ * @name object_set_script_instance
+ * @since 4.5
+ *
+ * Set the script instance data attached to this object.
+ *
+ * @param p_object A pointer to the Object.
+ * @param p_script_instance A pointer to the script instance data to attach to this object.
+ */
+ object_set_script_instance: ExtensionInterfaceObjectSetScriptInstance
+
+/**
  * @name callable_custom_create
  * @since 4.2
  * @deprecated in Godot 4.3. Use `callable_custom_create2` instead.
@@ -2052,6 +2063,21 @@ classdb_register_extension_class3: ExtensionInterfaceClassdbRegisterExtensionCla
  * @param p_extension_funcs A pointer to a GDExtensionClassCreationInfo2 struct.
  */
 classdb_register_extension_class4: ExtensionInterfaceClassdbRegisterExtensionClass4
+
+/**
+ * @name classdb_register_extension_class5
+ * @since 4.5
+ *
+ * Registers an extension class in the ClassDB.
+ *
+ * Provided struct can be safely freed once the function returns.
+ *
+ * @param p_library A pointer the library received by the GDExtension's entry point function.
+ * @param p_class_name A pointer to a StringName with the class name.
+ * @param p_parent_class_name A pointer to a StringName with the parent class name.
+ * @param p_extension_funcs A pointer to a GDExtensionClassCreationInfo5 struct.
+ */
+classdb_register_extension_class5: ExtensionInterfaceClassdbRegisterExtensionClass5
 
 /**
  * @name classdb_register_extension_class_method
@@ -2244,6 +2270,32 @@ editor_help_load_xml_from_utf8_chars: ExtensionsInterfaceEditorHelpLoadXmlFromUt
  */
 editor_help_load_xml_from_utf8_chars_and_len: ExtensionsInterfaceEditorHelpLoadXmlFromUtf8CharsAndLen
 
+/**
+ * @name editor_register_get_classes_used_callback
+ * @since 4.5
+ *
+ * Registers a callback that Godot can call to get the list of all classes (from ClassDB) that may be used by the calling GDExtension.
+ *
+ * This is used by the editor to generate a build profile (in "Tools" > "Engine Compilation Configuration Editor..." > "Detect from project"),
+ * in order to recompile Godot with only the classes used.
+ * In the provided callback, the GDExtension should provide the list of classes that _may_ be used statically, thus the time of invocation shouldn't matter.
+ * If a GDExtension doesn't register a callback, Godot will assume that it could be using any classes.
+ *
+ * @param p_library A pointer the library received by the GDExtension's entry point function.
+ * @param p_callback The callback to retrieve the list of classes used.
+ */
+editor_register_get_classes_used_callback: ExtensionInterfaceEditorRegisterGetClassesUsedCallback
+
+ /**
+ * @name register_main_loop_callbacks
+ * @since 4.5
+ *
+ * Registers callbacks to be called at different phases of the main loop.
+ *
+ * @param p_library A pointer the library received by the GDExtension's entry point function.
+ * @param p_callbacks A pointer to the structure that contains the callbacks.
+ */
+register_main_loop_callbacks: ExtensionInterfaceRegisterMainLoopCallbacks
 
 init :: proc "contextless" (library_ptr: ExtensionClassLibraryPtr, get_proc_address: ExtensionInterfaceGetProcAddress) {
     library = library_ptr
@@ -2389,6 +2441,7 @@ init :: proc "contextless" (library_ptr: ExtensionClassLibraryPtr, get_proc_addr
     placeholder_script_instance_create = cast(ExtensionInterfacePlaceHolderScriptInstanceCreate)get_proc_address("placeholder_script_instance_create")
     placeholder_script_instance_update = cast(ExtensionInterfacePlaceHolderScriptInstanceUpdate)get_proc_address("placeholder_script_instance_update")
     object_get_script_instance = cast(ExtensionInterfaceObjectGetScriptInstance)get_proc_address("object_get_script_instance")
+    object_set_script_instance = cast(ExtensionInterfaceObjectSetScriptInstance)get_proc_address("object_set_script_instance")
     callable_custom_create = cast(ExtensionInterfaceCallableCustomCreate)get_proc_address("callable_custom_create")
     callable_custom_create2 = cast(ExtensionInterfaceCallableCustomCreate2)get_proc_address("callable_custom_create2")
     callable_custom_get_userdata = cast(ExtensionInterfaceCallableCustomGetUserData)get_proc_address("callable_custom_get_userdata")
@@ -2400,6 +2453,7 @@ init :: proc "contextless" (library_ptr: ExtensionClassLibraryPtr, get_proc_addr
     classdb_register_extension_class2 = cast(ExtensionInterfaceClassdbRegisterExtensionClass2)get_proc_address("classdb_register_extension_class2")
     classdb_register_extension_class3 = cast(ExtensionInterfaceClassdbRegisterExtensionClass3)get_proc_address("classdb_register_extension_class3")
     classdb_register_extension_class4 = cast(ExtensionInterfaceClassdbRegisterExtensionClass4)get_proc_address("classdb_register_extension_class4")
+    classdb_register_extension_class5 = cast(ExtensionInterfaceClassdbRegisterExtensionClass5)get_proc_address("classdb_register_extension_class5")
     classdb_register_extension_class_method = cast(ExtensionInterfaceClassdbRegisterExtensionClassMethod)get_proc_address("classdb_register_extension_class_method")
     classdb_register_extension_class_virtual_method = cast(ExtensionInterfaceClassdbRegisterExtensionClassVirtualMethod)get_proc_address("classdb_register_extension_class_virtual_method")
     classdb_register_extension_class_integer_constant = cast(ExtensionInterfaceClassdbRegisterExtensionClassIntegerConstant)get_proc_address("classdb_register_extension_class_integer_constant")
@@ -2414,4 +2468,6 @@ init :: proc "contextless" (library_ptr: ExtensionClassLibraryPtr, get_proc_addr
     editor_remove_plugin = cast(ExtensionInterfaceEditorRemovePlugin)get_proc_address("editor_remove_plugin")
     editor_help_load_xml_from_utf8_chars = cast(ExtensionsInterfaceEditorHelpLoadXmlFromUtf8Chars)get_proc_address("editor_help_load_xml_from_utf8_chars")
     editor_help_load_xml_from_utf8_chars_and_len = cast(ExtensionsInterfaceEditorHelpLoadXmlFromUtf8CharsAndLen)get_proc_address("editor_help_load_xml_from_utf8_chars_and_len")
+    editor_register_get_classes_used_callback = cast(ExtensionInterfaceEditorRegisterGetClassesUsedCallback)get_proc_address("editor_register_get_classes_used_callback")
+    register_main_loop_callbacks = cast(ExtensionInterfaceRegisterMainLoopCallbacks)get_proc_address("register_main_loop_callbacks")
 }

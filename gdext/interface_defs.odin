@@ -236,7 +236,7 @@ ExtensionInterfaceVariantCall :: #type proc "c" (
  *
  * Calls a static method on a Variant.
  *
- * @param p_self A pointer to the Variant.
+ * @param p_type The variant type.
  * @param p_method A pointer to a StringName identifying the method.
  * @param p_args A pointer to a C array of Variant.
  * @param p_argument_count The number of arguments.
@@ -582,7 +582,7 @@ ExtensionInterfaceVariantGetType :: #type proc "c" (p_self: VariantPtr) -> Varia
  * @param p_self A pointer to the Variant.
  * @param p_method A pointer to a StringName with the method name.
  *
- * @return
+ * @return true if the variant has the given method; otherwise false.
  */
 ExtensionInterfaceVariantHasMethod :: #type proc "c" (p_self: VariantPtr, p_method: StringNamePtr) -> bool
 
@@ -595,7 +595,7 @@ ExtensionInterfaceVariantHasMethod :: #type proc "c" (p_self: VariantPtr, p_meth
  * @param p_type The Variant type.
  * @param p_member A pointer to a StringName with the member name.
  *
- * @return
+ * @return true if the variant has the given method; otherwise false.
  */
 ExtensionInterfaceVariantHasMember :: #type proc "c" (p_type: Variant_Type, p_member: StringNamePtr) -> bool
 
@@ -781,7 +781,7 @@ ExtensionInterfaceVariantGetPtrDestructor :: #type proc "c" (p_type: Variant_Typ
  * Constructs a Variant of the given type, using the first constructor that matches the given arguments.
  *
  * @param p_type The Variant type.
- * @param p_base A pointer to a Variant to store the constructed value.
+ * @param r_base A pointer to a Variant to store the constructed value.
  * @param p_args A pointer to a C array of Variant pointers representing the arguments for the constructor.
  * @param p_argument_count The number of arguments to pass to the constructor.
  * @param r_error A pointer the structure which will be updated with error information.
@@ -1023,7 +1023,7 @@ ExtensionInterfaceStringNewWithUtf8CharsAndLen2 :: #type proc "c" (
  *
  * @param r_dest A pointer to a Variant to hold the newly created String.
  * @param p_contents A pointer to a UTF-16 encoded C string.
- * @param p_size The number of characters (not bytes).
+ * @param p_char_count The number of characters (not bytes).
  */
 ExtensionInterfaceStringNewWithUtf16CharsAndLen :: #type proc "c" (
     r_dest: StringPtr,
@@ -1039,7 +1039,7 @@ ExtensionInterfaceStringNewWithUtf16CharsAndLen :: #type proc "c" (
  *
  * @param r_dest A pointer to a Variant to hold the newly created String.
  * @param p_contents A pointer to a UTF-16 encoded C string.
- * @param p_size The number of characters (not bytes).
+ * @param p_char_count The number of characters (not bytes).
  * @param p_default_little_endian If true, UTF-16 use little endian.
  *
  * @return Error code signifying if the operation successful.
@@ -1059,7 +1059,7 @@ ExtensionInterfaceStringNewWithUtf16CharsAndLen2 :: #type proc "c" (
  *
  * @param r_dest A pointer to a Variant to hold the newly created String.
  * @param p_contents A pointer to a UTF-32 encoded C string.
- * @param p_size The number of characters (not bytes).
+ * @param p_char_count The number of characters (not bytes).
  */
 ExtensionInterfaceStringNewWithUtf32CharsAndLen :: #type proc "c" (
     r_dest: StringPtr,
@@ -1075,7 +1075,7 @@ ExtensionInterfaceStringNewWithUtf32CharsAndLen :: #type proc "c" (
  *
  * @param r_dest A pointer to a Variant to hold the newly created String.
  * @param p_contents A pointer to a wide C string.
- * @param p_size The number of characters (not bytes).
+ * @param p_char_count The number of characters (not bytes).
  */
 ExtensionInterfaceStringNewWithWideCharsAndLen :: #type proc "c" (
     r_dest: StringPtr,
@@ -1414,6 +1414,7 @@ ExtensionInterfaceImagePtr :: #type proc "c" (p_instance: ObjectPtr) -> ^u8
  * @param p_instance A pointer to a WorkerThreadPool object.
  * @param p_func A pointer to a function to run in the thread pool.
  * @param p_userdata A pointer to arbitrary data which will be passed to p_func.
+ * @param p_elements The number of element needed in the group.
  * @param p_tasks The number of tasks needed in the group.
  * @param p_high_priority Whether or not this is a high priority task.
  * @param p_description A pointer to a String with the task description.
@@ -1424,7 +1425,7 @@ ExtensionInterfaceImagePtr :: #type proc "c" (p_instance: ObjectPtr) -> ^u8
  */
 ExtensionInterfaceWorkerThreadPoolAddNativeGroupTask :: #type proc "c" (
     p_instance: ObjectPtr,
-    p_func: proc "c" (_: rawptr, _: c.uint32_t),
+    p_func: ExtensionWorkerThreadPoolGroupTask,
     p_userdata: rawptr,
     p_elements: int,
     p_tasks: int,
@@ -1448,7 +1449,7 @@ ExtensionInterfaceWorkerThreadPoolAddNativeGroupTask :: #type proc "c" (
  */
 ExtensionInterfaceWorkerThreadPoolAddNativeTask :: #type proc "c" (
     p_instance: ObjectPtr,
-    p_func: proc "c" (_: rawptr),
+    p_func: ExtensionWorkerThreadPoolTask,
     p_userdata: rawptr,
     p_high_priority: bool,
     p_description: StringPtr,
@@ -1743,7 +1744,7 @@ ExtensionInterfaceArrayOperatorIndexConst :: #type proc "c" (p_self: TypePtr, p_
 /**
  * @name array_ref
  * @since 4.1
- *
+ * @deprecated in Godot 4.5. use `Array::operator=` instead.
  * Sets an Array to be a reference to another Array object.
  *
  * @param p_self A pointer to the Array object to update.
@@ -1888,10 +1889,10 @@ ExtensionInterfaceGlobalGetSingleton :: #type proc "c" (p_name: StringNamePtr) -
  * Gets a pointer representing an Object's instance binding.
  *
  * @param p_o A pointer to the Object.
- * @param p_library A token the library received by the GDExtension's entry point function.
+ * @param p_token A token the library received by the GDExtension's entry point function.
  * @param p_callbacks A pointer to a GDExtensionInstanceBindingCallbacks struct.
  *
- * @return
+ * @return A pointer to the instance binding.
  */
 ExtensionInterfaceObjectGetInstanceBinding :: #type proc "c" (
     p_o: ObjectPtr,
@@ -1906,7 +1907,7 @@ ExtensionInterfaceObjectGetInstanceBinding :: #type proc "c" (
  * Sets an Object's instance binding.
  *
  * @param p_o A pointer to the Object.
- * @param p_library A token the library received by the GDExtension's entry point function.
+ * @param p_token A token the library received by the GDExtension's entry point function.
  * @param p_binding A pointer to the instance binding.
  * @param p_callbacks A pointer to a GDExtensionInstanceBindingCallbacks struct.
  */
@@ -1924,7 +1925,7 @@ ExtensionInterfaceObjectSetInstanceBinding :: #type proc "c" (
  * Free an Object's instance binding.
  *
  * @param p_o A pointer to the Object.
- * @param p_library A token the library received by the GDExtension's entry point function.
+ * @param p_token A token the library received by the GDExtension's entry point function.
  */
 ExtensionInterfaceObjectFreeInstanceBinding :: #type proc "c" (p_o: ObjectPtr, p_token: rawptr)
 
@@ -1933,6 +1934,8 @@ ExtensionInterfaceObjectFreeInstanceBinding :: #type proc "c" (p_o: ObjectPtr, p
  * @since 4.1
  *
  * Sets an extension class instance on a Object.
+ *
+ * `p_classname` should be a registered extension class and should extend the `p_o` Object's class.
  *
  * @param p_o A pointer to the Object.
  * @param p_classname A pointer to a StringName with the registered extension class's name.
@@ -2011,7 +2014,7 @@ ExtensionInterfaceObjectGetInstanceId :: #type proc "c" (p_object: ObjectPtr) ->
  * @param p_object A pointer to the Object.
  * @param p_method A pointer to a StringName identifying the method.
  *
- * @returns true if the object has a script and that script has a method with the given name. Returns false if the object has no script.
+ * @return true if the object has a script and that script has a method with the given name. Returns false if the object has no script.
  */
 ExtensionInterfaceObjectHasScriptMethod :: #type proc "c" (p_object: ObjectPtr, p_method: StringNamePtr) -> bool
 
@@ -2166,6 +2169,20 @@ ExtensionInterfaceObjectGetScriptInstance :: #type proc "c" (
 ) -> ExtensionScriptInstanceDataPtr
 
 /**
+ * @name object_set_script_instance
+ * @since 4.5
+ *
+ * Set the script instance data attached to this object.
+ *
+ * @param p_object A pointer to the Object.
+ * @param p_script_instance A pointer to the script instance data to attach to this object.
+ */
+ExtensionInterfaceObjectSetScriptInstance :: #type proc "c" (
+    p_object: ObjectPtr,
+    p_script_instance: ExtensionScriptInstanceDataPtr,
+)
+
+/**
  * @name callable_custom_create
  * @since 4.2
  * @deprecated in Godot 4.3. Use `callable_custom_create2` instead.
@@ -2208,6 +2225,8 @@ ExtensionInterfaceCallableCustomCreate2 :: #type proc "c" (
  *
  * @param p_callable A pointer to a Callable.
  * @param p_token A pointer to an address that uniquely identifies the GDExtension.
+ *
+ * @return The userdata pointer given when creating this custom Callable.
  */
 ExtensionInterfaceCallableCustomGetUserData :: #type proc "c" (p_callable: TypePtr, p_token: rawptr) -> rawptr
 
@@ -2326,7 +2345,7 @@ ExtensionInterfaceClassdbRegisterExtensionClass2 :: #type proc "c" (
  * @param p_library A pointer the library received by the GDExtension's entry point function.
  * @param p_class_name A pointer to a StringName with the class name.
  * @param p_parent_class_name A pointer to a StringName with the parent class name.
- * @param p_extension_funcs A pointer to a GDExtensionClassCreationInfo2 struct.
+ * @param p_extension_funcs A pointer to a GDExtensionClassCreationInfo3 struct.
  */
 ExtensionInterfaceClassdbRegisterExtensionClass3 :: #type proc "c" (
     p_library: ExtensionClassLibraryPtr,
@@ -2338,6 +2357,7 @@ ExtensionInterfaceClassdbRegisterExtensionClass3 :: #type proc "c" (
 /**
  * @name classdb_register_extension_class4
  * @since 4.4
+ * @deprecated in Godot 4.5. Use `classdb_register_extension_class5` instead.
  *
  * Registers an extension class in the ClassDB.
  *
@@ -2346,13 +2366,33 @@ ExtensionInterfaceClassdbRegisterExtensionClass3 :: #type proc "c" (
  * @param p_library A pointer the library received by the GDExtension's entry point function.
  * @param p_class_name A pointer to a StringName with the class name.
  * @param p_parent_class_name A pointer to a StringName with the parent class name.
- * @param p_extension_funcs A pointer to a GDExtensionClassCreationInfo2 struct.
+ * @param p_extension_funcs A pointer to a GDExtensionClassCreationInfo4 struct.
  */
 ExtensionInterfaceClassdbRegisterExtensionClass4 :: #type proc "c" (
     p_library: ExtensionClassLibraryPtr,
     p_class_name: StringNamePtr,
     p_parent_class_name: StringNamePtr,
     p_extension_funcs: ^ExtensionClassCreationInfo4,
+)
+
+/**
+ * @name classdb_register_extension_class5
+ * @since 4.5
+ *
+ * Registers an extension class in the ClassDB.
+ *
+ * Provided struct can be safely freed once the function returns.
+ *
+ * @param p_library A pointer the library received by the GDExtension's entry point function.
+ * @param p_class_name A pointer to a StringName with the class name.
+ * @param p_parent_class_name A pointer to a StringName with the parent class name.
+ * @param p_extension_funcs A pointer to a GDExtensionClassCreationInfo5 struct.
+ */
+ ExtensionInterfaceClassdbRegisterExtensionClass5 :: #type proc "c" (
+    p_library: ExtensionClassLibraryPtr,
+    p_class_name: StringNamePtr,
+    p_parent_class_name: StringNamePtr,
+    p_extension_funcs: ^ExtensionClassCreationInfo5,
 )
 
 /**
@@ -2527,6 +2567,8 @@ ExtensionInterfaceClassdbRegisterExtensionClassSignal :: #type proc "c" (
  *
  * Unregisters an extension class in the ClassDB.
  *
+ * Unregistering a parent class before a class that inherits it will result in failure. Inheritors must be unregistered first.
+ *
  * @param p_library A pointer the library received by the GDExtension's entry point function.
  * @param p_class_name A pointer to a StringName with the class name.
  */
@@ -2592,3 +2634,36 @@ ExtensionsInterfaceEditorHelpLoadXmlFromUtf8Chars :: #type proc "c" (p_data: cst
  * @param p_size The number of bytes (not code units).
  */
 ExtensionsInterfaceEditorHelpLoadXmlFromUtf8CharsAndLen :: #type proc "c" (p_data: cstring, p_size: i64)
+
+/**
+ * @name editor_register_get_classes_used_callback
+ * @since 4.5
+ *
+ * Registers a callback that Godot can call to get the list of all classes (from ClassDB) that may be used by the calling GDExtension.
+ *
+ * This is used by the editor to generate a build profile (in "Tools" > "Engine Compilation Configuration Editor..." > "Detect from project"),
+ * in order to recompile Godot with only the classes used.
+ * In the provided callback, the GDExtension should provide the list of classes that _may_ be used statically, thus the time of invocation shouldn't matter.
+ * If a GDExtension doesn't register a callback, Godot will assume that it could be using any classes.
+ *
+ * @param p_library A pointer the library received by the GDExtension's entry point function.
+ * @param p_callback The callback to retrieve the list of classes used.
+ */
+ ExtensionInterfaceEditorRegisterGetClassesUsedCallback :: #type proc "c" (
+    p_library: ExtensionClassLibraryPtr,
+    p_callback: ExtensionEditorGetClassesUsedCallback,
+ )
+
+ /**
+ * @name register_main_loop_callbacks
+ * @since 4.5
+ *
+ * Registers callbacks to be called at different phases of the main loop.
+ *
+ * @param p_library A pointer the library received by the GDExtension's entry point function.
+ * @param p_callbacks A pointer to the structure that contains the callbacks.
+ */
+  ExtensionInterfaceRegisterMainLoopCallbacks :: #type proc "c" (
+    p_library: ExtensionClassLibraryPtr,
+    p_callback: ^ExtensionMainLoopCallbacks,
+ )
