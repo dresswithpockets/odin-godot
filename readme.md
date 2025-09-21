@@ -1,9 +1,9 @@
 # Godot Toolkit for Odin
 
 > [!WARNING]
-> **WIP Do not attempt to use this fork! - CyberneticDruid**
+> **untested rough draft that compiles, use at your own risk! - CyberneticDruid**
 > 
-> messing around with updates for Godot 4.5
+> updates for Godot 4.5
 >
 > godot-cpp submodule updated to 4.5 branch
 >
@@ -11,10 +11,11 @@
 >
 > extension_api.json and gdextension_interface.h added just to see the diff between 4.4 and 4.5
 >
-> gdext:
->   lib.odin updated
->
-> I didn't touch Godin at all
+> gdext: updated
+> 
+> examples not updated yet
+> 
+> I didn't touch Godin
 
 > [!WARNING]
 > **This toolkit is a Work In Progress!**
