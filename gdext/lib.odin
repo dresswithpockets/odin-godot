@@ -748,7 +748,7 @@ ExtensionWorkerThreadPoolGroupTask :: #type proc "c" (rawptr, c.uint32_t)
 ExtensionWorkerThreadPoolTask :: #type proc "c" (rawptr)
 
 ExtensionInitializeCallback :: #type proc "c" (user_data: rawptr, level: InitializationLevel)
-ExtensionDeinitializeCallback :: #type proc "c" (user_data: rawptr)
+ExtensionDeinitializeCallback :: #type proc "c" (user_data: rawptr, level: InitializationLevel)
 
 ExtensionInterfaceGetProcAddress :: #type proc "c" (function_name: cstring) -> rawptr
 
