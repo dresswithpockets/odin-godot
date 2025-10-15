@@ -1,6 +1,23 @@
 # Godot Toolkit for Odin
 
 > [!WARNING]
+> **untested rough draft that compiles, use at your own risk! - CyberneticDruid**
+> 
+> updates for Godot 4.5
+>
+> godot-cpp submodule updated to 4.5 branch
+>
+> minimal workaround to bindgen to allow it to run (skips 2 instances of typeddictionary instead of panic)
+>
+> extension_api.json and gdextension_interface.h added just to see the diff between 4.4 and 4.5
+>
+> gdext: updated
+> 
+> examples not updated yet
+> 
+> I didn't touch Godin
+
+> [!WARNING]
 > **This toolkit is a Work In Progress!**
 >
 > If you are using parts of it, beware of sudden major changes to the API, structure, and features.

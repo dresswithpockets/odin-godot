@@ -84,8 +84,7 @@ Signal :: distinct Opaque(4)
 Dictionary :: distinct Opaque(1)
 Array :: distinct Opaque(1)
 
-Typed_Array :: struct($T: typeid) where intrinsics.type_is_variant_of(Variantable_Type, T) || intrinsics.type_is_specialization_of(T, Packed_Array)
-{
+Typed_Array :: struct($T: typeid) where intrinsics.type_is_variant_of(Variantable_Type, T) || intrinsics.type_is_specialization_of(T, Packed_Array) {
     using untyped: Array,
 }
 

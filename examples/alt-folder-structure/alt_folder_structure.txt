@@ -1,0 +1,10 @@
+works for me on Windows/Linux with the imports: ("godot:gdext", "godot:godot", "godot:libgd")
+
+//repo for Odin library
+root/
+  build/	// .lib/.so to my_lib_tests, or .dll/.so/etc. to extension project
+  src/
+    odin-godot/
+    my_lib/
+    my_lib_tests/
+  build.sh //defines odin-godot as a collection named godot
