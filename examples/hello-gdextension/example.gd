@@ -1,8 +1,9 @@
 extends Node2D
 
-@onready var thing: ExampleClass = $ExampleClass
+var thing: ExampleClass
 
 func _ready():
+    thing = ExampleClass.new()
     print("speed: ", thing.get_speed())
     thing.set_speed(2.0)
     print("speed: ", thing.speed)
