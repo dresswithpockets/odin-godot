@@ -5,10 +5,19 @@ import "core:slice"
 import "core:strings"
 import "views"
 
-variant_template := temple_compiled("../templates/bindgen_view_variant.temple.twig", views.Variant)
-engine_class_template := temple_compiled("../templates/bindgen_view_engine.temple.twig", views.Engine_Class)
-core_template := temple_compiled("../templates/bindgen_view_core.temple.twig", views.Godot_Package)
-structs_template := temple_compiled("../templates/bindgen_view_structs.temple.twig", views.Structs)
+import temple "../temple"
+
+variant_template: temple.Compiled(views.Variant)
+engine_class_template: temple.Compiled(views.Engine_Class)
+core_template: temple.Compiled(views.Godot_Package)
+structs_template: temple.Compiled(views.Structs)
+
+init_templates :: proc() {
+	variant_template = temple_compiled("../templates/bindgen_view_variant.temple.twig", views.Variant)
+	engine_class_template = temple_compiled("../templates/bindgen_view_engine.temple.twig", views.Engine_Class)
+	core_template = temple_compiled("../templates/bindgen_view_core.temple.twig", views.Godot_Package)
+	structs_template = temple_compiled("../templates/bindgen_view_structs.temple.twig", views.Structs)
+}
 
 /*
     Copyright 2025 Dresses Digital
