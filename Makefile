@@ -111,7 +111,7 @@ tests:
 
 check:
 	odin check bindgen/
-	odin check gdextension/ -no-entry-point -collection:godot=. -vet
+	odin check gdext/ -no-entry-point -collection:godot=. -vet
 	odin check godot/ -no-entry-point -collection:godot=. -define:REAL_PRECISION=$(REAL_PRECISION) -vet
 	odin check examples/game/src -no-entry-point -collection:godot=. -define:REAL_PRECISION=$(REAL_PRECISION) -vet
 	odin check examples/hello-gdextension/src -no-entry-point -collection:godot=. -define:REAL_PRECISION=$(REAL_PRECISION) -vet
