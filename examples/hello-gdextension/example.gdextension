@@ -1,8 +1,8 @@
 [configuration]
 
 entry_symbol = "example_library_init"
-compatibility_minimum = "4.2"
+compatibility_minimum = "4.5"
 
 [libraries]
-
-windows.x86_64="res://bin/example.dll"
+windows.x86_64 = "bin/example.dll"
+linuxbsd.x86_64 = "bin/example.so"
