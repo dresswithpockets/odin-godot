@@ -52,7 +52,7 @@ odin build bindgen/ -o:speed -out:bin/bindgen.exe
 
 See [the example game](examples/game) for a working usage of these bindings.
 
-Then, follow the instructions for [using the extension module](https://docs.godotengine.org/en/stable/tutorials/scripting/gdextension/gdextension_cpp_example.html#using-the-gdextension-module).
+Then, follow the instructions for [using the extension module](https://docs.godotengine.org/en/stable/tutorials/scripting/cpp/gdextension_cpp_example.html#using-the-gdextension-module).
 
 ## Godin
 
